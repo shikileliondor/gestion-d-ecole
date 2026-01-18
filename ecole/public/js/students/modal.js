@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const openModal = (studentId, studentName) => {
+    const openModal = (studentUrl, studentName) => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         activateTab('info');
@@ -94,7 +94,29 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = `Fiche élève - ${studentName}`;
         }
 
-        fetch(`/students/${studentId}`)
+        setText(infoFields.admission_number, '—');
+        setText(infoFields.date_of_birth, '—');
+        setText(infoFields.class_name, '—');
+        setText(infoFields.phone, '—');
+        setText(infoFields.parent_name, '—');
+        setText(infoFields.parent_phone, '—');
+        setText(infoFields.address, '—');
+        setText(infoFields.email, '—');
+
+        setList(listFields.grades, [], () => '', 'Aucune note disponible.');
+        setList(listFields.payments, [], () => '', 'Aucun paiement enregistré.');
+        setList(listFields.documents, [], () => '', 'Aucun document disponible.');
+
+        if (!studentUrl) {
+            return;
+        }
+
+        fetch(studentUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement');
@@ -205,11 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     openButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            const studentId = button.getAttribute('data-student-id');
+            const studentUrl = button.getAttribute('data-student-url');
             const studentName = button.getAttribute('data-student-name') || 'Élève';
-            if (studentId) {
-                openModal(studentId, studentName);
-            }
+            openModal(studentUrl, studentName);
         });
     });
 
