@@ -15,6 +15,7 @@ use App\Models\SchoolClass;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
@@ -37,7 +38,15 @@ class StudentController extends Controller
             ->orderBy('students.first_name')
             ->get();
 
-        return view('students.index', compact('students'));
+        $classes = SchoolClass::query()
+            ->orderBy('name')
+            ->get();
+
+        $academicYears = AcademicYear::query()
+            ->orderByDesc('start_date')
+            ->get();
+
+        return view('students.index', compact('students', 'classes', 'academicYears'));
     }
 
     public function create(): View
@@ -56,7 +65,6 @@ class StudentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'admission_number' => ['required', 'string', 'max:50', 'unique:students,admission_number'],
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
@@ -64,11 +72,9 @@ class StudentController extends Controller
             'date_of_birth' => ['nullable', 'date'],
             'place_of_birth' => ['nullable', 'string', 'max:255'],
             'nationality' => ['nullable', 'string', 'max:100'],
-            'religion' => ['nullable', 'string', 'max:100'],
-            'blood_type' => ['nullable', 'string', 'max:10'],
+            'blood_type' => ['nullable', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-'],
             'address' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
-            'country' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'enrollment_date' => ['nullable', 'date'],
@@ -80,7 +86,6 @@ class StudentController extends Controller
             'status' => ['required', 'in:active,suspended,transferred,graduated,inactive'],
             'class_id' => ['required', 'exists:classes,id'],
             'academic_year_id' => ['required', 'exists:academic_years,id'],
-            'class_start_date' => ['nullable', 'date'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
             'parent_first_name' => ['nullable', 'string', 'max:255'],
             'parent_last_name' => ['nullable', 'string', 'max:255'],
@@ -136,7 +141,11 @@ class StudentController extends Controller
             $student = Student::create([
                 'school_id' => $schoolId,
                 'academic_year_id' => $data['academic_year_id'],
-                'admission_number' => $data['admission_number'],
+                'admission_number' => $this->generateAdmissionNumber(
+                    $data['first_name'],
+                    $data['last_name'],
+                    $data['enrollment_date'] ?? null
+                ),
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'middle_name' => $data['middle_name'] ?? null,
@@ -144,11 +153,9 @@ class StudentController extends Controller
                 'date_of_birth' => $data['date_of_birth'] ?? null,
                 'place_of_birth' => $data['place_of_birth'] ?? null,
                 'nationality' => $data['nationality'] ?? null,
-                'religion' => $data['religion'] ?? null,
                 'blood_type' => $data['blood_type'] ?? null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
-                'country' => $data['country'] ?? null,
                 'phone' => $data['phone'] ?? null,
                 'email' => $data['email'] ?? null,
                 'enrollment_date' => $data['enrollment_date'] ?? null,
@@ -164,7 +171,7 @@ class StudentController extends Controller
                 'student_id' => $student->id,
                 'class_id' => $data['class_id'],
                 'academic_year_id' => $data['academic_year_id'],
-                'start_date' => $data['class_start_date'] ?? null,
+                'start_date' => null,
                 'status' => $data['class_status'] ?? 'active',
                 'assigned_at' => now(),
             ]);
@@ -279,5 +286,26 @@ class StudentController extends Controller
             'payments' => $payments,
             'documents' => $documents,
         ]);
+    }
+
+    private function generateAdmissionNumber(string $firstName, string $lastName, ?string $enrollmentDate): string
+    {
+        $year = $enrollmentDate
+            ? Carbon::parse($enrollmentDate)->format('Y')
+            : now()->format('Y');
+
+        $lettersSource = preg_replace('/[^A-Za-z]/', '', $lastName . $firstName);
+        $letters = strtoupper(substr($lettersSource, 0, 3));
+        $letters = str_pad($letters, 3, 'X');
+
+        $candidate = $year . '-' . $letters;
+        $alphabet = range('A', 'Z');
+
+        while (Student::query()->where('admission_number', $candidate)->exists()) {
+            $letters .= $alphabet[array_rand($alphabet)];
+            $candidate = $year . '-' . $letters;
+        }
+
+        return $candidate;
     }
 }

@@ -15,7 +15,7 @@ class StudentSeeder extends Seeder
         $academicYear = AcademicYear::first();
 
         Student::firstOrCreate(
-            ['admission_number' => 'STU-001'],
+            ['admission_number' => '2024-KOA'],
             [
                 'school_id' => $school?->id,
                 'academic_year_id' => $academicYear?->id,
