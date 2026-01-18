@@ -8,31 +8,36 @@
     ];
 @endphp
 
-<aside class="{{ $classes ?? '' }} bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100">
-    <div class="flex h-full flex-col border-r border-gray-200 px-4 py-6 dark:border-gray-700">
+<aside class="{{ $classes ?? '' }} min-h-screen bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+    <div class="flex min-h-screen flex-col border-r border-gray-200 px-4 py-6 dark:border-gray-700">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-2">
             <x-application-logo class="h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
             <span class="text-lg font-semibold">{{ config('app.name', 'Laravel') }}</span>
         </a>
 
-        <nav class="mt-8 flex-1 space-y-1">
-            @foreach ($links as $link)
-                @php
-                    $isActive = request()->routeIs($link['route']);
-                @endphp
-                <a
-                    href="{{ route($link['route']) }}"
-                    class="{{ $isActive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700/60 dark:hover:text-white' }} flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition"
-                >
-                    <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        {!! $link['icon'] !!}
-                    </svg>
-                    <span>{{ $link['label'] }}</span>
-                </a>
-            @endforeach
-        </nav>
+        <div class="mt-8 flex flex-1 flex-col">
+            <p class="px-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                {{ __('Navigation') }}
+            </p>
+            <nav class="mt-4 space-y-1">
+                @foreach ($links as $link)
+                    @php
+                        $isActive = request()->routeIs($link['route']);
+                    @endphp
+                    <a
+                        href="{{ route($link['route']) }}"
+                        class="{{ $isActive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700/60 dark:hover:text-white' }} flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition"
+                    >
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            {!! $link['icon'] !!}
+                        </svg>
+                        <span>{{ $link['label'] }}</span>
+                    </a>
+                @endforeach
+            </nav>
+        </div>
 
-        <div class="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <div class="mt-auto border-t border-gray-200 pt-6 dark:border-gray-700">
             <div class="px-3 text-sm font-medium text-gray-500 dark:text-gray-400">
                 {{ Auth::user()->name }}
             </div>
