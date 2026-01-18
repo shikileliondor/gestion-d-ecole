@@ -10,7 +10,7 @@
                 <h1>Gestion des élèves</h1>
                 <p>Liste complète et fiches détaillées</p>
             </div>
-            <button class="primary-button" type="button">+ Ajouter un élève</button>
+            <a class="primary-button" href="{{ route('students.create') }}">+ Ajouter un élève</a>
         </div>
 
         <div class="students-toolbar">
@@ -32,7 +32,6 @@
                         <th>Nom</th>
                         <th>Classe</th>
                         <th>Statut</th>
-                        <th>Moyenne</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -48,20 +47,18 @@
                                 </span>
                             </td>
                             <td>
-                                @if ($student->average_score)
-                                    {{ number_format($student->average_score, 1) }}/20
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td>
                                 <button
-                                    class="link-button"
+                                    class="icon-button"
                                     type="button"
                                     data-student-id="{{ $student->id }}"
                                     data-student-name="{{ $student->last_name }} {{ $student->first_name }}"
+                                    aria-label="Voir la fiche de {{ $student->last_name }} {{ $student->first_name }}"
                                 >
-                                    Voir fiche
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                                        <path
+                                            d="M12 5c5.05 0 9.27 3.11 11 7-1.73 3.89-5.95 7-11 7S2.73 15.89 1 12c1.73-3.89 5.95-7 11-7Zm0 2C7.82 7 4.31 9.24 2.75 12 4.31 14.76 7.82 17 12 17s7.69-2.24 9.25-5C19.69 9.24 16.18 7 12 7Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Zm0 1.8A.7.7 0 1 0 12.7 12 .7.7 0 0 0 12 11.3Z"
+                                        />
+                                    </svg>
                                 </button>
                             </td>
                         </tr>

@@ -2,13 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicYear;
 use App\Models\Grade;
 use App\Models\Payment;
+use App\Models\ParentProfile;
+use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentClass;
 use App\Models\StudentDocument;
 use App\Models\StudentParent;
+use App\Models\SchoolClass;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -25,16 +33,184 @@ class StudentController extends Controller
                     ->latest('student_classes.assigned_at')
                     ->limit(1),
             ])
-            ->addSelect([
-                'average_score' => Grade::query()
-                    ->selectRaw('AVG(score)')
-                    ->whereColumn('grades.student_id', 'students.id'),
-            ])
             ->orderBy('students.last_name')
             ->orderBy('students.first_name')
             ->get();
 
         return view('students.index', compact('students'));
+    }
+
+    public function create(): View
+    {
+        $classes = SchoolClass::query()
+            ->orderBy('name')
+            ->get();
+
+        $academicYears = AcademicYear::query()
+            ->orderByDesc('start_date')
+            ->get();
+
+        return view('students.create', compact('classes', 'academicYears'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'admission_number' => ['required', 'string', 'max:50', 'unique:students,admission_number'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'gender' => ['nullable', 'in:male,female,other'],
+            'date_of_birth' => ['nullable', 'date'],
+            'place_of_birth' => ['nullable', 'string', 'max:255'],
+            'nationality' => ['nullable', 'string', 'max:100'],
+            'religion' => ['nullable', 'string', 'max:100'],
+            'blood_type' => ['nullable', 'string', 'max:10'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:100'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'enrollment_date' => ['nullable', 'date'],
+            'previous_school' => ['nullable', 'string', 'max:255'],
+            'needs_special_care' => ['nullable', 'boolean'],
+            'medical_notes' => ['nullable', 'string'],
+            'emergency_contact_name' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
+            'status' => ['required', 'in:active,suspended,transferred,graduated,inactive'],
+            'class_id' => ['required', 'exists:classes,id'],
+            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'class_start_date' => ['nullable', 'date'],
+            'class_status' => ['nullable', 'in:active,transferred,completed'],
+            'parent_first_name' => ['nullable', 'string', 'max:255'],
+            'parent_last_name' => ['nullable', 'string', 'max:255'],
+            'parent_gender' => ['nullable', 'in:male,female,other'],
+            'parent_relationship' => ['nullable', 'string', 'max:50'],
+            'parent_phone' => ['nullable', 'string', 'max:30'],
+            'parent_email' => ['nullable', 'email', 'max:255'],
+            'parent_address' => ['nullable', 'string', 'max:255'],
+            'parent_occupation' => ['nullable', 'string', 'max:255'],
+            'parent_employer' => ['nullable', 'string', 'max:255'],
+            'parent_national_id' => ['nullable', 'string', 'max:100'],
+            'parent_is_primary' => ['nullable', 'boolean'],
+            'parent_has_custody' => ['nullable', 'boolean'],
+            'parent_notes' => ['nullable', 'string'],
+        ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $parentFields = [
+                $request->input('parent_first_name'),
+                $request->input('parent_last_name'),
+                $request->input('parent_gender'),
+                $request->input('parent_relationship'),
+                $request->input('parent_phone'),
+                $request->input('parent_email'),
+                $request->input('parent_address'),
+                $request->input('parent_occupation'),
+                $request->input('parent_employer'),
+                $request->input('parent_national_id'),
+            ];
+
+            $hasParentData = collect($parentFields)->filter(fn ($value) => filled($value))->isNotEmpty();
+
+            if ($hasParentData) {
+                if (! $request->filled('parent_first_name')) {
+                    $validator->errors()->add('parent_first_name', 'Le prénom du parent est requis.');
+                }
+
+                if (! $request->filled('parent_last_name')) {
+                    $validator->errors()->add('parent_last_name', 'Le nom du parent est requis.');
+                }
+            }
+        });
+
+        $data = $validator->validate();
+
+        $schoolId = School::query()->value('id');
+        if (! $schoolId) {
+            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($data, $schoolId) {
+            $student = Student::create([
+                'school_id' => $schoolId,
+                'academic_year_id' => $data['academic_year_id'],
+                'admission_number' => $data['admission_number'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'middle_name' => $data['middle_name'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'date_of_birth' => $data['date_of_birth'] ?? null,
+                'place_of_birth' => $data['place_of_birth'] ?? null,
+                'nationality' => $data['nationality'] ?? null,
+                'religion' => $data['religion'] ?? null,
+                'blood_type' => $data['blood_type'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'country' => $data['country'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'email' => $data['email'] ?? null,
+                'enrollment_date' => $data['enrollment_date'] ?? null,
+                'previous_school' => $data['previous_school'] ?? null,
+                'needs_special_care' => (bool) ($data['needs_special_care'] ?? false),
+                'medical_notes' => $data['medical_notes'] ?? null,
+                'emergency_contact_name' => $data['emergency_contact_name'] ?? null,
+                'emergency_contact_phone' => $data['emergency_contact_phone'] ?? null,
+                'status' => $data['status'],
+            ]);
+
+            StudentClass::create([
+                'student_id' => $student->id,
+                'class_id' => $data['class_id'],
+                'academic_year_id' => $data['academic_year_id'],
+                'start_date' => $data['class_start_date'] ?? null,
+                'status' => $data['class_status'] ?? 'active',
+                'assigned_at' => now(),
+            ]);
+
+            $hasParentData = collect([
+                $data['parent_first_name'] ?? null,
+                $data['parent_last_name'] ?? null,
+                $data['parent_gender'] ?? null,
+                $data['parent_relationship'] ?? null,
+                $data['parent_phone'] ?? null,
+                $data['parent_email'] ?? null,
+                $data['parent_address'] ?? null,
+                $data['parent_occupation'] ?? null,
+                $data['parent_employer'] ?? null,
+                $data['parent_national_id'] ?? null,
+            ])->filter(fn ($value) => filled($value))->isNotEmpty();
+
+            if ($hasParentData) {
+                $parent = ParentProfile::create([
+                    'first_name' => $data['parent_first_name'],
+                    'last_name' => $data['parent_last_name'],
+                    'gender' => $data['parent_gender'] ?? null,
+                    'relationship' => $data['parent_relationship'] ?? null,
+                    'phone' => $data['parent_phone'] ?? null,
+                    'email' => $data['parent_email'] ?? null,
+                    'address' => $data['parent_address'] ?? null,
+                    'occupation' => $data['parent_occupation'] ?? null,
+                    'employer' => $data['parent_employer'] ?? null,
+                    'national_id' => $data['parent_national_id'] ?? null,
+                    'is_primary' => (bool) ($data['parent_is_primary'] ?? false),
+                    'status' => 'active',
+                ]);
+
+                StudentParent::create([
+                    'student_id' => $student->id,
+                    'parent_id' => $parent->id,
+                    'is_primary' => (bool) ($data['parent_is_primary'] ?? false),
+                    'has_custody' => (bool) ($data['parent_has_custody'] ?? false),
+                    'notes' => $data['parent_notes'] ?? null,
+                ]);
+            }
+        });
+
+        return redirect()
+            ->route('students.index')
+            ->with('status', "L'élève a été ajouté avec succès.");
     }
 
     public function show(int $id): JsonResponse
