@@ -14,16 +14,18 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div x-data="{ sidebarOpen: false }" class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <body class="font-sans antialiased bg-white text-gray-900">
+        <div x-data="{ sidebarOpen: false }" class="min-h-screen">
             <div class="flex min-h-screen">
+                <!-- Sidebar -->
                 @include('layouts.sidebar', ['classes' => 'hidden lg:flex lg:w-64 lg:flex-col'])
 
                 <div class="flex min-h-screen flex-1 flex-col">
-                    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 lg:hidden">
+                    <!-- Mobile Header -->
+                    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-4 shadow-sm lg:hidden">
                         <button
                             type="button"
-                            class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                             @click="sidebarOpen = true"
                         >
                             <span class="sr-only">Open sidebar</span>
@@ -32,11 +34,12 @@
                             </svg>
                         </button>
 
-                        <a href="{{ route('dashboard') }}" class="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        <a href="{{ route('dashboard') }}" class="text-base font-semibold text-gray-800">
                             {{ config('app.name', 'Laravel') }}
                         </a>
                     </header>
 
+                    <!-- Mobile Sidebar -->
                     <div
                         x-show="sidebarOpen"
                         x-transition.opacity
@@ -62,7 +65,7 @@
 
                     <!-- Page Heading -->
                     @isset($header)
-                        <header class="bg-white shadow dark:bg-gray-800">
+                        <header class="bg-white shadow">
                             <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                                 {{ $header }}
                             </div>
@@ -70,7 +73,7 @@
                     @endisset
 
                     <!-- Page Content -->
-                    <main class="flex-1">
+                    <main class="flex-1 bg-white">
                         {{ $slot }}
                     </main>
                 </div>
