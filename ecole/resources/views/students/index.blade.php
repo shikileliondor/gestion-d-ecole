@@ -52,6 +52,7 @@
                                     type="button"
                                     data-student-id="{{ $student->id }}"
                                     data-student-name="{{ $student->last_name }} {{ $student->first_name }}"
+                                    data-student-url="{{ route('students.show', $student) }}"
                                     aria-label="Voir la fiche de {{ $student->last_name }} {{ $student->first_name }}"
                                 >
                                     <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
