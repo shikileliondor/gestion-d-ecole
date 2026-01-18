@@ -11,4 +11,14 @@ class Staff extends Model
     use HasFactory, SoftDeletes;
 
     protected $guarded = [];
+
+    public function contracts()
+    {
+        return $this->hasMany(StaffContract::class);
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(StaffAssignment::class);
+    }
 }

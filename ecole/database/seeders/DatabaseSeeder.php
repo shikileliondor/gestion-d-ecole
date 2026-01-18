@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
             StudentDocumentSeeder::class,
             StaffSeeder::class,
             StaffDocumentSeeder::class,
+            StaffContractSeeder::class,
+            StaffAssignmentSeeder::class,
             SchoolClassSeeder::class,
             SubjectSeeder::class,
             ClassSubjectSeeder::class,
