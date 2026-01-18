@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Students\IndexStudentRequest;
 use App\Http\Requests\Students\StoreStudentRequest;
 use App\Http\Requests\Students\UpdateStudentRequest;
-use App\Models\Student;
 use App\Services\StudentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
 
 class StudentController extends Controller
 {
@@ -15,27 +15,16 @@ class StudentController extends Controller
     {
     }
 
-    public function index(IndexStudentRequest $request): JsonResponse
+    /**
+     * Display the student listing view.
+     */
+    public function index(IndexStudentRequest $request): View
     {
-        $filters = $request->validated();
+        $students = $this->studentService->list($request->validated());
 
-        $query = Student::query()
-            ->when($filters['school_id'] ?? null, fn ($builder, $schoolId) => $builder->where('school_id', $schoolId))
-            ->when($filters['academic_year_id'] ?? null, fn ($builder, $yearId) => $builder->where('academic_year_id', $yearId))
-            ->when($filters['status'] ?? null, fn ($builder, $status) => $builder->where('status', $status))
-            ->when($filters['search'] ?? null, function ($builder, $search) {
-                $builder->where(function ($subQuery) use ($search) {
-                    $subQuery->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('admission_number', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('last_name')
-            ->orderBy('first_name');
-
-        $students = $query->paginate($filters['per_page'] ?? 15);
-
-        return response()->json($students);
+        return view('students.index', [
+            'students' => $students,
+        ]);
     }
 
     public function store(StoreStudentRequest $request): JsonResponse
@@ -45,21 +34,21 @@ class StudentController extends Controller
         return response()->json($student, 201);
     }
 
-    public function show(Student $student): JsonResponse
+    public function show(\App\Models\Student $student): JsonResponse
     {
-        return response()->json($student);
+        return response()->json($this->studentService->getDetails($student));
     }
 
-    public function update(UpdateStudentRequest $request, Student $student): JsonResponse
+    public function update(UpdateStudentRequest $request, \App\Models\Student $student): JsonResponse
     {
         $student = $this->studentService->update($student, $request->validated());
 
         return response()->json($student);
     }
 
-    public function destroy(Student $student): JsonResponse
+    public function destroy(\App\Models\Student $student): JsonResponse
     {
-        $student->delete();
+        $this->studentService->delete($student);
 
         return response()->json(null, 204);
     }
