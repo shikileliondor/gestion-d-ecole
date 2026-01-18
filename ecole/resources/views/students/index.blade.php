@@ -10,7 +10,7 @@
                 <h1>Gestion des élèves</h1>
                 <p>Liste complète et fiches détaillées</p>
             </div>
-            <a class="primary-button" href="{{ route('students.create') }}">+ Ajouter un élève</a>
+            <button class="primary-button" type="button" data-form-modal-open>+ Ajouter un élève</button>
         </div>
 
         <div class="students-toolbar">
@@ -69,6 +69,12 @@
     </div>
 
     @include('students.partials.student-modal')
+    @include('students.partials.student-form-modal', [
+        'classes' => $classes,
+        'academicYears' => $academicYears,
+        'isOpen' => $errors->any() || request()->get('open') === 'create',
+    ])
 
     <script src="{{ asset('js/students/modal.js') }}" defer></script>
+    <script src="{{ asset('js/students/form-modal.js') }}" defer></script>
 </x-app-layout>
