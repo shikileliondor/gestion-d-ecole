@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('student_classes', function (Blueprint $table) {
+            $table->comment('Tracks student assignments to classes per academic year.');
+            $table->id();
+            $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
+            $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
+            $table->foreignId('academic_year_id')->constrained('academic_years')->cascadeOnDelete();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->enum('status', ['active', 'transferred', 'completed'])->default('active')->index();
+            $table->timestamp('assigned_at')->nullable();
+            $table->timestamps();
+
+            $table->unique(['student_id', 'class_id', 'academic_year_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('student_classes');
+    }
+};
