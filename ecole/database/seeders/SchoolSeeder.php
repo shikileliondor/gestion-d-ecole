@@ -20,7 +20,7 @@ class SchoolSeeder extends Seeder
                 'registration_number' => 'REG-2024-001',
                 'address' => '1 Rue Principale',
                 'city' => 'Abidjan',
-                'country' => 'Cote d'Ivoire',
+                'country' => 'Cote dIvoire',
                 'phone' => '+2250102030405',
                 'email' => 'contact@ecole-demo.test',
                 'website' => 'https://ecole-demo.test',
