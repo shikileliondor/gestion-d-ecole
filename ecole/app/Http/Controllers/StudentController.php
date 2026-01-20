@@ -127,6 +127,20 @@ class StudentController extends Controller
                     $validator->errors()->add('parent_last_name', 'Le nom du parent est requis.');
                 }
             }
+
+            if ($request->filled('class_id') && $request->filled('academic_year_id')) {
+                $matchesYear = SchoolClass::query()
+                    ->whereKey($request->input('class_id'))
+                    ->where('academic_year_id', $request->input('academic_year_id'))
+                    ->exists();
+
+                if (! $matchesYear) {
+                    $validator->errors()->add(
+                        'class_id',
+                        "La classe sélectionnée ne correspond pas à l'année scolaire choisie."
+                    );
+                }
+            }
         });
 
         $data = $validator->validate();
