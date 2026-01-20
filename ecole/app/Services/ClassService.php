@@ -133,9 +133,9 @@ class ClassService
             $student = Student::query()->findOrFail($data['student_id']);
 
             if ($student->school_id !== $class->school_id) {
-                throw ValidationException::withMessages([
+                throw ValidationException::withMessages(array(
                     'student_id' => "L'élève sélectionné n'appartient pas à la même école.",
-                ]);
+                ));
             }
 
             $alreadyAssigned = StudentClass::query()
