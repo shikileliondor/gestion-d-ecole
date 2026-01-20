@@ -38,7 +38,12 @@
                         <option value="">Sélectionner</option>
                         @foreach ($subjects as $subject)
                             <option value="{{ $subject->id }}" @selected(old('subject_id') == $subject->id)>
-                                {{ $subject->name }}@if ($subject->level) ({{ $subject->level }})@endif
+                                {{ $subject->name }}
+                                @if ($subject->level)
+                                    ({{ $subject->level }}@if ($subject->series) • Série {{ $subject->series }}@endif)
+                                @elseif ($subject->series)
+                                    (Série {{ $subject->series }})
+                                @endif
                             </option>
                         @endforeach
                     </select>
@@ -47,19 +52,29 @@
                     @endif
                 </div>
                 <div class="form-field">
-                    <label for="teacher_id">Enseignant</label>
-                    <select id="teacher_id" name="teacher_id">
-                        <option value="">Aucun</option>
+                    <label for="teacher_ids">Enseignants (multi-sélection)</label>
+                    <select id="teacher_ids" name="teacher_ids[]" multiple size="5">
                         @foreach ($staff as $member)
-                            <option value="{{ $member->id }}" @selected(old('teacher_id') == $member->id)>
+                            <option value="{{ $member->id }}" @selected(collect(old('teacher_ids', []))->contains($member->id))>
                                 {{ $member->last_name }} {{ $member->first_name }}
                             </option>
                         @endforeach
                     </select>
+                    <p class="helper-text">Maintenez Ctrl/⌘ pour sélectionner plusieurs enseignants.</p>
+                    @if ($assignSubjectErrors->has('teacher_ids'))
+                        <span class="error-text">{{ $assignSubjectErrors->first('teacher_ids') }}</span>
+                    @endif
                 </div>
                 <div class="form-field">
                     <label for="coefficient">Coefficient</label>
                     <input id="coefficient" name="coefficient" type="number" min="1" value="{{ old('coefficient', 1) }}">
+                </div>
+                <div class="form-field">
+                    <label for="color">Couleur matière</label>
+                    <input id="color" name="color" type="color" value="{{ old('color', '#1d4ed8') }}">
+                    @if ($assignSubjectErrors->has('color'))
+                        <span class="error-text">{{ $assignSubjectErrors->first('color') }}</span>
+                    @endif
                 </div>
                 <div class="form-field form-field--full">
                     <label class="checkbox">
@@ -74,5 +89,14 @@
                 <button type="submit" class="primary-button">Affecter la matière</button>
             </div>
         </form>
+
+        <div class="modal__divider"></div>
+        <div class="subject-summary">
+            <h3>Matières déjà affectées</h3>
+            <p class="helper-text">Vérifiez les enseignants associés et les couleurs utilisées pour l'emploi du temps.</p>
+            <div class="subject-summary__list" data-subject-summary>
+                <p class="helper-text">Sélectionnez une classe pour voir ses matières.</p>
+            </div>
+        </div>
     </div>
 </div>

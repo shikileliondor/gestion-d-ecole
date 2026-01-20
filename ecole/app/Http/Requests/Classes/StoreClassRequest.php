@@ -17,6 +17,7 @@ class StoreClassRequest extends FormRequest
             'academic_year_id' => ['required', 'integer', 'exists:academic_years,id'],
             'name' => ['required', 'string', 'max:255'],
             'level' => ['nullable', 'string', 'max:50'],
+            'series' => ['nullable', 'string', 'max:50'],
             'section' => ['nullable', 'string', 'max:50'],
             'room' => ['nullable', 'string', 'max:50'],
             'capacity' => ['nullable', 'integer', 'min:1'],

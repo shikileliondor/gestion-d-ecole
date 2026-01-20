@@ -16,9 +16,10 @@
         <div class="classes-header">
             <div>
                 <h1>Classes & Matières</h1>
-                <p>Gestion des classes, effectifs et programmes</p>
+                <p>Gestion des classes, matières et enseignants</p>
             </div>
             <div class="header-actions">
+                <button class="secondary-button" type="button" data-modal-open="series">Gérer les séries</button>
                 <button class="secondary-button" type="button" data-modal-open="subject">+ Ajouter une matière</button>
                 <button class="primary-button" type="button" data-modal-open="class">+ Ajouter une classe</button>
             </div>
@@ -51,8 +52,11 @@
                             <h3>{{ $class->name }}</h3>
                             <p>
                                 {{ $class->level ?? 'Niveau non défini' }}
+                                @if ($class->series)
+                                    • Série {{ $class->series }}
+                                @endif
                                 @if ($class->section)
-                                    • {{ $class->section }}
+                                    • Groupe {{ $class->section }}
                                 @endif
                             </p>
                         </div>
@@ -107,6 +111,22 @@
                             data-modal-open="assign-subject"
                             data-action="{{ route('classes.subjects.assign', $class) }}"
                             data-class-name="{{ $class->name }}"
+                            data-class-subjects='@json($class->subjectAssignments->map(function ($assignment) {
+                                $teachers = $assignment->teachers->map(fn ($teacher) => trim($teacher->last_name.' '.$teacher->first_name));
+
+                                if ($teachers->isEmpty() && $assignment->teacher) {
+                                    $teachers = collect([trim($assignment->teacher->last_name.' '.$assignment->teacher->first_name)]);
+                                }
+
+                                return [
+                                    'name' => $assignment->subject?->name,
+                                    'level' => $assignment->subject?->level,
+                                    'series' => $assignment->subject?->series,
+                                    'coefficient' => $assignment->coefficient,
+                                    'color' => $assignment->color,
+                                    'teachers' => $teachers->values(),
+                                ];
+                            }))'
                         >
                             Ajouter une matière
                         </button>
@@ -124,9 +144,15 @@
     @include('classes.partials.class-form-modal', [
         'academicYears' => $academicYears,
         'isOpen' => $classFormErrors->any(),
+        'seriesOptions' => $seriesOptions ?? [],
     ])
     @include('classes.partials.subject-form-modal', [
         'isOpen' => $subjectFormErrors->any(),
+        'seriesOptions' => $seriesOptions ?? [],
+    ])
+    @include('classes.partials.series-form-modal', [
+        'isOpen' => false,
+        'seriesOptions' => $seriesOptions ?? [],
     ])
     @include('classes.partials.assign-student-modal', [
         'students' => $students,
@@ -137,6 +163,12 @@
         'staff' => $staff,
         'isOpen' => $assignSubjectErrors->any(),
     ])
+
+    <datalist id="series-options">
+        @foreach ($seriesOptions ?? [] as $seriesOption)
+            <option value="{{ $seriesOption }}"></option>
+        @endforeach
+    </datalist>
 
     <script src="{{ asset('js/classes/modals.js') }}" defer></script>
 </x-app-layout>

@@ -14,7 +14,7 @@
         <div class="modal__header">
             <div>
                 <h2>Créer une matière</h2>
-                <p>Ajoutez une matière commune ou spécifique à un niveau.</p>
+                <p>Ajoutez une matière commune ou spécifique à un niveau ou une série.</p>
             </div>
             <button type="button" class="icon-button" data-modal-close aria-label="Fermer">
                 ✕
@@ -37,7 +37,11 @@
                 </div>
                 <div class="form-field">
                     <label for="subject_level">Niveau (optionnel)</label>
-                    <input id="subject_level" name="level" type="text" value="{{ old('level') }}" placeholder="Ex: Collège">
+                    <input id="subject_level" name="level" type="text" value="{{ old('level') }}" placeholder="Ex: 6e, Seconde, Terminale">
+                </div>
+                <div class="form-field">
+                    <label for="subject_series">Série ciblée (optionnel)</label>
+                    <input id="subject_series" name="series" type="text" value="{{ old('series') }}" list="series-options" placeholder="A, C, D, Littéraire">
                 </div>
                 <div class="form-field">
                     <label for="subject_hours">Crédits / heures</label>
@@ -61,5 +65,6 @@
                 <button type="submit" class="primary-button">Créer la matière</button>
             </div>
         </form>
+
     </div>
 </div>

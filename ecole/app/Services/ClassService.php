@@ -30,6 +30,7 @@ class ClassService
                 'academic_year_id' => $data['academic_year_id'],
                 'name' => $data['name'],
                 'level' => $data['level'] ?? null,
+                'series' => $data['series'] ?? null,
                 'section' => $data['section'] ?? null,
                 'room' => $data['room'] ?? null,
                 'capacity' => $data['capacity'] ?? null,
@@ -63,6 +64,7 @@ class ClassService
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'level' => $data['level'] ?? null,
+                'series' => $data['series'] ?? null,
                 'description' => $data['description'] ?? null,
                 'credit_hours' => $data['credit_hours'] ?? null,
                 'status' => $data['status'] ?? 'active',
@@ -81,17 +83,31 @@ class ClassService
                 ]);
             }
 
-            if (filled($data['teacher_id'] ?? null)) {
-                $teacher = Staff::query()->findOrFail($data['teacher_id']);
+            $teacherIds = array_unique(array_filter($data['teacher_ids'] ?? []));
 
+            if (filled($data['teacher_id'] ?? null)) {
+                $teacherIds[] = $data['teacher_id'];
+            }
+
+            $teachers = Staff::query()
+                ->whereIn('id', $teacherIds)
+                ->get();
+
+            if ($teacherIds && $teachers->count() !== count($teacherIds)) {
+                throw ValidationException::withMessages([
+                    'teacher_ids' => 'Un ou plusieurs enseignants sont invalides.',
+                ]);
+            }
+
+            foreach ($teachers as $teacher) {
                 if ($teacher->school_id !== $class->school_id) {
                     throw ValidationException::withMessages([
-                        'teacher_id' => "L'enseignant sélectionné n'appartient pas à la même école.",
+                        'teacher_ids' => "Un ou plusieurs enseignants n'appartiennent pas à la même école.",
                     ]);
                 }
             }
 
-            return ClassSubject::updateOrCreate(
+            $assignment = ClassSubject::updateOrCreate(
                 [
                     'class_id' => $class->id,
                     'subject_id' => $subject->id,
@@ -100,9 +116,14 @@ class ClassService
                 [
                     'teacher_id' => $data['teacher_id'] ?? null,
                     'coefficient' => $data['coefficient'] ?? 1,
+                    'color' => $data['color'] ?? null,
                     'is_optional' => (bool) ($data['is_optional'] ?? false),
                 ]
             );
+
+            $assignment->teachers()->sync($teachers->pluck('id')->all());
+
+            return $assignment;
         });
     }
 

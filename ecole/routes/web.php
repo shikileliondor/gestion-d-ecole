@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/classes/subjects', [SchoolClassController::class, 'storeSubject'])->name('classes.subjects.store');
     Route::post('/classes/{class}/subjects', [SchoolClassController::class, 'assignSubject'])
         ->name('classes.subjects.assign');
+    Route::post('/classes/series', [SchoolClassController::class, 'storeSeries'])->name('classes.series.store');
     Route::post('/classes/{class}/students', [SchoolClassController::class, 'assignStudent'])
         ->name('classes.students.assign');
 

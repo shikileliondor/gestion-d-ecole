@@ -14,7 +14,7 @@
         <div class="modal__header">
             <div>
                 <h2>Créer une classe</h2>
-                <p>Définissez le niveau et l'effectif manuellement.</p>
+                <p>Définissez le niveau (6e à Terminale), la série et l'effectif.</p>
             </div>
             <button type="button" class="icon-button" data-modal-close aria-label="Fermer">
                 ✕
@@ -44,10 +44,14 @@
                 </div>
                 <div class="form-field">
                     <label for="level">Niveau</label>
-                    <input id="level" name="level" type="text" value="{{ old('level') }}" placeholder="Collège / Lycée">
+                    <input id="level" name="level" type="text" value="{{ old('level') }}" placeholder="6e, 5e, Seconde, Terminale">
                 </div>
                 <div class="form-field">
-                    <label for="section">Section</label>
+                    <label for="series">Série (optionnelle)</label>
+                    <input id="series" name="series" type="text" value="{{ old('series') }}" list="series-options" placeholder="A, C, D, Littéraire">
+                </div>
+                <div class="form-field">
+                    <label for="section">Groupe</label>
                     <input id="section" name="section" type="text" value="{{ old('section') }}" placeholder="A, B, C">
                 </div>
                 <div class="form-field">
@@ -70,6 +74,7 @@
                     </select>
                 </div>
             </div>
+
 
             <div class="modal__actions">
                 <button type="button" class="ghost-button" data-modal-close>Annuler</button>
