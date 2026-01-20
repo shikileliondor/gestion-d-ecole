@@ -53,6 +53,12 @@
             'url' => '#',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7.5 9.75h9m-9 3h5.25M6 18.75h6l4.5 3v-3h1.5A3.75 3.75 0 0021.75 15V7.5A3.75 3.75 0 0018 3.75H6A3.75 3.75 0 002.25 7.5V15A3.75 3.75 0 006 18.75z" />',
         ],
+        [
+            'label' => 'Paramètres',
+            'route' => 'settings.index',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3m-7.5 0h1.5m9 0h1.5m-12 6h3m6 0h3m-12 6h1.5m9 0h1.5m-7.5 0h3" />',
+            'active' => request()->routeIs('settings.*'),
+        ],
     ];
 @endphp
 
