@@ -1,0 +1,354 @@
+:root {
+    --primary: #1d4ed8;
+    --primary-dark: #1e40af;
+    --text-dark: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --bg-soft: #f8fafc;
+    --success: #dcfce7;
+    --success-text: #15803d;
+    --danger: #fee2e2;
+    --danger-text: #b91c1c;
+}
+
+.classes-page {
+    font-family: 'Poppins', sans-serif;
+    padding: 32px 48px 48px;
+    background: #ffffff;
+    min-height: 100vh;
+}
+
+.classes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.classes-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--text-dark);
+}
+
+.classes-header p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.primary-button,
+.secondary-button,
+.outline-button,
+.ghost-button {
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.primary-button:hover {
+    background: var(--primary-dark);
+}
+
+.secondary-button {
+    background: #e0e7ff;
+    color: var(--primary-dark);
+}
+
+.secondary-button:hover {
+    background: #c7d2fe;
+}
+
+.outline-button {
+    background: #fff;
+    color: var(--primary-dark);
+    border: 1px solid #c7d2fe;
+}
+
+.outline-button:hover {
+    background: #eef2ff;
+}
+
+.ghost-button {
+    background: #f1f5f9;
+    color: var(--text-dark);
+}
+
+.alert {
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert.success {
+    background: var(--success);
+    color: var(--success-text);
+}
+
+.alert.error {
+    background: var(--danger);
+    color: var(--danger-text);
+}
+
+.alert ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+}
+
+.classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.class-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.class-card__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.class-card__header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--text-dark);
+}
+
+.class-card__header p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.badge {
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.class-card__stats {
+    display: grid;
+    gap: 12px;
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.stat span {
+    color: var(--text-muted);
+}
+
+.stat strong {
+    font-weight: 600;
+}
+
+.headcount-form label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.inline-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.inline-input input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.class-card__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    border: 1px dashed var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.modal.is-open {
+    display: flex;
+}
+
+.modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.modal__content {
+    position: relative;
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    width: min(640px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25);
+}
+
+.modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.modal__header h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    color: var(--text-dark);
+}
+
+.modal__header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-dark);
+}
+
+.form-field--full {
+    grid-column: 1 / -1;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.form-field textarea {
+    resize: vertical;
+}
+
+.error-text {
+    color: var(--danger-text);
+    font-size: 12px;
+}
+
+.modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.icon-button {
+    border: none;
+    background: rgba(29, 78, 216, 0.12);
+    color: var(--primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .classes-page {
+        padding: 24px;
+    }
+
+    .class-card__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .inline-input {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

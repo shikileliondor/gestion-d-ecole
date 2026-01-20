@@ -20,8 +20,9 @@
         ],
         [
             'label' => 'Classes & Matières',
-            'url' => '#',
+            'route' => 'classes.index',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 5.25h7.5m-7.5 0v13.5m0-13.5L15 4.5m-3 0v13.5m0-13.5h7.5m-7.5 0v13.5" />',
+            'active' => request()->routeIs('classes.*'),
         ],
         [
             'label' => 'Notes & Bulletins',

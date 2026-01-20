@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
@@ -23,6 +24,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
     Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
+
+    Route::get('/classes', [SchoolClassController::class, 'index'])->name('classes.index');
+    Route::post('/classes', [SchoolClassController::class, 'store'])->name('classes.store');
+    Route::patch('/classes/{class}/headcount', [SchoolClassController::class, 'updateHeadcount'])
+        ->name('classes.headcount.update');
+    Route::post('/classes/subjects', [SchoolClassController::class, 'storeSubject'])->name('classes.subjects.store');
+    Route::post('/classes/{class}/subjects', [SchoolClassController::class, 'assignSubject'])
+        ->name('classes.subjects.assign');
+    Route::post('/classes/{class}/students', [SchoolClassController::class, 'assignStudent'])
+        ->name('classes.students.assign');
 
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
