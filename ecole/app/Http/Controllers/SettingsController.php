@@ -133,8 +133,8 @@ class SettingsController extends Controller
             $terms = $request->input('terms', []);
 
             foreach ($terms as $index => $term) {
-                $startDate = $term['start_date'] ?? null;
-                $endDate = $term['end_date'] ?? null;
+                $startDate = data_get($term, 'start_date');
+                $endDate = data_get($term, 'end_date');
 
                 if ($startDate && $endDate && $endDate < $startDate) {
                     $validator->errors()->add("terms.$index.end_date", 'La date de fin doit être postérieure à la date de début.');
