@@ -20,29 +20,12 @@ class StaffController extends Controller
 {
     public function index(): View
     {
-        $staffMembers = Staff::query()
-            ->select('staff.*')
-            ->addSelect([
-                'contract_type' => StaffContract::query()
-                    ->select('contract_type')
-                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
-                    ->latest('staff_contracts.start_date')
-                    ->limit(1),
-                'contract_id' => StaffContract::query()
-                    ->select('id')
-                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
-                    ->latest('staff_contracts.start_date')
-                    ->limit(1),
-            ])
-            ->orderBy('staff.last_name')
-            ->orderBy('staff.first_name')
-            ->get();
+        return $this->renderStaffList(false);
+    }
 
-        $subjects = Subject::query()
-            ->orderBy('name')
-            ->get();
-
-        return view('staff.index', compact('staffMembers', 'subjects'));
+    public function teachers(): View
+    {
+        return $this->renderStaffList(true);
     }
 
     public function store(Request $request): RedirectResponse
@@ -204,5 +187,55 @@ class StaffController extends Controller
         $nextNumber = str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
 
         return 'EMP' . $nextNumber;
+    }
+
+    private function renderStaffList(bool $onlyTeachers): View
+    {
+        $staffMembers = Staff::query()
+            ->select('staff.*')
+            ->addSelect([
+                'contract_type' => StaffContract::query()
+                    ->select('contract_type')
+                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
+                    ->latest('staff_contracts.start_date')
+                    ->limit(1),
+                'contract_id' => StaffContract::query()
+                    ->select('id')
+                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
+                    ->latest('staff_contracts.start_date')
+                    ->limit(1),
+            ])
+            ->when($onlyTeachers, function ($query) {
+                $query->where('position', 'Enseignant');
+            }, function ($query) {
+                $query->where(function ($filter) {
+                    $filter->whereNull('position')
+                        ->orWhere('position', '!=', 'Enseignant');
+                });
+            })
+            ->with(['assignments.subject'])
+            ->orderBy('staff.last_name')
+            ->orderBy('staff.first_name')
+            ->get();
+
+        $subjects = Subject::query()
+            ->orderBy('name')
+            ->get();
+
+        return view('staff.cards', [
+            'staffMembers' => $staffMembers,
+            'subjects' => $subjects,
+            'title' => $onlyTeachers ? 'Gestion des professeurs' : 'Gestion du personnel',
+            'subtitle' => $onlyTeachers
+                ? 'Suivi des professeurs et de leurs matières'
+                : 'Suivi des contrats et affectations pédagogiques',
+            'ctaLabel' => $onlyTeachers ? 'Ajouter un professeur' : 'Ajouter un membre',
+            'identifierLabel' => $onlyTeachers ? 'Identifiant professeur' : 'Identifiant personnel',
+            'profileTitle' => $onlyTeachers ? 'Fiche professeur' : 'Fiche personnel',
+            'formEyebrow' => $onlyTeachers ? 'Nouveau professeur' : 'Nouveau personnel',
+            'formTitle' => $onlyTeachers ? 'Ajouter un professeur' : 'Ajouter un membre du personnel',
+            'defaultPosition' => $onlyTeachers ? 'Enseignant' : '',
+            'isTeacherList' => $onlyTeachers,
+        ]);
     }
 }

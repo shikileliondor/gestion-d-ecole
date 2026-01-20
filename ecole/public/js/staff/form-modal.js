@@ -1,11 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('staff-form-modal');
-    const openButton = document.querySelector('[data-form-modal-open]');
+    const openButtons = document.querySelectorAll('[data-form-modal-open]');
     const closeButtons = modal?.querySelectorAll('[data-form-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-form-tab]') || [];
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
     const positionInput = modal?.querySelector('#position');
     const subjectSelect = modal?.querySelector('#subjects');
+    const formTitle = modal?.querySelector('[data-form-title]');
+    const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
 
     if (!modal) {
         return;
@@ -32,10 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const openModal = () => {
+    const openModal = (button) => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         activateTab('identity');
+        if (button) {
+            if (formTitle && button.dataset.formTitle) {
+                formTitle.textContent = button.dataset.formTitle;
+            }
+            if (formEyebrow && button.dataset.formEyebrow) {
+                formEyebrow.textContent = button.dataset.formEyebrow;
+            }
+            if (positionInput && button.dataset.defaultPosition !== undefined) {
+                positionInput.value = button.dataset.defaultPosition;
+                toggleSubjects();
+            }
+        }
     };
 
     const closeModal = () => {
@@ -52,9 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
         subjectSelect.closest('.form-field')?.classList.toggle('is-disabled', !isTeacher);
     };
 
-    if (openButton) {
-        openButton.addEventListener('click', openModal);
-    }
+    openButtons.forEach((button) => {
+        button.addEventListener('click', () => openModal(button));
+    });
 
     closeButtons.forEach((button) => {
         button.addEventListener('click', closeModal);

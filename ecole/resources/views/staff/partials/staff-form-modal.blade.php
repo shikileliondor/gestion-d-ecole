@@ -10,8 +10,8 @@
     <div class="staff-form-modal__content">
         <header class="staff-form-modal__header">
             <div>
-                <p class="eyebrow">Nouveau personnel</p>
-                <h2 id="staff-form-title">Ajouter un membre du personnel</h2>
+                <p class="eyebrow" data-form-eyebrow>{{ $formEyebrow ?? 'Nouveau personnel' }}</p>
+                <h2 id="staff-form-title" data-form-title>{{ $formTitle ?? 'Ajouter un membre du personnel' }}</h2>
             </div>
             <button class="icon-button" type="button" data-form-modal-close aria-label="Fermer">
                 <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">

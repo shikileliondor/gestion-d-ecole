@@ -14,9 +14,19 @@
         ],
         [
             'label' => 'Personnel',
-            'route' => 'staff.index',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25a3 3 0 11-6 0 3 3 0 016 0zM19.5 19.5a6 6 0 00-15 0" />',
-            'active' => request()->routeIs('staff.*'),
+            'children' => [
+                [
+                    'label' => 'Professeurs',
+                    'route' => 'teachers.index',
+                    'active' => request()->routeIs('teachers.*'),
+                ],
+                [
+                    'label' => "Personnel de l'école",
+                    'route' => 'staff.index',
+                    'active' => request()->routeIs('staff.*'),
+                ],
+            ],
         ],
         [
             'label' => 'Classes & Matières',
@@ -73,19 +83,49 @@
         <nav class="mt-10 flex-1 space-y-2">
             @foreach ($links as $link)
                 @php
+                    $hasChildren = isset($link['children']);
                     $isActive = $link['active'] ?? false;
                     $href = isset($link['route']) ? route($link['route']) : ($link['url'] ?? '#');
                 @endphp
-                <a
-                    href="{{ $href }}"
-                    class="{{ $isActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
-                    @if ($isActive) aria-current="page" @endif
-                >
-                    <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
-                        {!! $link['icon'] !!}
-                    </svg>
-                    <span>{{ $link['label'] }}</span>
-                </a>
+                @if ($hasChildren)
+                    @php
+                        $childActive = collect($link['children'])->contains(fn ($child) => $child['active'] ?? false);
+                    @endphp
+                    <div class="space-y-1">
+                        <div class="{{ $childActive ? 'text-blue-600' : 'text-slate-600' }} flex items-center gap-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                {!! $link['icon'] !!}
+                            </svg>
+                            <span>{{ $link['label'] }}</span>
+                        </div>
+                        <div class="space-y-1 pl-8">
+                            @foreach ($link['children'] as $child)
+                                @php
+                                    $childHref = isset($child['route']) ? route($child['route']) : ($child['url'] ?? '#');
+                                    $childIsActive = $child['active'] ?? false;
+                                @endphp
+                                <a
+                                    href="{{ $childHref }}"
+                                    class="{{ $childIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                                    @if ($childIsActive) aria-current="page" @endif
+                                >
+                                    <span>{{ $child['label'] }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <a
+                        href="{{ $href }}"
+                        class="{{ $isActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                        @if ($isActive) aria-current="page" @endif
+                    >
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                            {!! $link['icon'] !!}
+                        </svg>
+                        <span>{{ $link['label'] }}</span>
+                    </a>
+                @endif
             @endforeach
         </nav>
     </div>

@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('[data-staff-search]');
-    const rows = document.querySelectorAll('[data-staff-row]');
+    const cards = document.querySelectorAll('[data-staff-card]');
 
     if (!searchInput) {
         return;
@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filterRows = () => {
         const query = normalize(searchInput.value);
-        rows.forEach((row) => {
-            const staffId = normalize(row.querySelector('[data-staff-id]')?.textContent);
-            const staffName = normalize(row.querySelector('[data-staff-name]')?.textContent);
-            const staffPosition = normalize(row.querySelector('[data-staff-position]')?.textContent);
+        cards.forEach((card) => {
+            const staffId = normalize(card.querySelector('[data-staff-id]')?.textContent);
+            const staffName = normalize(card.querySelector('[data-staff-name]')?.textContent);
+            const staffPosition = normalize(card.querySelector('[data-staff-position]')?.textContent);
             const matches = [staffId, staffName, staffPosition].some((field) => field.includes(query));
-            row.style.display = matches ? '' : 'none';
+            card.style.display = matches ? '' : 'none';
         });
     };
 
