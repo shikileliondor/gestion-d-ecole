@@ -1,10 +1,17 @@
-<div class="staff-modal" id="staff-modal" aria-hidden="true" role="dialog" aria-labelledby="staff-modal-title">
+<div
+    class="staff-modal"
+    id="staff-modal"
+    aria-hidden="true"
+    role="dialog"
+    aria-labelledby="staff-modal-title"
+    data-modal-title="{{ $profileTitle ?? 'Fiche personnel' }}"
+>
     <div class="staff-modal__overlay" data-staff-modal-close></div>
     <div class="staff-modal__content">
         <header class="staff-modal__header">
             <div>
-                <p class="eyebrow">Fiche personnel</p>
-                <h2 id="staff-modal-title">Fiche personnel</h2>
+                <p class="eyebrow">{{ $profileTitle ?? 'Fiche personnel' }}</p>
+                <h2 id="staff-modal-title">{{ $profileTitle ?? 'Fiche personnel' }}</h2>
             </div>
             <button class="icon-button" type="button" data-staff-modal-close aria-label="Fermer">
                 <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
@@ -21,7 +28,7 @@
         <div class="staff-modal__panel is-active" data-panel="info" role="tabpanel">
             <div class="info-grid">
                 <div>
-                    <p class="label">ID employé</p>
+                    <p class="label">{{ $identifierLabel ?? 'ID employé' }}</p>
                     <p class="value" data-field="staff_number">—</p>
                 </div>
                 <div>

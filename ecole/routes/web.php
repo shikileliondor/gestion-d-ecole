@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
         ->name('classes.students.assign');
 
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::get('/teachers', [StaffController::class, 'teachers'])->name('teachers.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
     Route::get('/staff/contracts/{id}/download', [StaffController::class, 'downloadContract'])

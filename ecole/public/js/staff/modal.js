@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('staff-modal');
     const modalTitle = modal?.querySelector('#staff-modal-title');
-    const openButtons = document.querySelectorAll('[data-staff-id]');
+    const openButtons = document.querySelectorAll('[data-staff-modal-open]');
     const closeButtons = modal?.querySelectorAll('[data-staff-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-tab]') || [];
     const panels = modal?.querySelectorAll('[data-panel]') || [];
@@ -88,7 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'false');
         activateTab('info');
         if (modalTitle) {
-            modalTitle.textContent = `Fiche personnel - ${staffName}`;
+            const prefix = modal.dataset.modalTitle || 'Fiche personnel';
+            modalTitle.textContent = `${prefix} - ${staffName}`;
         }
 
         setText(infoFields.staff_number, '—');
