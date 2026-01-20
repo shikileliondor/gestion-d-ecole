@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
     Route::get('/staff/contracts/{id}/download', [StaffController::class, 'downloadContract'])
         ->name('staff.contracts.download');
+
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/academic-years', [SettingsController::class, 'storeAcademicYear'])
+        ->name('settings.academic-years.store');
+    Route::post('/settings/academic-years/{academicYear}/status', [SettingsController::class, 'updateAcademicYearStatus'])
+        ->name('settings.academic-years.status');
+    Route::post('/settings/academic-years/{academicYear}/terms', [SettingsController::class, 'storeTerms'])
+        ->name('settings.academic-years.terms.store');
+    Route::post('/settings/fees', [SettingsController::class, 'storeFee'])->name('settings.fees.store');
 });
 
 require __DIR__.'/auth.php';
