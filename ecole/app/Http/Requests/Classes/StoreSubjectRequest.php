@@ -17,6 +17,7 @@ class StoreSubjectRequest extends FormRequest
             'code' => ['required', 'string', 'max:50', 'unique:subjects,code'],
             'name' => ['required', 'string', 'max:255'],
             'level' => ['nullable', 'string', 'max:50'],
+            'series' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'credit_hours' => ['nullable', 'integer', 'min:1'],
             'status' => ['nullable', 'in:active,inactive'],

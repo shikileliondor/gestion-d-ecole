@@ -10,6 +10,7 @@ use App\Http\Requests\Classes\UpdateClassHeadcountRequest;
 use App\Models\AcademicYear;
 use App\Models\School;
 use App\Models\SchoolClass;
+use App\Models\Setting;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Subject;
@@ -26,6 +27,7 @@ class SchoolClassController extends Controller
         $classes = SchoolClass::query()
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
             ->with('academicYear')
+            ->with(['subjectAssignments.subject', 'subjectAssignments.teacher', 'subjectAssignments.teachers'])
             ->withCount(['studentAssignments', 'subjectAssignments'])
             ->orderBy('name')
             ->get();
@@ -51,7 +53,16 @@ class SchoolClassController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('classes.index', compact('classes', 'academicYears', 'subjects', 'students', 'staff'));
+        $seriesSetting = Setting::query()
+            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+            ->where('group', 'classes')
+            ->where('key', 'series')
+            ->value('value');
+
+        $seriesOptions = $seriesSetting ? json_decode($seriesSetting, true) : [];
+        $seriesOptions = is_array($seriesOptions) ? $seriesOptions : [];
+
+        return view('classes.index', compact('classes', 'academicYears', 'subjects', 'students', 'staff', 'seriesOptions'));
     }
 
     public function store(StoreClassRequest $request, ClassService $service): RedirectResponse
@@ -98,5 +109,40 @@ class SchoolClassController extends Controller
         $service->assignStudent($class, $request->validated());
 
         return back()->with('status', "L'élève a été affecté à la classe.");
+    }
+
+    public function storeSeries(\Illuminate\Http\Request $request): RedirectResponse
+    {
+        $schoolId = School::query()->value('id');
+
+        if (! $schoolId) {
+            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])->withInput();
+        }
+
+        $data = $request->validate([
+            'series_list' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $series = collect(explode(',', $data['series_list'] ?? ''))
+            ->map(fn ($value) => trim($value))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        Setting::query()->updateOrCreate(
+            [
+                'school_id' => $schoolId,
+                'group' => 'classes',
+                'key' => 'series',
+            ],
+            [
+                'value' => json_encode($series, JSON_UNESCAPED_UNICODE),
+                'type' => 'json',
+                'is_public' => true,
+            ]
+        );
+
+        return back()->with('status', 'Les séries ont été mises à jour.');
     }
 }
