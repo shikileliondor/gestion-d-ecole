@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionInput = modal.querySelector('[data-action-input]');
         const classLabelInput = modal.querySelector('[data-class-input]');
         const subjectSummary = modal.querySelector('[data-subject-summary]');
+        const timetable = modal.querySelector('[data-timetable]');
 
         if (actionTarget) {
             const action = trigger?.dataset?.action || actionTarget.dataset.actionFallback;
@@ -107,6 +108,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.appendChild(teachers);
                     item.appendChild(color);
                     subjectSummary.appendChild(item);
+                });
+            }
+        }
+
+        if (timetable) {
+            const subjects = trigger?.dataset?.classSubjects
+                ? JSON.parse(trigger.dataset.classSubjects)
+                : [];
+            const subjectNames = subjects.map((subject) => subject.name).filter(Boolean);
+            if (subjectNames.length) {
+                const uniqueNames = [...new Set(subjectNames)];
+                const lessonPills = timetable.querySelectorAll('.lesson-pill');
+                lessonPills.forEach((pill, index) => {
+                    const subject = uniqueNames[index % uniqueNames.length];
+                    const subjectColor = subjects.find((item) => item.name === subject)?.color;
+                    const [name, meta] = pill.innerHTML.split('<br>');
+                    pill.innerHTML = `${subject}<br>${meta || '<span>Enseignant à définir • Salle à préciser</span>'}`;
+                    if (subjectColor) {
+                        pill.style.setProperty('--lesson-color', subjectColor);
+                    }
                 });
             }
         }
