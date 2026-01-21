@@ -119,20 +119,36 @@
                         <p class="helper-text">Cliquez sur un créneau pour le modifier ou le supprimer.</p>
                     </div>
                     <div class="board-actions">
+                        <div class="timetable-view-toggle" role="tablist" aria-label="Changer la vue">
+                            <button class="ghost-button" type="button" data-timetable-view="list">Vue liste</button>
+                            <button class="ghost-button" type="button" data-timetable-view="grid">Vue grille</button>
+                        </div>
                         <button class="secondary-button" type="button" data-clear-schedule>Tout effacer</button>
                     </div>
                 </div>
-                <div class="timetable-days" data-timetable-days></div>
-                <div class="timetable-empty" data-timetable-empty hidden>
-                    <strong>Aucun créneau pour le moment.</strong>
-                    <p>Ajoutez un cours ou une pause pour commencer.</p>
+                <div class="timetable-view" data-timetable-view-container="list">
+                    <div class="timetable-days" data-timetable-days></div>
+                    <div class="timetable-empty" data-timetable-empty hidden>
+                        <strong>Aucun créneau pour le moment.</strong>
+                        <p>Ajoutez un cours ou une pause pour commencer.</p>
+                    </div>
+                </div>
+                <div class="timetable-view" data-timetable-view-container="grid" hidden>
+                    <div class="timetable-grid" data-timetable-grid></div>
+                    <div class="timetable-grid-empty" data-timetable-grid-empty hidden>
+                        <strong>Aucun créneau pour le moment.</strong>
+                        <p>Ajoutez un cours ou une pause pour commencer.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="timetable-footer">
             <div class="legend" data-timetable-legend></div>
-            <button class="primary-button" type="button">Enregistrer le planning</button>
+            <div class="timetable-footer__actions">
+                <span class="timetable-save-status" data-timetable-save-status></span>
+                <button class="primary-button" type="button" data-save-timetable>Enregistrer le planning</button>
+            </div>
         </div>
     </div>
 </div>
