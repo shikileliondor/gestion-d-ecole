@@ -614,6 +614,30 @@
     margin-bottom: 16px;
 }
 
+.board-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.timetable-view-toggle {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.timetable-view-toggle .ghost-button.is-active {
+    background: var(--primary);
+    color: #fff;
+}
+
+.timetable-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .timetable-days {
     display: grid;
     gap: 14px;
@@ -700,6 +724,69 @@
     text-align: center;
 }
 
+.timetable-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+
+.timetable-grid__row {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: var(--timetable-time-width, 120px) repeat(var(--day-columns, 5), minmax(180px, 1fr));
+    align-items: stretch;
+}
+
+.timetable-grid__cell {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+    min-height: 72px;
+}
+
+.timetable-grid__cell--header {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.timetable-grid__cell--time {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.timetable-grid__cell--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    background: #f8fafc;
+}
+
+.timetable-grid-empty {
+    padding: 16px;
+    border-radius: 14px;
+    background: #fff7ed;
+    border: 1px dashed #fdba74;
+    color: #7c2d12;
+    text-align: center;
+}
+
 .timetable-footer {
     display: flex;
     flex-wrap: wrap;
@@ -707,6 +794,22 @@
     justify-content: space-between;
     gap: 12px;
     margin-top: 16px;
+}
+
+.timetable-footer__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.timetable-save-status {
+    font-size: 12px;
+    color: var(--success-text);
+}
+
+.timetable-save-status.is-error {
+    color: var(--danger-text);
 }
 
 .legend {

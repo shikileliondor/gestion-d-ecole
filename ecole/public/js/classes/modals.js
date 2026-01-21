@@ -174,8 +174,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const slotIdInput = modal.querySelector('[data-slot-id]');
             const timetableDays = modal.querySelector('[data-timetable-days]');
             const timetableEmpty = modal.querySelector('[data-timetable-empty]');
+            const timetableGrid = modal.querySelector('[data-timetable-grid]');
+            const timetableGridEmpty = modal.querySelector('[data-timetable-grid-empty]');
             const legend = modal.querySelector('[data-timetable-legend]');
             const clearButton = modal.querySelector('[data-clear-schedule]');
+            const viewButtons = Array.from(modal.querySelectorAll('[data-timetable-view]'));
+            const viewContainers = Array.from(modal.querySelectorAll('[data-timetable-view-container]'));
+            const saveButton = modal.querySelector('[data-save-timetable]');
+            const saveStatus = modal.querySelector('[data-timetable-save-status]');
 
             const subjectsForClass = classSubjects.length ? classSubjects : subjectOptions;
             modal.timetableSubjects = subjectsForClass;
@@ -184,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const getClassId = () => modal.dataset.activeClassId || '';
             const getSubjects = () => modal.timetableSubjects || [];
             const getStaff = () => modal.timetableStaff || [];
+            let saveStatusTimeout = null;
 
             const resetForm = () => {
                 slotForm.reset();
@@ -268,6 +275,145 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.textContent = subject.name || 'Matière';
                     legend.appendChild(item);
                 });
+            };
+
+            const toMinutes = (time) => {
+                if (!time) {
+                    return null;
+                }
+                const [hours, minutes] = time.split(':').map(Number);
+                if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+                    return null;
+                }
+                return hours * 60 + minutes;
+            };
+
+            const renderGrid = () => {
+                if (!timetableGrid) {
+                    return;
+                }
+                const state = getState();
+                const days = state.days.length ? state.days : [...weekDays];
+                const timeSlots = [];
+                const seen = new Set();
+
+                state.slots.forEach((slot) => {
+                    if (!slot.start || !slot.end) {
+                        return;
+                    }
+                    const key = `${slot.start}-${slot.end}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        timeSlots.push({ start: slot.start, end: slot.end });
+                    }
+                });
+
+                timeSlots.sort((a, b) => {
+                    const startDiff = (toMinutes(a.start) ?? 0) - (toMinutes(b.start) ?? 0);
+                    if (startDiff !== 0) {
+                        return startDiff;
+                    }
+                    return (toMinutes(a.end) ?? 0) - (toMinutes(b.end) ?? 0);
+                });
+
+                timetableGrid.innerHTML = '';
+                timetableGrid.style.setProperty('--day-columns', days.length);
+
+                if (!state.slots.length) {
+                    if (timetableGridEmpty) {
+                        timetableGridEmpty.hidden = false;
+                    }
+                    return;
+                }
+
+                if (timetableGridEmpty) {
+                    timetableGridEmpty.hidden = true;
+                }
+
+                const headerRow = document.createElement('div');
+                headerRow.className = 'timetable-grid__row';
+
+                const timeHeader = document.createElement('div');
+                timeHeader.className = 'timetable-grid__cell timetable-grid__cell--header';
+                timeHeader.textContent = 'Horaires';
+                headerRow.appendChild(timeHeader);
+
+                days.forEach((day) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'timetable-grid__cell timetable-grid__cell--header';
+                    cell.textContent = day;
+                    headerRow.appendChild(cell);
+                });
+
+                timetableGrid.appendChild(headerRow);
+
+                timeSlots.forEach((timeSlot) => {
+                    const row = document.createElement('div');
+                    row.className = 'timetable-grid__row';
+
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'timetable-grid__cell timetable-grid__cell--time';
+                    timeCell.textContent = `${timeSlot.start} - ${timeSlot.end}`;
+                    row.appendChild(timeCell);
+
+                    days.forEach((day) => {
+                        const cell = document.createElement('div');
+                        cell.className = 'timetable-grid__cell';
+                        const slot = state.slots.find(
+                            (item) => item.day === day && item.start === timeSlot.start && item.end === timeSlot.end
+                        );
+
+                        if (!slot) {
+                            cell.classList.add('timetable-grid__cell--empty');
+                            cell.textContent = 'Libre';
+                        } else {
+                            const card = document.createElement('div');
+                            card.className = `slot-card ${slot.type === 'pause' ? 'slot-card--pause' : ''}`;
+                            if (slot.color) {
+                                card.style.setProperty('--slot-color', slot.color);
+                            }
+
+                            const title = document.createElement('div');
+                            title.className = 'slot-card__title';
+                            title.textContent = slot.type === 'pause' ? 'Pause' : slot.subjectName || 'Matière';
+
+                            const meta = document.createElement('div');
+                            meta.className = 'slot-card__meta';
+                            if (slot.type === 'pause') {
+                                meta.textContent = 'Créneau de pause';
+                            } else {
+                                const metaParts = [];
+                                if (slot.teacherName) {
+                                    metaParts.push(slot.teacherName);
+                                }
+                                if (slot.room) {
+                                    metaParts.push(slot.room);
+                                }
+                                meta.textContent = metaParts.join(' • ') || 'Enseignant et salle à préciser';
+                            }
+
+                            card.appendChild(title);
+                            card.appendChild(meta);
+                            cell.appendChild(card);
+                        }
+
+                        row.appendChild(cell);
+                    });
+
+                    timetableGrid.appendChild(row);
+                });
+            };
+
+            const setView = (view) => {
+                viewContainers.forEach((container) => {
+                    const isActive = container.dataset.timetableViewContainer === view;
+                    container.hidden = !isActive;
+                });
+                viewButtons.forEach((button) => {
+                    const isActive = button.dataset.timetableView === view;
+                    button.classList.toggle('is-active', isActive);
+                });
+                modal.dataset.timetableView = view;
             };
 
             const renderSchedule = () => {
@@ -384,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 renderDayOptions();
+                renderGrid();
             };
 
             const setSelectOptions = () => {
@@ -468,6 +615,38 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderSchedule();
                     resetForm();
                 });
+                viewButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        setView(button.dataset.timetableView);
+                    });
+                });
+                if (saveButton) {
+                    saveButton.addEventListener('click', () => {
+                        if (!saveStatus) {
+                            saveTimetableState(getClassId(), getState());
+                            return;
+                        }
+                        if (saveStatusTimeout) {
+                            window.clearTimeout(saveStatusTimeout);
+                        }
+                        const classId = getClassId();
+                        if (!classId) {
+                            saveStatus.textContent = 'Sélectionnez une classe pour enregistrer.';
+                            saveStatus.classList.add('is-error');
+                            saveStatusTimeout = window.setTimeout(() => {
+                                saveStatus.textContent = '';
+                                saveStatus.classList.remove('is-error');
+                            }, 3000);
+                            return;
+                        }
+                        saveTimetableState(classId, getState());
+                        saveStatus.textContent = 'Planning enregistré.';
+                        saveStatus.classList.remove('is-error');
+                        saveStatusTimeout = window.setTimeout(() => {
+                            saveStatus.textContent = '';
+                        }, 3000);
+                    });
+                }
                 modal.dataset.timetableInitialized = 'true';
             }
 
@@ -482,6 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLegend();
             renderSchedule();
             resetForm();
+            setView(modal.dataset.timetableView || 'list');
         }
 
         modal.classList.add('is-open');
