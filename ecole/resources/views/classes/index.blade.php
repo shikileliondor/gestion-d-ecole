@@ -144,8 +144,10 @@
                             type="button"
                             data-modal-open="timetable"
                             data-class-name="{{ $class->name }}"
+                            data-class-id="{{ $class->id }}"
                             data-class-subjects='@json($class->subjectAssignments->map(function ($assignment) {
                                 return [
+                                    'id' => $assignment->subject?->id,
                                     'name' => $assignment->subject?->name,
                                     'color' => $assignment->color,
                                 ];
