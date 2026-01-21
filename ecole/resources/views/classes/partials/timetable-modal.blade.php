@@ -1,4 +1,29 @@
-<div class="modal" data-modal="timetable" aria-hidden="true">
+@php
+    $timetableRooms = isset($classes)
+        ? $classes->pluck('room')->filter()->unique()->values()
+        : collect();
+    $timetableStaff = isset($staff)
+        ? $staff->map(fn ($member) => [
+            'id' => $member->id,
+            'name' => trim($member->last_name.' '.$member->first_name),
+            'position' => $member->position ?? null,
+        ])->values()
+        : collect();
+    $timetableSubjects = isset($subjects)
+        ? $subjects->map(fn ($subject) => [
+            'id' => $subject->id,
+            'name' => $subject->name,
+        ])->values()
+        : collect();
+@endphp
+
+<div
+    class="modal"
+    data-modal="timetable"
+    data-timetable-staff='@json($timetableStaff)'
+    data-timetable-subjects='@json($timetableSubjects)'
+    aria-hidden="true"
+>
     <div class="modal__overlay" data-modal-close></div>
     <div class="modal__content modal__content--wide" role="dialog" aria-modal="true">
         <div class="modal__header">
@@ -15,95 +40,105 @@
 
         <div class="timetable-toolbar">
             <div class="toolbar-group">
-                <span class="toolbar-label">Semaine</span>
-                <div class="toolbar-chip">7 - 11 oct. 2024</div>
+                <span class="toolbar-label">Planning</span>
+                <div class="toolbar-chip">Standard par classe</div>
             </div>
             <div class="toolbar-group">
-                <span class="toolbar-label">Période</span>
-                <div class="toolbar-chip">Semestre 1</div>
+                <span class="toolbar-label">Mode</span>
+                <div class="toolbar-chip">Créneaux libres</div>
             </div>
             <div class="toolbar-group">
-                <span class="toolbar-label">Salle</span>
-                <div class="toolbar-chip">Bâtiment A</div>
+                <span class="toolbar-label">Synchronisation</span>
+                <div class="toolbar-chip">Sauvegarde locale</div>
             </div>
             <button class="secondary-button" type="button">Exporter PDF</button>
         </div>
 
-        <div class="timetable-scroll" role="region" aria-label="Emploi du temps">
-            <table class="timetable" data-timetable>
-                <thead>
-                    <tr>
-                        <th>Horaires</th>
-                        <th>Lundi</th>
-                        <th>Mardi</th>
-                        <th>Mercredi</th>
-                        <th>Jeudi</th>
-                        <th>Vendredi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>08:00 - 09:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0f2fe">Mathématiques<br><span>Pr. Kouassi • Salle A1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #ede9fe">Anglais<br><span>Pr. Diallo • Salle C1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Histoire-Géo<br><span>Pr. Traoré • Salle A3</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #dcfce7">SVT<br><span>Pr. Mensah • Labo 2</span></div></td>
-                    </tr>
-                    <tr>
-                        <th>09:00 - 10:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0f2fe">Mathématiques<br><span>Pr. Kouassi • Salle A1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Physique<br><span>Pr. N'Guessan • Labo 1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #ede9fe">Anglais<br><span>Pr. Diallo • Salle C1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0e7ff">EPS<br><span>Pr. Koné • Gymnase</span></div></td>
-                    </tr>
-                    <tr>
-                        <th>10:00 - 11:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #ede9fe">Anglais<br><span>Pr. Diallo • Salle C1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #dcfce7">SVT<br><span>Pr. Mensah • Labo 2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0f2fe">Mathématiques<br><span>Pr. Kouassi • Salle A1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Physique<br><span>Pr. N'Guessan • Labo 1</span></div></td>
-                    </tr>
-                    <tr>
-                        <th>11:00 - 12:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #dcfce7">SVT<br><span>Pr. Mensah • Labo 2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Physique<br><span>Pr. N'Guessan • Labo 1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0f2fe">Mathématiques<br><span>Pr. Kouassi • Salle A1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #ede9fe">Anglais<br><span>Pr. Diallo • Salle C1</span></div></td>
-                    </tr>
-                    <tr>
-                        <th>14:00 - 15:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Histoire-Géo<br><span>Pr. Traoré • Salle A3</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0e7ff">EPS<br><span>Pr. Koné • Gymnase</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #dcfce7">SVT<br><span>Pr. Mensah • Labo 2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0f2fe">Mathématiques<br><span>Pr. Kouassi • Salle A1</span></div></td>
-                    </tr>
-                    <tr>
-                        <th>15:00 - 16:00</th>
-                        <td><div class="lesson-pill" style="--lesson-color: #dcfce7">SVT<br><span>Pr. Mensah • Labo 2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fce7f3">Physique<br><span>Pr. N'Guessan • Labo 1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #fef3c7">Français<br><span>Pr. Yao • Salle B2</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #ede9fe">Anglais<br><span>Pr. Diallo • Salle C1</span></div></td>
-                        <td><div class="lesson-pill" style="--lesson-color: #e0e7ff">EPS<br><span>Pr. Koné • Gymnase</span></div></td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="timetable-layout" data-timetable-layout>
+            <div class="timetable-config-panel">
+                <div class="config-card">
+                    <div class="config-card__header">
+                        <h3>Jours de cours</h3>
+                        <p class="helper-text">Activez uniquement les jours utilisés par la classe.</p>
+                    </div>
+                    <div class="day-options" data-day-options></div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-card__header">
+                        <h3>Planifier un créneau</h3>
+                        <p class="helper-text">Définissez l'horaire, la matière, l'enseignant et la salle.</p>
+                    </div>
+                    <form class="slot-form" data-slot-form>
+                        <div class="form-grid">
+                            <label>
+                                Jour
+                                <select name="day" data-day-select required></select>
+                            </label>
+                            <label>
+                                Début
+                                <input name="start" type="time" required>
+                            </label>
+                            <label>
+                                Fin
+                                <input name="end" type="time" required>
+                            </label>
+                            <label>
+                                Type
+                                <select name="type" data-slot-type>
+                                    <option value="course">Cours</option>
+                                    <option value="pause">Pause</option>
+                                </select>
+                            </label>
+                            <label>
+                                Matière
+                                <select name="subject" data-subject-select></select>
+                            </label>
+                            <label>
+                                Enseignant
+                                <select name="teacher" data-teacher-select></select>
+                            </label>
+                            <label>
+                                Salle
+                                <input name="room" type="text" list="timetable-rooms" placeholder="Salle A1">
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button class="ghost-button" type="button" data-reset-slot>Effacer</button>
+                            <button class="primary-button" type="submit" data-submit-slot>Ajouter le créneau</button>
+                        </div>
+                        <input type="hidden" name="slot_id" data-slot-id>
+                    </form>
+                </div>
+            </div>
+
+            <div class="timetable-board">
+                <div class="timetable-board__header">
+                    <div>
+                        <h3>Planning standard</h3>
+                        <p class="helper-text">Cliquez sur un créneau pour le modifier ou le supprimer.</p>
+                    </div>
+                    <div class="board-actions">
+                        <button class="secondary-button" type="button" data-clear-schedule>Tout effacer</button>
+                    </div>
+                </div>
+                <div class="timetable-days" data-timetable-days></div>
+                <div class="timetable-empty" data-timetable-empty hidden>
+                    <strong>Aucun créneau pour le moment.</strong>
+                    <p>Ajoutez un cours ou une pause pour commencer.</p>
+                </div>
+            </div>
         </div>
 
         <div class="timetable-footer">
-            <div class="legend">
-                <span class="legend-item" style="--legend-color: #e0f2fe">Mathématiques</span>
-                <span class="legend-item" style="--legend-color: #fef3c7">Français</span>
-                <span class="legend-item" style="--legend-color: #ede9fe">Anglais</span>
-                <span class="legend-item" style="--legend-color: #fce7f3">Physique</span>
-                <span class="legend-item" style="--legend-color: #dcfce7">SVT</span>
-                <span class="legend-item" style="--legend-color: #e0e7ff">EPS</span>
-            </div>
-            <button class="primary-button" type="button">Planifier un cours</button>
+            <div class="legend" data-timetable-legend></div>
+            <button class="primary-button" type="button">Enregistrer le planning</button>
         </div>
     </div>
 </div>
+
+<datalist id="timetable-rooms">
+    @foreach ($timetableRooms as $room)
+        <option value="{{ $room }}"></option>
+    @endforeach
+</datalist>
