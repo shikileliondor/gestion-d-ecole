@@ -158,6 +158,25 @@
                             </svg>
                             Emploi du temps
                         </button>
+                        <button
+                            class="pill-button"
+                            type="button"
+                            data-modal-open="timetable-preview"
+                            data-class-name="{{ $class->name }}"
+                            data-class-id="{{ $class->id }}"
+                            data-class-subjects='@json($class->subjectAssignments->map(function ($assignment) {
+                                return [
+                                    'id' => $assignment->subject?->id,
+                                    'name' => $assignment->subject?->name,
+                                    'color' => $assignment->color,
+                                ];
+                            }))'
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M4 4h16a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2Zm-2 7h20v7a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7Zm5 2v2h4v-2H7Z"/>
+                            </svg>
+                            Voir le planning
+                        </button>
                     </div>
                 </div>
             @empty
@@ -192,6 +211,7 @@
         'isOpen' => $assignSubjectErrors->any(),
     ])
     @include('classes.partials.timetable-modal')
+    @include('classes.partials.timetable-preview-modal')
 
     <datalist id="series-options">
         @foreach ($seriesOptions ?? [] as $seriesOption)

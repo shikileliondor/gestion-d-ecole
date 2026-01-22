@@ -15,6 +15,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const weekDays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
+    const toMinutes = (time) => {
+        if (!time) {
+            return null;
+        }
+        const [hours, minutes] = time.split(':').map(Number);
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+            return null;
+        }
+        return hours * 60 + minutes;
+    };
+
+    const collectTimeSlots = (slots) => {
+        const timeSlots = [];
+        const seen = new Set();
+
+        slots.forEach((slot) => {
+            if (!slot.start || !slot.end) {
+                return;
+            }
+            const key = `${slot.start}-${slot.end}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                timeSlots.push({ start: slot.start, end: slot.end });
+            }
+        });
+
+        timeSlots.sort((a, b) => {
+            const startDiff = (toMinutes(a.start) ?? 0) - (toMinutes(b.start) ?? 0);
+            if (startDiff !== 0) {
+                return startDiff;
+            }
+            return (toMinutes(a.end) ?? 0) - (toMinutes(b.end) ?? 0);
+        });
+
+        return timeSlots;
+    };
+
     const getStorageKey = (classId) => `timetable:${classId || 'default'}`;
 
     const loadTimetableState = (classId) => {
@@ -50,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const classLabelInput = modal.querySelector('[data-class-input]');
         const subjectSummary = modal.querySelector('[data-subject-summary]');
         const timetableLayout = modal.querySelector('[data-timetable-layout]');
+        const timetablePreviewGrid = modal.querySelector('[data-timetable-preview-grid]');
 
         if (actionTarget) {
             const action = trigger?.dataset?.action || actionTarget.dataset.actionFallback;
@@ -277,44 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             };
 
-            const toMinutes = (time) => {
-                if (!time) {
-                    return null;
-                }
-                const [hours, minutes] = time.split(':').map(Number);
-                if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-                    return null;
-                }
-                return hours * 60 + minutes;
-            };
-
             const renderGrid = () => {
                 if (!timetableGrid) {
                     return;
                 }
                 const state = getState();
                 const days = state.days.length ? state.days : [...weekDays];
-                const timeSlots = [];
-                const seen = new Set();
-
-                state.slots.forEach((slot) => {
-                    if (!slot.start || !slot.end) {
-                        return;
-                    }
-                    const key = `${slot.start}-${slot.end}`;
-                    if (!seen.has(key)) {
-                        seen.add(key);
-                        timeSlots.push({ start: slot.start, end: slot.end });
-                    }
-                });
-
-                timeSlots.sort((a, b) => {
-                    const startDiff = (toMinutes(a.start) ?? 0) - (toMinutes(b.start) ?? 0);
-                    if (startDiff !== 0) {
-                        return startDiff;
-                    }
-                    return (toMinutes(a.end) ?? 0) - (toMinutes(b.end) ?? 0);
-                });
+                const timeSlots = collectTimeSlots(state.slots);
 
                 timetableGrid.innerHTML = '';
                 timetableGrid.style.setProperty('--day-columns', days.length);
@@ -662,6 +669,126 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSchedule();
             resetForm();
             setView(modal.dataset.timetableView || 'list');
+        }
+
+        if (timetablePreviewGrid) {
+            const classId = trigger?.dataset?.classId || trigger?.dataset?.className || '';
+            modal.dataset.activeClassId = classId;
+            const classSubjects = trigger?.dataset?.classSubjects
+                ? JSON.parse(trigger.dataset.classSubjects)
+                : [];
+            const timetableState = loadTimetableState(classId);
+            const previewEmpty = modal.querySelector('[data-timetable-preview-empty]');
+            const previewLegend = modal.querySelector('[data-timetable-preview-legend]');
+            const days = timetableState.days.length ? timetableState.days : [...weekDays];
+            const timeSlots = collectTimeSlots(timetableState.slots);
+
+            timetablePreviewGrid.innerHTML = '';
+            timetablePreviewGrid.style.setProperty('--day-columns', days.length);
+
+            if (!timetableState.slots.length) {
+                if (previewEmpty) {
+                    previewEmpty.hidden = false;
+                }
+            } else if (previewEmpty) {
+                previewEmpty.hidden = true;
+            }
+
+            if (timetableState.slots.length) {
+                const headerRow = document.createElement('div');
+                headerRow.className = 'timetable-preview__row';
+
+                const timeHeader = document.createElement('div');
+                timeHeader.className = 'timetable-preview__cell timetable-preview__cell--header';
+                timeHeader.textContent = 'Horaires';
+                headerRow.appendChild(timeHeader);
+
+                days.forEach((day) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'timetable-preview__cell timetable-preview__cell--header';
+                    cell.textContent = day;
+                    headerRow.appendChild(cell);
+                });
+
+                timetablePreviewGrid.appendChild(headerRow);
+
+                timeSlots.forEach((timeSlot) => {
+                    const row = document.createElement('div');
+                    row.className = 'timetable-preview__row';
+
+                    const timeCell = document.createElement('div');
+                    timeCell.className = 'timetable-preview__cell timetable-preview__cell--time';
+                    timeCell.textContent = `${timeSlot.start} - ${timeSlot.end}`;
+                    row.appendChild(timeCell);
+
+                    days.forEach((day) => {
+                        const cell = document.createElement('div');
+                        cell.className = 'timetable-preview__cell';
+
+                        const slot = timetableState.slots.find(
+                            (item) => item.day === day && item.start === timeSlot.start && item.end === timeSlot.end
+                        );
+
+                        if (!slot) {
+                            cell.classList.add('timetable-preview__cell--empty');
+                            cell.textContent = 'Libre';
+                        } else {
+                            const card = document.createElement('div');
+                            card.className = 'timetable-preview__card';
+                            if (slot.color) {
+                                card.style.setProperty('--slot-color', slot.color);
+                            }
+
+                            const title = document.createElement('div');
+                            title.className = 'timetable-preview__title';
+                            title.textContent = slot.type === 'pause' ? 'Pause' : slot.subjectName || 'Matière';
+
+                            const meta = document.createElement('div');
+                            meta.className = 'timetable-preview__meta';
+                            if (slot.type === 'pause') {
+                                meta.textContent = 'Créneau de pause';
+                            } else {
+                                const metaParts = [];
+                                if (slot.teacherName) {
+                                    metaParts.push(slot.teacherName);
+                                }
+                                if (slot.room) {
+                                    metaParts.push(slot.room);
+                                }
+                                meta.textContent = metaParts.join(' • ') || 'Enseignant et salle à préciser';
+                            }
+
+                            card.appendChild(title);
+                            card.appendChild(meta);
+                            cell.appendChild(card);
+                        }
+
+                        row.appendChild(cell);
+                    });
+
+                    timetablePreviewGrid.appendChild(row);
+                });
+            }
+
+            if (previewLegend) {
+                previewLegend.innerHTML = '';
+                if (!classSubjects.length) {
+                    const empty = document.createElement('span');
+                    empty.className = 'helper-text';
+                    empty.textContent = 'Aucune matière assignée à cette classe.';
+                    previewLegend.appendChild(empty);
+                } else {
+                    classSubjects.forEach((subject) => {
+                        const item = document.createElement('span');
+                        item.className = 'legend-item';
+                        if (subject.color) {
+                            item.style.setProperty('--legend-color', subject.color);
+                        }
+                        item.textContent = subject.name || 'Matière';
+                        previewLegend.appendChild(item);
+                    });
+                }
+            }
         }
 
         modal.classList.add('is-open');
