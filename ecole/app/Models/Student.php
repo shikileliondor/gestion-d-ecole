@@ -14,6 +14,7 @@ class Student extends Model
         'school_id',
         'academic_year_id',
         'admission_number',
+        'matricule',
         'first_name',
         'last_name',
         'middle_name',

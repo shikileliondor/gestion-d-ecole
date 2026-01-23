@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Enseignant;
 use App\Models\EnseignantDocument;
+use App\Models\School;
+use App\Services\MatriculeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class EnseignantController extends Controller
 {
@@ -32,7 +35,22 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request);
 
-        $enseignant = Enseignant::create($data);
+        $schoolId = School::query()->value('id');
+        if (! $schoolId) {
+            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])
+                ->withInput();
+        }
+
+        try {
+            $matricule = app(MatriculeService::class)->generateForEnseignant($schoolId);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['academic_year' => $exception->getMessage()])
+                ->withInput();
+        }
+
+        $enseignant = Enseignant::create(array_merge($data, [
+            'matricule' => $matricule,
+        ]));
 
         return redirect()
             ->route('teachers.show', $enseignant)

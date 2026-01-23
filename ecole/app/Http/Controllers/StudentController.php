@@ -12,6 +12,7 @@ use App\Models\StudentClass;
 use App\Models\StudentDocument;
 use App\Models\StudentParent;
 use App\Models\SchoolClass;
+use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use RuntimeException;
 
 class StudentController extends Controller
 {
@@ -151,7 +153,14 @@ class StudentController extends Controller
                 ->withInput();
         }
 
-        DB::transaction(function () use ($data, $schoolId) {
+        try {
+            $matricule = app(MatriculeService::class)->generateForStudent($schoolId);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['academic_year' => $exception->getMessage()])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($data, $schoolId, $matricule) {
             $student = Student::create([
                 'school_id' => $schoolId,
                 'academic_year_id' => $data['academic_year_id'],
@@ -160,6 +169,7 @@ class StudentController extends Controller
                     $data['last_name'],
                     $data['enrollment_date'] ?? null
                 ),
+                'matricule' => $matricule,
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
                 'middle_name' => $data['middle_name'] ?? null,
