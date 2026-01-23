@@ -7,6 +7,7 @@ use App\Models\Staff;
 use App\Models\StaffAssignment;
 use App\Models\StaffContract;
 use App\Models\Subject;
+use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use RuntimeException;
 
 class StaffController extends Controller
 {
@@ -66,10 +68,18 @@ class StaffController extends Controller
         $contractFile = $request->file('contract_file');
         $filePath = $contractFile?->store('documents/staff-contracts', 'public');
 
-        DB::transaction(function () use ($data, $schoolId, $firstName, $lastName, $middleName, $filePath, $contractFile) {
+        try {
+            $matricule = app(MatriculeService::class)->generateForStaff($schoolId);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['academic_year' => $exception->getMessage()])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($data, $schoolId, $firstName, $lastName, $middleName, $filePath, $contractFile, $matricule) {
             $staff = Staff::create([
                 'school_id' => $schoolId,
                 'code_personnel' => $data['code_personnel'],
+                'matricule' => $matricule,
                 'nom' => $data['nom'],
                 'prenoms' => $data['prenoms'],
                 'sexe' => $data['sexe'] ?? null,
