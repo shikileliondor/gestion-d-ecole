@@ -5,9 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButtons = modal?.querySelectorAll('[data-staff-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-tab]') || [];
     const panels = modal?.querySelectorAll('[data-panel]') || [];
-    const teacherTab = modal?.querySelector('[data-tab="teacher"]');
-    const teacherPanel = modal?.querySelector('[data-panel="teacher"]');
-
     if (!modal) {
         return;
     }
@@ -24,22 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const listFields = {
         assignments: modal.querySelector('[data-field="assignments"]'),
-        teacherDocuments: modal.querySelector('[data-field="teacher_documents"]'),
-    };
-
-    const teacherFields = {
-        code: modal.querySelector('[data-field="teacher_code"]'),
-        grade: modal.querySelector('[data-field="teacher_grade"]'),
-        speciality: modal.querySelector('[data-field="teacher_speciality"]'),
-        qualification: modal.querySelector('[data-field="teacher_qualification"]'),
-        load: modal.querySelector('[data-field="teacher_load"]'),
-        responsibility: modal.querySelector('[data-field="teacher_responsibility"]'),
-        start: modal.querySelector('[data-field="teacher_start"]'),
-        experience: modal.querySelector('[data-field="teacher_experience"]'),
-        evaluation: modal.querySelector('[data-field="teacher_evaluation"]'),
-        research: modal.querySelector('[data-field="teacher_research"]'),
-        development: modal.querySelector('[data-field="teacher_development"]'),
-        notes: modal.querySelector('[data-field="teacher_notes"]'),
     };
 
     const formatDate = (value) => {
@@ -88,15 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         panels.forEach((panel) => panel.classList.remove('is-active'));
     };
 
-    const toggleTeacherTab = (isVisible) => {
-        if (teacherTab) {
-            teacherTab.classList.toggle('is-hidden', !isVisible);
-        }
-        if (teacherPanel) {
-            teacherPanel.classList.toggle('is-hidden', !isVisible);
-        }
-    };
-
     const activateTab = (tabName) => {
         resetTabs();
         const activeButton = modal.querySelector(`[data-tab="${tabName}"]`);
@@ -127,9 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setText(infoFields.hire_date, '—');
         setText(infoFields.status, '—');
         setList(listFields.assignments, [], () => '', 'Aucune affectation enregistrée.');
-        setList(listFields.teacherDocuments, [], () => '', 'Aucun document pédagogique.');
-        toggleTeacherTab(false);
-        Object.values(teacherFields).forEach((field) => setText(field, '—'));
 
         if (!staffUrl) {
             return;
@@ -150,8 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then((data) => {
                 const staff = data.staff || {};
                 const contract = data.contract || {};
-                const teacher = data.teacher || null;
-
                 setText(infoFields.staff_number, staff.staff_number);
                 setText(infoFields.full_name, `${staff.last_name || ''} ${staff.first_name || ''}`.trim());
                 setText(infoFields.position, staff.position);
@@ -167,22 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 setText(infoFields.hire_date, formatDate(staff.hire_date));
                 setText(infoFields.status, staff.status === 'active' ? 'Actif' : 'Inactif');
-
-                if (teacher) {
-                    toggleTeacherTab(true);
-                    setText(teacherFields.code, teacher.teacher_code);
-                    setText(teacherFields.grade, teacher.grade);
-                    setText(teacherFields.speciality, teacher.speciality);
-                    setText(teacherFields.qualification, teacher.qualification);
-                    setText(teacherFields.load, teacher.teaching_load_hours ? `${teacher.teaching_load_hours} h` : null);
-                    setText(teacherFields.responsibility, teacher.pedagogical_responsibility);
-                    setText(teacherFields.start, formatDate(teacher.start_teaching_date));
-                    setText(teacherFields.experience, teacher.teaching_experience_years);
-                    setText(teacherFields.evaluation, teacher.teacher_evaluation);
-                    setText(teacherFields.research, teacher.research_interests);
-                    setText(teacherFields.development, teacher.professional_development);
-                    setText(teacherFields.notes, teacher.notes);
-                }
 
                 setList(
                     listFields.assignments,
@@ -208,26 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Aucune affectation enregistrée.'
                 );
 
-                setList(
-                    listFields.teacherDocuments,
-                    data.documents,
-                    (document) => `
-                        <div>
-                            <p class="label">Document</p>
-                            <p class="value">${document.name || '—'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Statut</p>
-                            <p class="value">${document.status || '—'}</p>
-                        </div>
-                    `,
-                    'Aucun document pédagogique.'
-                );
             })
             .catch(() => {
                 setList(listFields.assignments, [], () => '', 'Impossible de charger les informations.');
-                setList(listFields.teacherDocuments, [], () => '', 'Impossible de charger les documents.');
-                toggleTeacherTab(false);
             });
     };
 

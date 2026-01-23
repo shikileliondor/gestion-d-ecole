@@ -44,9 +44,6 @@
                 <button class="tab-button" type="button" data-form-tab="assignments" role="tab" aria-selected="false">
                     Affectations
                 </button>
-                <button class="tab-button" type="button" data-form-tab="teacher" role="tab" aria-selected="false">
-                    Profil enseignant
-                </button>
             </div>
 
             <div class="staff-form__panel is-active" data-form-panel="identity" role="tabpanel">
@@ -103,63 +100,6 @@
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="staff-form__panel" data-form-panel="teacher" role="tabpanel">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="teacher_code">Code enseignant *</label>
-                        <input type="text" id="teacher_code" name="teacher_code" value="{{ old('teacher_code') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="grade">Grade / Rang</label>
-                        <input type="text" id="grade" name="grade" value="{{ old('grade') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="speciality">Spécialité</label>
-                        <input type="text" id="speciality" name="speciality" value="{{ old('speciality') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="qualification">Qualification</label>
-                        <input type="text" id="qualification" name="qualification" value="{{ old('qualification') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="teaching_load_hours">Charge horaire (heures/semaine)</label>
-                        <input type="number" id="teaching_load_hours" name="teaching_load_hours" min="0" value="{{ old('teaching_load_hours') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="pedagogical_responsibility">Responsabilité pédagogique</label>
-                        <input type="text" id="pedagogical_responsibility" name="pedagogical_responsibility" value="{{ old('pedagogical_responsibility') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="start_teaching_date">Date début enseignement</label>
-                        <input type="date" id="start_teaching_date" name="start_teaching_date" value="{{ old('start_teaching_date') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="teaching_experience_years">Années d'expérience</label>
-                        <input type="number" id="teaching_experience_years" name="teaching_experience_years" min="0" value="{{ old('teaching_experience_years') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="teacher_evaluation">Évaluation</label>
-                        <input type="text" id="teacher_evaluation" name="teacher_evaluation" value="{{ old('teacher_evaluation') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="research_interests">Intérêts de recherche</label>
-                        <textarea id="research_interests" name="research_interests" rows="3">{{ old('research_interests') }}</textarea>
-                    </div>
-                    <div class="form-field">
-                        <label for="professional_development">Développement professionnel</label>
-                        <textarea id="professional_development" name="professional_development" rows="3">{{ old('professional_development') }}</textarea>
-                    </div>
-                    <div class="form-field">
-                        <label for="notes">Notes / Observations</label>
-                        <textarea id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
-                    </div>
-                    <div class="form-field">
-                        <label for="teacher_documents">Documents pédagogiques (PDF)</label>
-                        <input type="file" id="teacher_documents" name="teacher_documents[]" accept="application/pdf" multiple>
                     </div>
                 </div>
             </div>

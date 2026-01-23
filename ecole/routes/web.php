@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
@@ -44,11 +45,22 @@ Route::middleware('auth')->group(function () {
         ->name('classes.students.assign');
 
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
-    Route::get('/teachers', [StaffController::class, 'teachers'])->name('teachers.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
     Route::get('/staff/contracts/{id}/download', [StaffController::class, 'downloadContract'])
         ->name('staff.contracts.download');
+
+    Route::get('/teachers', [EnseignantController::class, 'index'])->name('teachers.index');
+    Route::get('/teachers/create', [EnseignantController::class, 'create'])->name('teachers.create');
+    Route::post('/teachers', [EnseignantController::class, 'store'])->name('teachers.store');
+    Route::get('/teachers/{enseignant}', [EnseignantController::class, 'show'])->name('teachers.show');
+    Route::get('/teachers/{enseignant}/edit', [EnseignantController::class, 'edit'])->name('teachers.edit');
+    Route::put('/teachers/{enseignant}', [EnseignantController::class, 'update'])->name('teachers.update');
+    Route::delete('/teachers/{enseignant}', [EnseignantController::class, 'destroy'])->name('teachers.destroy');
+    Route::post('/teachers/{enseignant}/documents', [EnseignantController::class, 'storeDocument'])
+        ->name('teachers.documents.store');
+    Route::delete('/teachers/{enseignant}/documents/{document}', [EnseignantController::class, 'destroyDocument'])
+        ->name('teachers.documents.destroy');
 
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/academic-years', [SettingsController::class, 'storeAcademicYear'])
