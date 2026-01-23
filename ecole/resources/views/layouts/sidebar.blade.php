@@ -8,9 +8,24 @@
         ],
         [
             'label' => 'Élèves',
-            'route' => 'students.index',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M17.25 19.5V17.625A3.375 3.375 0 0013.875 14.25H10.125A3.375 3.375 0 006.75 17.625V19.5M15 7.875A3.375 3.375 0 118.25 7.875 3.375 3.375 0 0115 7.875z" />',
-            'active' => request()->routeIs('students.*'),
+            'children' => [
+                [
+                    'label' => 'Liste des élèves',
+                    'route' => 'students.index',
+                    'active' => request()->routeIs('students.index', 'students.show'),
+                ],
+                [
+                    'label' => 'Inscriptions',
+                    'route' => 'students.enrollments',
+                    'active' => request()->routeIs('students.enrollments'),
+                ],
+                [
+                    'label' => 'Réinscriptions',
+                    'route' => 'students.re-enrollments',
+                    'active' => request()->routeIs('students.re-enrollments'),
+                ],
+            ],
         ],
         [
             'label' => 'Personnel',
@@ -41,8 +56,189 @@
         ],
         [
             'label' => 'Comptabilité',
-            'url' => '#',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3 6.75h18M4.5 10.5h15m-15 6h6" />',
+            'children' => [
+                [
+                    'label' => 'Tableau de bord',
+                    'route' => 'accounting.dashboard',
+                    'active' => request()->routeIs('accounting.dashboard'),
+                ],
+                [
+                    'label' => 'Recettes',
+                    'children' => [
+                        [
+                            'label' => 'Liste des paiements',
+                            'route' => 'accounting.income.index',
+                            'active' => request()->routeIs('accounting.income.index'),
+                        ],
+                        [
+                            'label' => 'Ajouter un paiement',
+                            'route' => 'accounting.income.create',
+                            'active' => request()->routeIs('accounting.income.create'),
+                        ],
+                        [
+                            'label' => 'Écritures diverses',
+                            'route' => 'accounting.income.manual',
+                            'active' => request()->routeIs('accounting.income.manual'),
+                        ],
+                        [
+                            'label' => 'Catégories recettes',
+                            'route' => 'accounting.income.categories',
+                            'active' => request()->routeIs('accounting.income.categories'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Dépenses',
+                    'children' => [
+                        [
+                            'label' => 'Liste des dépenses',
+                            'route' => 'accounting.expenses.index',
+                            'active' => request()->routeIs('accounting.expenses.index'),
+                        ],
+                        [
+                            'label' => 'Ajouter dépense',
+                            'route' => 'accounting.expenses.create',
+                            'active' => request()->routeIs('accounting.expenses.create'),
+                        ],
+                        [
+                            'label' => 'Catégories dépenses',
+                            'route' => 'accounting.expenses.categories',
+                            'active' => request()->routeIs('accounting.expenses.categories'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Facturation',
+                    'children' => [
+                        [
+                            'label' => 'Générer factures',
+                            'route' => 'accounting.billing.generate',
+                            'active' => request()->routeIs('accounting.billing.generate'),
+                        ],
+                        [
+                            'label' => 'Liste des factures',
+                            'route' => 'accounting.invoices.index',
+                            'active' => request()->routeIs('accounting.invoices.index'),
+                        ],
+                        [
+                            'label' => 'Factures par élève',
+                            'route' => 'accounting.invoices.student',
+                            'active' => request()->routeIs('accounting.invoices.student'),
+                        ],
+                        [
+                            'label' => 'Factures par classe',
+                            'route' => 'accounting.invoices.class',
+                            'active' => request()->routeIs('accounting.invoices.class'),
+                        ],
+                        [
+                            'label' => 'Factures impayées',
+                            'route' => 'accounting.invoices.unpaid',
+                            'active' => request()->routeIs('accounting.invoices.unpaid'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Reçus',
+                    'children' => [
+                        [
+                            'label' => 'Liste des reçus',
+                            'route' => 'accounting.receipts.list',
+                            'active' => request()->routeIs('accounting.receipts.list'),
+                        ],
+                        [
+                            'label' => 'Télécharger PDF',
+                            'route' => 'accounting.receipts.download',
+                            'active' => request()->routeIs('accounting.receipts.download'),
+                        ],
+                        [
+                            'label' => 'Numérotation automatique',
+                            'route' => 'accounting.receipts.numbering',
+                            'active' => request()->routeIs('accounting.receipts.numbering'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Impayés',
+                    'children' => [
+                        [
+                            'label' => 'Impayés par classe',
+                            'route' => 'accounting.overdue.class',
+                            'active' => request()->routeIs('accounting.overdue.class'),
+                        ],
+                        [
+                            'label' => 'Impayés par élève',
+                            'route' => 'accounting.overdue.student',
+                            'active' => request()->routeIs('accounting.overdue.student'),
+                        ],
+                        [
+                            'label' => 'Historique des relances',
+                            'route' => 'accounting.overdue.history',
+                            'active' => request()->routeIs('accounting.overdue.history'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Rapports',
+                    'children' => [
+                        [
+                            'label' => 'Rapport annuel',
+                            'route' => 'accounting.reports.annual',
+                            'active' => request()->routeIs('accounting.reports.annual'),
+                        ],
+                        [
+                            'label' => 'Rapport mensuel',
+                            'route' => 'accounting.reports.monthly',
+                            'active' => request()->routeIs('accounting.reports.monthly'),
+                        ],
+                        [
+                            'label' => 'Rapport par classe',
+                            'route' => 'accounting.reports.class',
+                            'active' => request()->routeIs('accounting.reports.class'),
+                        ],
+                        [
+                            'label' => 'Rapport par catégorie',
+                            'route' => 'accounting.reports.category',
+                            'active' => request()->routeIs('accounting.reports.category'),
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Paramètres Comptabilité',
+                    'children' => [
+                        [
+                            'label' => 'Années scolaires',
+                            'route' => 'accounting.settings.academic-years',
+                            'active' => request()->routeIs('accounting.settings.academic-years'),
+                        ],
+                        [
+                            'label' => 'Catégories recettes',
+                            'route' => 'accounting.settings.revenue-categories',
+                            'active' => request()->routeIs('accounting.settings.revenue-categories'),
+                        ],
+                        [
+                            'label' => 'Catégories dépenses',
+                            'route' => 'accounting.settings.expense-categories',
+                            'active' => request()->routeIs('accounting.settings.expense-categories'),
+                        ],
+                        [
+                            'label' => 'Modes de paiement',
+                            'route' => 'accounting.settings.payment-modes',
+                            'active' => request()->routeIs('accounting.settings.payment-modes'),
+                        ],
+                        [
+                            'label' => 'Champs personnalisés',
+                            'route' => 'accounting.settings.custom-fields',
+                            'active' => request()->routeIs('accounting.settings.custom-fields'),
+                        ],
+                        [
+                            'label' => 'Modèle reçu / facture',
+                            'route' => 'accounting.settings.templates',
+                            'active' => request()->routeIs('accounting.settings.templates'),
+                        ],
+                    ],
+                ],
+            ],
         ],
         [
             'label' => 'Documents',
@@ -86,11 +282,19 @@
                     $hasChildren = isset($link['children']);
                     $isActive = $link['active'] ?? false;
                     $href = isset($link['route']) ? route($link['route']) : ($link['url'] ?? '#');
+                    $childActive = $hasChildren
+                        ? collect($link['children'])->contains(function ($child) {
+                            if ($child['active'] ?? false) {
+                                return true;
+                            }
+                            if (isset($child['children'])) {
+                                return collect($child['children'])->contains(fn ($grandchild) => $grandchild['active'] ?? false);
+                            }
+                            return false;
+                        })
+                        : false;
                 @endphp
                 @if ($hasChildren)
-                    @php
-                        $childActive = collect($link['children'])->contains(fn ($child) => $child['active'] ?? false);
-                    @endphp
                     <div class="space-y-1">
                         <div class="{{ $childActive ? 'text-blue-600' : 'text-slate-600' }} flex items-center gap-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide">
                             <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
@@ -98,19 +302,45 @@
                             </svg>
                             <span>{{ $link['label'] }}</span>
                         </div>
-                        <div class="space-y-1 pl-8">
+                        <div class="space-y-2 pl-8">
                             @foreach ($link['children'] as $child)
                                 @php
                                     $childHref = isset($child['route']) ? route($child['route']) : ($child['url'] ?? '#');
                                     $childIsActive = $child['active'] ?? false;
                                 @endphp
-                                <a
-                                    href="{{ $childHref }}"
-                                    class="{{ $childIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
-                                    @if ($childIsActive) aria-current="page" @endif
-                                >
-                                    <span>{{ $child['label'] }}</span>
-                                </a>
+                                @if (isset($child['children']))
+                                    @php
+                                        $grandActive = collect($child['children'])->contains(fn ($grandchild) => $grandchild['active'] ?? false);
+                                    @endphp
+                                    <div class="space-y-1">
+                                        <div class="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide {{ $grandActive ? 'text-blue-600' : 'text-slate-500' }}">
+                                            {{ $child['label'] }}
+                                        </div>
+                                        <div class="space-y-1 pl-4">
+                                            @foreach ($child['children'] as $grandchild)
+                                                @php
+                                                    $grandHref = isset($grandchild['route']) ? route($grandchild['route']) : ($grandchild['url'] ?? '#');
+                                                    $grandIsActive = $grandchild['active'] ?? false;
+                                                @endphp
+                                                <a
+                                                    href="{{ $grandHref }}"
+                                                    class="{{ $grandIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                                                    @if ($grandIsActive) aria-current="page" @endif
+                                                >
+                                                    <span>{{ $grandchild['label'] }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @else
+                                    <a
+                                        href="{{ $childHref }}"
+                                        class="{{ $childIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                                        @if ($childIsActive) aria-current="page" @endif
+                                    >
+                                        <span>{{ $child['label'] }}</span>
+                                    </a>
+                                @endif
                             @endforeach
                         </div>
                     </div>
