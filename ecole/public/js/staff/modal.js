@@ -5,41 +5,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButtons = modal?.querySelectorAll('[data-staff-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-tab]') || [];
     const panels = modal?.querySelectorAll('[data-panel]') || [];
-    const teacherTab = modal?.querySelector('[data-tab="teacher"]');
-    const teacherPanel = modal?.querySelector('[data-panel="teacher"]');
 
     if (!modal) {
         return;
     }
 
     const infoFields = {
-        staff_number: modal.querySelector('[data-field="staff_number"]'),
-        full_name: modal.querySelector('[data-field="full_name"]'),
-        position: modal.querySelector('[data-field="position"]'),
+        code_personnel: modal.querySelector('[data-field="code_personnel"]'),
+        nom: modal.querySelector('[data-field="nom"]'),
+        prenoms: modal.querySelector('[data-field="prenoms"]'),
+        sexe: modal.querySelector('[data-field="sexe"]'),
+        date_naissance: modal.querySelector('[data-field="date_naissance"]'),
+        categorie_personnel: modal.querySelector('[data-field="categorie_personnel"]'),
+        poste: modal.querySelector('[data-field="poste"]'),
         contact: modal.querySelector('[data-field="contact"]'),
-        contract: modal.querySelector('[data-field="contract"]'),
-        hire_date: modal.querySelector('[data-field="hire_date"]'),
-        status: modal.querySelector('[data-field="status"]'),
+        adresse: modal.querySelector('[data-field="adresse"]'),
+        commune: modal.querySelector('[data-field="commune"]'),
+        statut: modal.querySelector('[data-field="statut"]'),
+    };
+
+    const rhFields = {
+        type_contrat: modal.querySelector('[data-field="type_contrat"]'),
+        date_debut_service: modal.querySelector('[data-field="date_debut_service"]'),
+        date_fin_service: modal.querySelector('[data-field="date_fin_service"]'),
+        num_cni: modal.querySelector('[data-field="num_cni"]'),
+        date_expiration_cni: modal.querySelector('[data-field="date_expiration_cni"]'),
+        photo_url: modal.querySelector('[data-field="photo_url"]'),
+    };
+
+    const urgenceFields = {
+        contact_urgence_nom: modal.querySelector('[data-field="contact_urgence_nom"]'),
+        contact_urgence_lien: modal.querySelector('[data-field="contact_urgence_lien"]'),
+        contact_urgence_tel: modal.querySelector('[data-field="contact_urgence_tel"]'),
+    };
+
+    const paieFields = {
+        mode_paiement: modal.querySelector('[data-field="mode_paiement"]'),
+        numero_paiement: modal.querySelector('[data-field="numero_paiement"]'),
+        salaire_base: modal.querySelector('[data-field="salaire_base"]'),
     };
 
     const listFields = {
-        assignments: modal.querySelector('[data-field="assignments"]'),
-        teacherDocuments: modal.querySelector('[data-field="teacher_documents"]'),
-    };
-
-    const teacherFields = {
-        code: modal.querySelector('[data-field="teacher_code"]'),
-        grade: modal.querySelector('[data-field="teacher_grade"]'),
-        speciality: modal.querySelector('[data-field="teacher_speciality"]'),
-        qualification: modal.querySelector('[data-field="teacher_qualification"]'),
-        load: modal.querySelector('[data-field="teacher_load"]'),
-        responsibility: modal.querySelector('[data-field="teacher_responsibility"]'),
-        start: modal.querySelector('[data-field="teacher_start"]'),
-        experience: modal.querySelector('[data-field="teacher_experience"]'),
-        evaluation: modal.querySelector('[data-field="teacher_evaluation"]'),
-        research: modal.querySelector('[data-field="teacher_research"]'),
-        development: modal.querySelector('[data-field="teacher_development"]'),
-        notes: modal.querySelector('[data-field="teacher_notes"]'),
+        documents: modal.querySelector('[data-field="documents"]'),
     };
 
     const formatDate = (value) => {
@@ -51,6 +58,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return value;
         }
         return new Intl.DateTimeFormat('fr-FR').format(date);
+    };
+
+    const formatCurrency = (value) => {
+        if (value === null || value === undefined || value === '') {
+            return '—';
+        }
+        const numberValue = Number(value);
+        if (Number.isNaN(numberValue)) {
+            return value;
+        }
+        return `${new Intl.NumberFormat('fr-FR').format(numberValue)} FCFA`;
     };
 
     const setText = (element, value) => {
@@ -88,15 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         panels.forEach((panel) => panel.classList.remove('is-active'));
     };
 
-    const toggleTeacherTab = (isVisible) => {
-        if (teacherTab) {
-            teacherTab.classList.toggle('is-hidden', !isVisible);
-        }
-        if (teacherPanel) {
-            teacherPanel.classList.toggle('is-hidden', !isVisible);
-        }
-    };
-
     const activateTab = (tabName) => {
         resetTabs();
         const activeButton = modal.querySelector(`[data-tab="${tabName}"]`);
@@ -110,6 +119,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const labelMaps = {
+        sexe: { M: 'M', F: 'F', AUTRE: 'Autre' },
+        categorie_personnel: {
+            ADMINISTRATION: 'Administration',
+            SURVEILLANCE: 'Surveillance',
+            INTENDANCE: 'Intendance',
+            COMPTABILITE: 'Comptabilité',
+            TECHNIQUE: 'Technique',
+            SERVICE: 'Service',
+        },
+        type_contrat: { CDI: 'CDI', CDD: 'CDD', VACATAIRE: 'Vacataire', STAGE: 'Stage' },
+        statut: { ACTIF: 'Actif', SUSPENDU: 'Suspendu', PARTI: 'Parti' },
+        mode_paiement: { MOBILE_MONEY: 'Mobile Money', VIREMENT: 'Virement', CASH: 'Cash' },
+        contact_urgence_lien: {
+            PERE: 'Père',
+            MERE: 'Mère',
+            CONJOINT: 'Conjoint',
+            FRERE_SOEUR: 'Frère/Soeur',
+            TUTEUR: 'Tuteur',
+            AUTRE: 'Autre',
+        },
+        type_document: {
+            CNI: 'CNI',
+            CONTRAT: 'Contrat',
+            DIPLOME: 'Diplôme',
+            CV: 'CV',
+            ATTESTATION: 'Attestation',
+            AUTRE: 'Autre',
+        },
+    };
+
     const openModal = (staffUrl, staffName) => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
@@ -119,17 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = `${prefix} - ${staffName}`;
         }
 
-        setText(infoFields.staff_number, '—');
-        setText(infoFields.full_name, '—');
-        setText(infoFields.position, '—');
-        setText(infoFields.contact, '—');
-        setText(infoFields.contract, '—');
-        setText(infoFields.hire_date, '—');
-        setText(infoFields.status, '—');
-        setList(listFields.assignments, [], () => '', 'Aucune affectation enregistrée.');
-        setList(listFields.teacherDocuments, [], () => '', 'Aucun document pédagogique.');
-        toggleTeacherTab(false);
-        Object.values(teacherFields).forEach((field) => setText(field, '—'));
+        Object.values(infoFields).forEach((field) => setText(field, '—'));
+        Object.values(rhFields).forEach((field) => setText(field, '—'));
+        Object.values(urgenceFields).forEach((field) => setText(field, '—'));
+        Object.values(paieFields).forEach((field) => setText(field, '—'));
+        setList(listFields.documents, [], () => '', 'Aucun document enregistré.');
 
         if (!staffUrl) {
             return;
@@ -149,85 +183,76 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then((data) => {
                 const staff = data.staff || {};
-                const contract = data.contract || {};
-                const teacher = data.teacher || null;
 
-                setText(infoFields.staff_number, staff.staff_number);
-                setText(infoFields.full_name, `${staff.last_name || ''} ${staff.first_name || ''}`.trim());
-                setText(infoFields.position, staff.position);
+                setText(infoFields.code_personnel, staff.code_personnel);
+                setText(infoFields.nom, staff.nom);
+                setText(infoFields.prenoms, staff.prenoms);
+                setText(infoFields.sexe, labelMaps.sexe[staff.sexe] || staff.sexe);
+                setText(infoFields.date_naissance, formatDate(staff.date_naissance));
+                setText(
+                    infoFields.categorie_personnel,
+                    labelMaps.categorie_personnel[staff.categorie_personnel] || staff.categorie_personnel
+                );
+                setText(infoFields.poste, staff.poste);
                 setText(
                     infoFields.contact,
-                    [staff.phone, staff.email].filter((item) => item).join(' · ')
+                    [staff.telephone_1, staff.telephone_2, staff.email].filter((item) => item).join(' · ')
                 );
-                if (contract.contract_type) {
-                    setText(
-                        infoFields.contract,
-                        `${contract.contract_type.toUpperCase()} (${contract.status || 'actif'})`
-                    );
-                }
-                setText(infoFields.hire_date, formatDate(staff.hire_date));
-                setText(infoFields.status, staff.status === 'active' ? 'Actif' : 'Inactif');
+                setText(infoFields.adresse, staff.adresse);
+                setText(infoFields.commune, staff.commune);
+                setText(infoFields.statut, labelMaps.statut[staff.statut] || staff.statut);
 
-                if (teacher) {
-                    toggleTeacherTab(true);
-                    setText(teacherFields.code, teacher.teacher_code);
-                    setText(teacherFields.grade, teacher.grade);
-                    setText(teacherFields.speciality, teacher.speciality);
-                    setText(teacherFields.qualification, teacher.qualification);
-                    setText(teacherFields.load, teacher.teaching_load_hours ? `${teacher.teaching_load_hours} h` : null);
-                    setText(teacherFields.responsibility, teacher.pedagogical_responsibility);
-                    setText(teacherFields.start, formatDate(teacher.start_teaching_date));
-                    setText(teacherFields.experience, teacher.teaching_experience_years);
-                    setText(teacherFields.evaluation, teacher.teacher_evaluation);
-                    setText(teacherFields.research, teacher.research_interests);
-                    setText(teacherFields.development, teacher.professional_development);
-                    setText(teacherFields.notes, teacher.notes);
-                }
+                setText(rhFields.type_contrat, labelMaps.type_contrat[staff.type_contrat] || staff.type_contrat);
+                setText(rhFields.date_debut_service, formatDate(staff.date_debut_service));
+                setText(rhFields.date_fin_service, formatDate(staff.date_fin_service));
+                setText(rhFields.num_cni, staff.num_cni);
+                setText(rhFields.date_expiration_cni, formatDate(staff.date_expiration_cni));
+                setText(rhFields.photo_url, staff.photo_url);
+
+                setText(urgenceFields.contact_urgence_nom, staff.contact_urgence_nom);
+                setText(
+                    urgenceFields.contact_urgence_lien,
+                    labelMaps.contact_urgence_lien[staff.contact_urgence_lien] || staff.contact_urgence_lien
+                );
+                setText(urgenceFields.contact_urgence_tel, staff.contact_urgence_tel);
+
+                setText(
+                    paieFields.mode_paiement,
+                    labelMaps.mode_paiement[staff.mode_paiement] || staff.mode_paiement
+                );
+                setText(paieFields.numero_paiement, staff.numero_paiement);
+                setText(paieFields.salaire_base, formatCurrency(staff.salaire_base));
 
                 setList(
-                    listFields.assignments,
-                    data.assignments,
-                    (assignment) => `
-                        <div>
-                            <p class="label">Matière</p>
-                            <p class="value">${assignment.subject || '—'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Classe</p>
-                            <p class="value">${assignment.class || '—'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Période</p>
-                            <p class="value">${formatDate(assignment.start_date)} → ${assignment.end_date ? formatDate(assignment.end_date) : 'en cours'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Statut</p>
-                            <p class="value">${assignment.status || '—'}</p>
-                        </div>
-                    `,
-                    'Aucune affectation enregistrée.'
-                );
-
-                setList(
-                    listFields.teacherDocuments,
+                    listFields.documents,
                     data.documents,
                     (document) => `
                         <div>
-                            <p class="label">Document</p>
-                            <p class="value">${document.name || '—'}</p>
+                            <p class="label">Libellé</p>
+                            <p class="value">${document.libelle || '—'}</p>
                         </div>
                         <div>
-                            <p class="label">Statut</p>
-                            <p class="value">${document.status || '—'}</p>
+                            <p class="label">Type</p>
+                            <p class="value">${labelMaps.type_document[document.type_document] || document.type_document || '—'}</p>
+                        </div>
+                        <div>
+                            <p class="label">Description</p>
+                            <p class="value">${document.description || '—'}</p>
+                        </div>
+                        <div>
+                            <p class="label">Ajouté le</p>
+                            <p class="value">${formatDate(document.created_at)}</p>
+                        </div>
+                        <div>
+                            <p class="label">Fichier</p>
+                            <p class="value">${document.url ? `<a href="${document.url}" target="_blank" rel="noreferrer">Télécharger</a>` : '—'}</p>
                         </div>
                     `,
-                    'Aucun document pédagogique.'
+                    'Aucun document enregistré.'
                 );
             })
             .catch(() => {
-                setList(listFields.assignments, [], () => '', 'Impossible de charger les informations.');
-                setList(listFields.teacherDocuments, [], () => '', 'Impossible de charger les documents.');
-                toggleTeacherTab(false);
+                setList(listFields.documents, [], () => '', 'Impossible de charger les documents.');
             });
     };
 

@@ -32,11 +32,6 @@
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M15 8.25a3 3 0 11-6 0 3 3 0 016 0zM19.5 19.5a6 6 0 00-15 0" />',
             'children' => [
                 [
-                    'label' => 'Professeurs',
-                    'route' => 'teachers.index',
-                    'active' => request()->routeIs('teachers.*'),
-                ],
-                [
                     'label' => "Personnel de l'école",
                     'route' => 'staff.index',
                     'active' => request()->routeIs('staff.*'),

@@ -12,7 +12,7 @@ class StaffAssignmentSeeder extends Seeder
 {
     public function run(): void
     {
-        $staff = Staff::where('staff_number', 'EMP001')->first();
+        $staff = Staff::where('code_personnel', 'PER001')->first();
         $subject = Subject::query()->first();
         $class = SchoolClass::query()->first();
 

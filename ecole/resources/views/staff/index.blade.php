@@ -8,7 +8,7 @@
         <div class="staff-header">
             <div>
                 <h1>Gestion du personnel</h1>
-                <p>Suivi des contrats et affectations pédagogiques</p>
+                <p>Suivi du personnel administratif et technique</p>
             </div>
             <button class="primary-button" type="button" data-form-modal-open>+ Ajouter un membre</button>
         </div>
@@ -24,11 +24,11 @@
             <table class="staff-table">
                 <thead>
                     <tr>
-                        <th>ID employé</th>
+                        <th>Code personnel</th>
                         <th>Nom complet</th>
-                        <th>Fonction</th>
+                        <th>Poste</th>
                         <th>Contact</th>
-                        <th>Type de contrat</th>
+                        <th>Catégorie</th>
                         <th>Statut</th>
                         <th>Actions</th>
                     </tr>
@@ -36,19 +36,33 @@
                 <tbody>
                     @foreach ($staffMembers as $staff)
                         <tr data-staff-row>
-                            <td data-staff-id>{{ $staff->staff_number }}</td>
-                            <td data-staff-name>{{ $staff->last_name }} {{ $staff->first_name }}</td>
-                            <td data-staff-position>{{ $staff->position ?? '—' }}</td>
+                            <td data-staff-id>{{ $staff->code_personnel }}</td>
+                            <td data-staff-name>{{ $staff->nom }} {{ $staff->prenoms }}</td>
+                            <td data-staff-position>{{ $staff->poste ?? '—' }}</td>
                             <td>
                                 <div class="contact-stack">
-                                    <span>{{ $staff->phone ?? '—' }}</span>
+                                    <span>{{ $staff->telephone_1 ?? '—' }}</span>
                                     <span>{{ $staff->email ?? '—' }}</span>
                                 </div>
                             </td>
-                            <td>{{ $staff->contract_type ? strtoupper($staff->contract_type) : '—' }}</td>
+                            <td>{{ $staff->categorie_personnel ?? '—' }}</td>
                             <td>
-                                <span class="status-pill {{ $staff->status === 'active' ? 'status-active' : 'status-inactive' }}">
-                                    {{ $staff->status === 'active' ? 'Actif' : 'Inactif' }}
+                                @php
+                                    $statusClass = match ($staff->statut) {
+                                        'ACTIF' => 'status-active',
+                                        'SUSPENDU' => 'status-suspended',
+                                        'PARTI' => 'status-departed',
+                                        default => 'status-inactive',
+                                    };
+                                    $statusLabel = match ($staff->statut) {
+                                        'ACTIF' => 'Actif',
+                                        'SUSPENDU' => 'Suspendu',
+                                        'PARTI' => 'Parti',
+                                        default => 'Inconnu',
+                                    };
+                                @endphp
+                                <span class="status-pill {{ $statusClass }}">
+                                    {{ $statusLabel }}
                                 </span>
                             </td>
                             <td>
@@ -57,9 +71,9 @@
                                         class="icon-button"
                                         type="button"
                                         data-staff-id="{{ $staff->id }}"
-                                        data-staff-name="{{ $staff->last_name }} {{ $staff->first_name }}"
+                                        data-staff-name="{{ $staff->nom }} {{ $staff->prenoms }}"
                                         data-staff-url="{{ route('staff.show', $staff) }}"
-                                        aria-label="Voir la fiche de {{ $staff->last_name }} {{ $staff->first_name }}"
+                                        aria-label="Voir la fiche de {{ $staff->nom }} {{ $staff->prenoms }}"
                                     >
                                         <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
                                             <path
@@ -67,13 +81,6 @@
                                             />
                                         </svg>
                                     </button>
-                                    @if ($staff->contract_id)
-                                        <a class="link-button" href="{{ route('staff.contracts.download', $staff->contract_id) }}">
-                                            Télécharger contrat
-                                        </a>
-                                    @else
-                                        <span class="muted">Contrat indisponible</span>
-                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -85,7 +92,6 @@
 
     @include('staff.partials.staff-modal')
     @include('staff.partials.staff-form-modal', [
-        'subjects' => $subjects,
         'isOpen' => $errors->any() || request()->get('open') === 'create',
     ])
 

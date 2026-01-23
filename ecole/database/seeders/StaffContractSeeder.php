@@ -15,7 +15,7 @@ class StaffContractSeeder extends Seeder
     {
         $school = School::first();
         $admin = User::where('email', 'admin@example.com')->first();
-        $staff = Staff::where('staff_number', 'EMP001')->first();
+        $staff = Staff::where('code_personnel', 'PER001')->first();
 
         if (! $school || ! $staff) {
             return;

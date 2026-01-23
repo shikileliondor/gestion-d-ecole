@@ -13,17 +13,19 @@ class StaffSeeder extends Seeder
         $school = School::first();
 
         Staff::firstOrCreate(
-            ['staff_number' => 'EMP001'],
+            ['code_personnel' => 'PER001'],
             [
                 'school_id' => $school?->id,
-                'first_name' => 'Jean',
-                'last_name' => 'Traore',
-                'gender' => 'male',
+                'nom' => 'Traore',
+                'prenoms' => 'Jean',
+                'sexe' => 'M',
                 'email' => 'jean.traore@example.com',
-                'position' => 'Enseignant',
-                'department' => 'Maths',
-                'hire_date' => '2022-09-01',
-                'status' => 'active',
+                'telephone_1' => '0102030405',
+                'categorie_personnel' => 'ADMINISTRATION',
+                'poste' => 'Secrétaire',
+                'type_contrat' => 'CDI',
+                'date_debut_service' => '2022-09-01',
+                'statut' => 'ACTIF',
             ]
         );
     }

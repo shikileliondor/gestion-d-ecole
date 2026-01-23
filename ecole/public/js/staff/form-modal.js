@@ -4,12 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButtons = modal?.querySelectorAll('[data-form-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-form-tab]') || [];
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
-    const positionInput = modal?.querySelector('#position');
-    const subjectSelect = modal?.querySelector('#subjects');
-    const teacherPanel = modal?.querySelector('[data-form-panel="teacher"]');
-    const teacherInputs = teacherPanel?.querySelectorAll('input, textarea, select') || [];
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
+    const documentsStack = modal?.querySelector('[data-documents-stack]');
+    const addDocumentButton = modal?.querySelector('[data-document-add]');
 
     if (!modal) {
         return;
@@ -47,10 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (formEyebrow && button.dataset.formEyebrow) {
                 formEyebrow.textContent = button.dataset.formEyebrow;
             }
-            if (positionInput && button.dataset.defaultPosition !== undefined) {
-                positionInput.value = button.dataset.defaultPosition;
-                toggleSubjects();
-            }
         }
     };
 
@@ -59,24 +53,56 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'true');
     };
 
-    const toggleSubjects = () => {
-        if (!subjectSelect) {
-            return;
-        }
-        const isTeacher = positionInput?.value?.toLowerCase().includes('enseignant');
-        subjectSelect.disabled = !isTeacher;
-        subjectSelect.closest('.form-field')?.classList.toggle('is-disabled', !isTeacher);
+    const clearRowInputs = (row) => {
+        const fields = row.querySelectorAll('input, select, textarea');
+        fields.forEach((field) => {
+            if (field.type === 'file') {
+                field.value = '';
+                return;
+            }
+            if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+                return;
+            }
+            field.value = '';
+        });
     };
 
-    const toggleTeacherFields = () => {
-        if (!teacherPanel) {
+    const reindexDocuments = () => {
+        if (!documentsStack) {
             return;
         }
-        const isTeacher = positionInput?.value?.toLowerCase().includes('enseignant');
-        teacherInputs.forEach((input) => {
-            input.disabled = !isTeacher;
+        const rows = documentsStack.querySelectorAll('[data-document-row]');
+        rows.forEach((row, index) => {
+            const fields = row.querySelectorAll('input, select, textarea');
+            fields.forEach((field) => {
+                const name = field.getAttribute('name');
+                if (!name) {
+                    return;
+                }
+                field.setAttribute('name', name.replace(/documents\[\d+\]/, `documents[${index}]`));
+            });
         });
-        teacherPanel.classList.toggle('is-disabled', !isTeacher);
+        rows.forEach((row) => {
+            const removeButton = row.querySelector('[data-document-remove]');
+            if (removeButton) {
+                removeButton.disabled = rows.length <= 1;
+            }
+        });
+    };
+
+    const addDocumentRow = () => {
+        if (!documentsStack) {
+            return;
+        }
+        const template = documentsStack.querySelector('[data-document-row]');
+        if (!template) {
+            return;
+        }
+        const clone = template.cloneNode(true);
+        clearRowInputs(clone);
+        documentsStack.appendChild(clone);
+        reindexDocuments();
     };
 
     openButtons.forEach((button) => {
@@ -96,8 +122,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    positionInput?.addEventListener('input', toggleSubjects);
-    positionInput?.addEventListener('input', toggleTeacherFields);
+    addDocumentButton?.addEventListener('click', addDocumentRow);
+
+    documentsStack?.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('[data-document-remove]');
+        if (!removeButton || !documentsStack) {
+            return;
+        }
+        const row = removeButton.closest('[data-document-row]');
+        if (!row) {
+            return;
+        }
+        const rows = documentsStack.querySelectorAll('[data-document-row]');
+        if (rows.length <= 1) {
+            return;
+        }
+        row.remove();
+        reindexDocuments();
+    });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
@@ -105,8 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    toggleSubjects();
-    toggleTeacherFields();
+    reindexDocuments();
 
     if (modal.dataset.openOnLoad === 'true') {
         openModal();

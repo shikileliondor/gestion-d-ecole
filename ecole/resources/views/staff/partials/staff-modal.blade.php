@@ -21,104 +21,127 @@
         </header>
 
         <div class="staff-modal__tabs" role="tablist">
-            <button class="tab-button is-active" type="button" data-tab="info" role="tab" aria-selected="true">Informations</button>
-            <button class="tab-button" type="button" data-tab="assignments" role="tab" aria-selected="false">Affectations</button>
-            <button class="tab-button" type="button" data-tab="teacher" role="tab" aria-selected="false">Profil enseignant</button>
+            <button class="tab-button is-active" type="button" data-tab="info" role="tab" aria-selected="true">Identité</button>
+            <button class="tab-button" type="button" data-tab="rh" role="tab" aria-selected="false">RH</button>
+            <button class="tab-button" type="button" data-tab="urgence" role="tab" aria-selected="false">Urgence</button>
+            <button class="tab-button" type="button" data-tab="paie" role="tab" aria-selected="false">Paie</button>
+            <button class="tab-button" type="button" data-tab="documents" role="tab" aria-selected="false">Documents</button>
         </div>
 
         <div class="staff-modal__panel is-active" data-panel="info" role="tabpanel">
             <div class="info-grid">
                 <div>
                     <p class="label">{{ $identifierLabel ?? 'ID employé' }}</p>
-                    <p class="value" data-field="staff_number">—</p>
+                    <p class="value" data-field="code_personnel">—</p>
                 </div>
                 <div>
-                    <p class="label">Nom complet</p>
-                    <p class="value" data-field="full_name">—</p>
+                    <p class="label">Nom</p>
+                    <p class="value" data-field="nom">—</p>
                 </div>
                 <div>
-                    <p class="label">Fonction</p>
-                    <p class="value" data-field="position">—</p>
+                    <p class="label">Prénoms</p>
+                    <p class="value" data-field="prenoms">—</p>
+                </div>
+                <div>
+                    <p class="label">Sexe</p>
+                    <p class="value" data-field="sexe">—</p>
+                </div>
+                <div>
+                    <p class="label">Date de naissance</p>
+                    <p class="value" data-field="date_naissance">—</p>
+                </div>
+                <div>
+                    <p class="label">Catégorie</p>
+                    <p class="value" data-field="categorie_personnel">—</p>
+                </div>
+                <div>
+                    <p class="label">Poste</p>
+                    <p class="value" data-field="poste">—</p>
                 </div>
                 <div>
                     <p class="label">Contact</p>
                     <p class="value" data-field="contact">—</p>
                 </div>
                 <div>
-                    <p class="label">Contrat</p>
-                    <p class="value" data-field="contract">—</p>
+                    <p class="label">Adresse</p>
+                    <p class="value" data-field="adresse">—</p>
                 </div>
                 <div>
-                    <p class="label">Date d'embauche</p>
-                    <p class="value" data-field="hire_date">—</p>
+                    <p class="label">Commune</p>
+                    <p class="value" data-field="commune">—</p>
                 </div>
                 <div>
                     <p class="label">Statut</p>
-                    <p class="value" data-field="status">—</p>
+                    <p class="value" data-field="statut">—</p>
                 </div>
             </div>
         </div>
 
-        <div class="staff-modal__panel" data-panel="assignments" role="tabpanel">
-            <div class="list-stack" data-field="assignments"></div>
-        </div>
-
-        <div class="staff-modal__panel" data-panel="teacher" role="tabpanel">
+        <div class="staff-modal__panel" data-panel="rh" role="tabpanel">
             <div class="info-grid">
                 <div>
-                    <p class="label">Code enseignant</p>
-                    <p class="value" data-field="teacher_code">—</p>
+                    <p class="label">Type de contrat</p>
+                    <p class="value" data-field="type_contrat">—</p>
                 </div>
                 <div>
-                    <p class="label">Grade / Rang</p>
-                    <p class="value" data-field="teacher_grade">—</p>
+                    <p class="label">Début de service</p>
+                    <p class="value" data-field="date_debut_service">—</p>
                 </div>
                 <div>
-                    <p class="label">Spécialité</p>
-                    <p class="value" data-field="teacher_speciality">—</p>
+                    <p class="label">Fin de service</p>
+                    <p class="value" data-field="date_fin_service">—</p>
                 </div>
                 <div>
-                    <p class="label">Qualification</p>
-                    <p class="value" data-field="teacher_qualification">—</p>
+                    <p class="label">Numéro CNI</p>
+                    <p class="value" data-field="num_cni">—</p>
                 </div>
                 <div>
-                    <p class="label">Charge horaire</p>
-                    <p class="value" data-field="teacher_load">—</p>
+                    <p class="label">Expiration CNI</p>
+                    <p class="value" data-field="date_expiration_cni">—</p>
                 </div>
                 <div>
-                    <p class="label">Responsabilité pédagogique</p>
-                    <p class="value" data-field="teacher_responsibility">—</p>
-                </div>
-                <div>
-                    <p class="label">Début enseignement</p>
-                    <p class="value" data-field="teacher_start">—</p>
-                </div>
-                <div>
-                    <p class="label">Années d'expérience</p>
-                    <p class="value" data-field="teacher_experience">—</p>
-                </div>
-                <div>
-                    <p class="label">Évaluation</p>
-                    <p class="value" data-field="teacher_evaluation">—</p>
-                </div>
-                <div>
-                    <p class="label">Intérêts de recherche</p>
-                    <p class="value" data-field="teacher_research">—</p>
-                </div>
-                <div>
-                    <p class="label">Développement professionnel</p>
-                    <p class="value" data-field="teacher_development">—</p>
-                </div>
-                <div>
-                    <p class="label">Notes</p>
-                    <p class="value" data-field="teacher_notes">—</p>
+                    <p class="label">Photo</p>
+                    <p class="value" data-field="photo_url">—</p>
                 </div>
             </div>
+        </div>
 
-            <div class="section-header">
-                <p class="label">Documents pédagogiques</p>
+        <div class="staff-modal__panel" data-panel="urgence" role="tabpanel">
+            <div class="info-grid">
+                <div>
+                    <p class="label">Nom du contact</p>
+                    <p class="value" data-field="contact_urgence_nom">—</p>
+                </div>
+                <div>
+                    <p class="label">Lien</p>
+                    <p class="value" data-field="contact_urgence_lien">—</p>
+                </div>
+                <div>
+                    <p class="label">Téléphone</p>
+                    <p class="value" data-field="contact_urgence_tel">—</p>
+                </div>
             </div>
-            <div class="list-stack" data-field="teacher_documents"></div>
+        </div>
+
+        <div class="staff-modal__panel" data-panel="paie" role="tabpanel">
+            <div class="info-grid">
+                <div>
+                    <p class="label">Mode de paiement</p>
+                    <p class="value" data-field="mode_paiement">—</p>
+                </div>
+                <div>
+                    <p class="label">Numéro paiement</p>
+                    <p class="value" data-field="numero_paiement">—</p>
+                </div>
+                <div>
+                    <p class="label">Salaire de base</p>
+                    <p class="value" data-field="salaire_base">—</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="staff-modal__panel" data-panel="documents" role="tabpanel">
+            <div class="list-stack" data-field="documents"></div>
         </div>
     </div>
 </div>
