@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const subjectSelect = modal?.querySelector('#subjects');
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
+    const documentsStack = modal?.querySelector('[data-documents-stack]');
+    const addDocumentButton = modal?.querySelector('[data-document-add]');
 
     if (!modal) {
         return;
@@ -45,10 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (formEyebrow && button.dataset.formEyebrow) {
                 formEyebrow.textContent = button.dataset.formEyebrow;
             }
-            if (positionInput && button.dataset.defaultPosition !== undefined) {
-                positionInput.value = button.dataset.defaultPosition;
-                toggleSubjects();
-            }
         }
     };
 
@@ -57,13 +55,42 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'true');
     };
 
-    const toggleSubjects = () => {
-        if (!subjectSelect) {
+    const clearRowInputs = (row) => {
+        const fields = row.querySelectorAll('input, select, textarea');
+        fields.forEach((field) => {
+            if (field.type === 'file') {
+                field.value = '';
+                return;
+            }
+            if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+                return;
+            }
+            field.value = '';
+        });
+    };
+
+    const reindexDocuments = () => {
+        if (!documentsStack) {
             return;
         }
-        const isTeacher = positionInput?.value?.toLowerCase().includes('enseignant');
-        subjectSelect.disabled = !isTeacher;
-        subjectSelect.closest('.form-field')?.classList.toggle('is-disabled', !isTeacher);
+        const rows = documentsStack.querySelectorAll('[data-document-row]');
+        rows.forEach((row, index) => {
+            const fields = row.querySelectorAll('input, select, textarea');
+            fields.forEach((field) => {
+                const name = field.getAttribute('name');
+                if (!name) {
+                    return;
+                }
+                field.setAttribute('name', name.replace(/documents\[\d+\]/, `documents[${index}]`));
+            });
+        });
+        rows.forEach((row) => {
+            const removeButton = row.querySelector('[data-document-remove]');
+            if (removeButton) {
+                removeButton.disabled = rows.length <= 1;
+            }
+        });
     };
 
     openButtons.forEach((button) => {

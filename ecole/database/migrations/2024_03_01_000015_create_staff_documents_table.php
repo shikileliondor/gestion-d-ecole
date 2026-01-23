@@ -9,16 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('staff_documents', function (Blueprint $table) {
-            $table->comment('Associates staff members with their uploaded documents.');
+            $table->comment('Stores uploaded documents for staff members.');
             $table->id();
             $table->foreignId('staff_id')->constrained('staff')->cascadeOnDelete();
-            $table->foreignId('document_id')->constrained('documents')->cascadeOnDelete();
-            $table->boolean('is_required')->default(false)->index();
-            $table->enum('status', ['pending', 'received', 'verified'])->default('pending')->index();
-            $table->string('remarks')->nullable();
-            $table->timestamps();
-
-            $table->unique(['staff_id', 'document_id']);
+            $table->enum('type_document', ['CNI', 'CONTRAT', 'DIPLOME', 'CV', 'ATTESTATION', 'AUTRE']);
+            $table->string('libelle');
+            $table->text('description')->nullable();
+            $table->string('fichier_url');
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('taille')->nullable();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 

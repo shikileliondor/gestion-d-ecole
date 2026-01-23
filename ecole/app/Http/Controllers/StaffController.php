@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Document;
 use App\Models\School;
 use App\Models\Staff;
 use App\Models\StaffAssignment;
@@ -20,19 +19,20 @@ class StaffController extends Controller
 {
     public function index(): View
     {
-        return $this->renderStaffList(false);
-    }
-
-    public function teachers(): View
-    {
-        return $this->renderStaffList(true);
+        return $this->renderStaffList();
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => ['required', 'string', 'max:255'],
-            'position' => ['required', 'string', 'max:255'],
+            'code_personnel' => ['required', 'string', 'max:50', 'unique:staff,code_personnel'],
+            'nom' => ['required', 'string', 'max:255'],
+            'prenoms' => ['required', 'string', 'max:255'],
+            'sexe' => ['nullable', 'in:M,F,AUTRE'],
+            'date_naissance' => ['nullable', 'date'],
+            'photo_url' => ['nullable', 'string', 'max:255'],
+            'telephone_1' => ['required', 'string', 'max:30'],
+            'telephone_2' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
             'contract_type' => ['required', 'in:CDI,CDD,Vacation'],
@@ -69,47 +69,39 @@ class StaffController extends Controller
         DB::transaction(function () use ($data, $schoolId, $firstName, $lastName, $middleName, $filePath, $contractFile) {
             $staff = Staff::create([
                 'school_id' => $schoolId,
-                'staff_number' => $this->generateStaffNumber(),
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'middle_name' => $middleName,
+                'code_personnel' => $data['code_personnel'],
+                'nom' => $data['nom'],
+                'prenoms' => $data['prenoms'],
+                'sexe' => $data['sexe'] ?? null,
+                'date_naissance' => $data['date_naissance'] ?? null,
+                'photo_url' => $data['photo_url'] ?? null,
+                'telephone_1' => $data['telephone_1'],
+                'telephone_2' => $data['telephone_2'] ?? null,
                 'email' => $data['email'] ?? null,
-                'phone' => $data['phone'] ?? null,
-                'position' => $data['position'],
-                'hire_date' => $data['hire_date'],
-                'status' => 'active',
+                'adresse' => $data['adresse'] ?? null,
+                'commune' => $data['commune'] ?? null,
+                'categorie_personnel' => $data['categorie_personnel'],
+                'poste' => $data['poste'],
+                'type_contrat' => $data['type_contrat'],
+                'date_debut_service' => $data['date_debut_service'],
+                'date_fin_service' => $data['date_fin_service'] ?? null,
+                'statut' => $data['statut'],
+                'num_cni' => $data['num_cni'] ?? null,
+                'date_expiration_cni' => $data['date_expiration_cni'] ?? null,
+                'contact_urgence_nom' => $data['contact_urgence_nom'] ?? null,
+                'contact_urgence_lien' => $data['contact_urgence_lien'] ?? null,
+                'contact_urgence_tel' => $data['contact_urgence_tel'] ?? null,
+                'mode_paiement' => $data['mode_paiement'] ?? null,
+                'numero_paiement' => $data['numero_paiement'] ?? null,
+                'salaire_base' => $data['salaire_base'] ?? null,
             ]);
 
-            $document = Document::create([
-                'school_id' => $schoolId,
-                'category' => 'contrat_personnel',
-                'name' => 'Contrat ' . $staff->staff_number,
-                'description' => 'Contrat de travail du personnel',
-                'file_path' => $filePath ?? 'documents/staff-contracts/contrat.pdf',
-                'mime_type' => $contractFile?->getClientMimeType(),
-                'size' => $contractFile?->getSize(),
-                'is_public' => false,
-                'status' => 'active',
-            ]);
+            $documents = $data['documents'] ?? [];
+            foreach ($documents as $index => $documentData) {
+                $uploadedFile = $request->file("documents.$index.fichier");
 
-            StaffContract::create([
-                'staff_id' => $staff->id,
-                'document_id' => $document->id,
-                'contract_type' => strtolower($data['contract_type']),
-                'start_date' => $data['hire_date'],
-                'status' => 'active',
-            ]);
-
-            if (! empty($data['subjects'])) {
-                foreach ($data['subjects'] as $subjectId) {
-                    StaffAssignment::create([
-                        'staff_id' => $staff->id,
-                        'subject_id' => $subjectId,
-                        'class_id' => null,
-                        'start_date' => $data['hire_date'],
-                        'assigned_at' => now(),
-                        'status' => 'active',
-                    ]);
+                if (! $uploadedFile) {
+                    continue;
                 }
             }
         });
@@ -158,86 +150,22 @@ class StaffController extends Controller
         ]);
     }
 
-    public function downloadContract(int $id)
-    {
-        $contract = StaffContract::query()
-            ->where('staff_contracts.id', $id)
-            ->leftJoin('documents', 'staff_contracts.document_id', '=', 'documents.id')
-            ->select('documents.file_path', 'documents.name')
-            ->firstOrFail();
-
-        $filePath = $contract->file_path;
-        if (! $filePath || ! Storage::disk('public')->exists($filePath)) {
-            return back()->withErrors(['contract' => 'Le contrat est indisponible.']);
-        }
-
-        return Storage::disk('public')->download($filePath, ($contract->name ?? 'contrat') . '.pdf');
-    }
-
-    private function generateStaffNumber(): string
-    {
-        $lastStaffNumber = Staff::query()
-            ->where('staff_number', 'like', 'EMP%')
-            ->orderByDesc('staff_number')
-            ->value('staff_number');
-
-        if (! $lastStaffNumber) {
-            return 'EMP001';
-        }
-
-        $number = (int) preg_replace('/\D/', '', $lastStaffNumber);
-        $nextNumber = str_pad((string) ($number + 1), 3, '0', STR_PAD_LEFT);
-
-        return 'EMP' . $nextNumber;
-    }
-
-    private function renderStaffList(bool $onlyTeachers): View
+    private function renderStaffList(): View
     {
         $staffMembers = Staff::query()
-            ->select('staff.*')
-            ->addSelect([
-                'contract_type' => StaffContract::query()
-                    ->select('contract_type')
-                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
-                    ->latest('staff_contracts.start_date')
-                    ->limit(1),
-                'contract_id' => StaffContract::query()
-                    ->select('id')
-                    ->whereColumn('staff_contracts.staff_id', 'staff.id')
-                    ->latest('staff_contracts.start_date')
-                    ->limit(1),
-            ])
-            ->when($onlyTeachers, function ($query) {
-                $query->where('position', 'Enseignant');
-            }, function ($query) {
-                $query->where(function ($filter) {
-                    $filter->whereNull('position')
-                        ->orWhere('position', '!=', 'Enseignant');
-                });
-            })
-            ->with(['assignments.subject'])
-            ->orderBy('staff.last_name')
-            ->orderBy('staff.first_name')
-            ->get();
-
-        $subjects = Subject::query()
-            ->orderBy('name')
+            ->orderBy('staff.nom')
+            ->orderBy('staff.prenoms')
             ->get();
 
         return view('staff.cards', [
             'staffMembers' => $staffMembers,
-            'subjects' => $subjects,
-            'title' => $onlyTeachers ? 'Gestion des professeurs' : 'Gestion du personnel',
-            'subtitle' => $onlyTeachers
-                ? 'Suivi des professeurs et de leurs matières'
-                : 'Suivi des contrats et affectations pédagogiques',
-            'ctaLabel' => $onlyTeachers ? 'Ajouter un professeur' : 'Ajouter un membre',
-            'identifierLabel' => $onlyTeachers ? 'Identifiant professeur' : 'Identifiant personnel',
-            'profileTitle' => $onlyTeachers ? 'Fiche professeur' : 'Fiche personnel',
-            'formEyebrow' => $onlyTeachers ? 'Nouveau professeur' : 'Nouveau personnel',
-            'formTitle' => $onlyTeachers ? 'Ajouter un professeur' : 'Ajouter un membre du personnel',
-            'defaultPosition' => $onlyTeachers ? 'Enseignant' : '',
-            'isTeacherList' => $onlyTeachers,
+            'title' => 'Gestion du personnel',
+            'subtitle' => 'Suivi du personnel administratif et technique',
+            'ctaLabel' => 'Ajouter un membre',
+            'identifierLabel' => 'Code personnel',
+            'profileTitle' => 'Fiche personnel',
+            'formEyebrow' => 'Nouveau personnel',
+            'formTitle' => 'Ajouter un membre du personnel',
         ]);
     }
 }

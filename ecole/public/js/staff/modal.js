@@ -10,13 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const infoFields = {
-        staff_number: modal.querySelector('[data-field="staff_number"]'),
-        full_name: modal.querySelector('[data-field="full_name"]'),
-        position: modal.querySelector('[data-field="position"]'),
+        code_personnel: modal.querySelector('[data-field="code_personnel"]'),
+        nom: modal.querySelector('[data-field="nom"]'),
+        prenoms: modal.querySelector('[data-field="prenoms"]'),
+        sexe: modal.querySelector('[data-field="sexe"]'),
+        date_naissance: modal.querySelector('[data-field="date_naissance"]'),
+        categorie_personnel: modal.querySelector('[data-field="categorie_personnel"]'),
+        poste: modal.querySelector('[data-field="poste"]'),
         contact: modal.querySelector('[data-field="contact"]'),
-        contract: modal.querySelector('[data-field="contract"]'),
-        hire_date: modal.querySelector('[data-field="hire_date"]'),
-        status: modal.querySelector('[data-field="status"]'),
+        adresse: modal.querySelector('[data-field="adresse"]'),
+        commune: modal.querySelector('[data-field="commune"]'),
+        statut: modal.querySelector('[data-field="statut"]'),
     };
 
     const listFields = {
@@ -32,6 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return value;
         }
         return new Intl.DateTimeFormat('fr-FR').format(date);
+    };
+
+    const formatCurrency = (value) => {
+        if (value === null || value === undefined || value === '') {
+            return '—';
+        }
+        const numberValue = Number(value);
+        if (Number.isNaN(numberValue)) {
+            return value;
+        }
+        return `${new Intl.NumberFormat('fr-FR').format(numberValue)} FCFA`;
     };
 
     const setText = (element, value) => {
@@ -82,6 +97,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const labelMaps = {
+        sexe: { M: 'M', F: 'F', AUTRE: 'Autre' },
+        categorie_personnel: {
+            ADMINISTRATION: 'Administration',
+            SURVEILLANCE: 'Surveillance',
+            INTENDANCE: 'Intendance',
+            COMPTABILITE: 'Comptabilité',
+            TECHNIQUE: 'Technique',
+            SERVICE: 'Service',
+        },
+        type_contrat: { CDI: 'CDI', CDD: 'CDD', VACATAIRE: 'Vacataire', STAGE: 'Stage' },
+        statut: { ACTIF: 'Actif', SUSPENDU: 'Suspendu', PARTI: 'Parti' },
+        mode_paiement: { MOBILE_MONEY: 'Mobile Money', VIREMENT: 'Virement', CASH: 'Cash' },
+        contact_urgence_lien: {
+            PERE: 'Père',
+            MERE: 'Mère',
+            CONJOINT: 'Conjoint',
+            FRERE_SOEUR: 'Frère/Soeur',
+            TUTEUR: 'Tuteur',
+            AUTRE: 'Autre',
+        },
+        type_document: {
+            CNI: 'CNI',
+            CONTRAT: 'Contrat',
+            DIPLOME: 'Diplôme',
+            CV: 'CV',
+            ATTESTATION: 'Attestation',
+            AUTRE: 'Autre',
+        },
+    };
+
     const openModal = (staffUrl, staffName) => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
@@ -124,36 +170,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 setText(infoFields.position, staff.position);
                 setText(
                     infoFields.contact,
-                    [staff.phone, staff.email].filter((item) => item).join(' · ')
+                    [staff.telephone_1, staff.telephone_2, staff.email].filter((item) => item).join(' · ')
                 );
-                if (contract.contract_type) {
-                    setText(
-                        infoFields.contract,
-                        `${contract.contract_type.toUpperCase()} (${contract.status || 'actif'})`
-                    );
-                }
-                setText(infoFields.hire_date, formatDate(staff.hire_date));
-                setText(infoFields.status, staff.status === 'active' ? 'Actif' : 'Inactif');
+                setText(infoFields.adresse, staff.adresse);
+                setText(infoFields.commune, staff.commune);
+                setText(infoFields.statut, labelMaps.statut[staff.statut] || staff.statut);
 
                 setList(
-                    listFields.assignments,
-                    data.assignments,
-                    (assignment) => `
+                    listFields.documents,
+                    data.documents,
+                    (document) => `
                         <div>
-                            <p class="label">Matière</p>
-                            <p class="value">${assignment.subject || '—'}</p>
+                            <p class="label">Libellé</p>
+                            <p class="value">${document.libelle || '—'}</p>
                         </div>
                         <div>
-                            <p class="label">Classe</p>
-                            <p class="value">${assignment.class || '—'}</p>
+                            <p class="label">Type</p>
+                            <p class="value">${labelMaps.type_document[document.type_document] || document.type_document || '—'}</p>
                         </div>
                         <div>
-                            <p class="label">Période</p>
-                            <p class="value">${formatDate(assignment.start_date)} → ${assignment.end_date ? formatDate(assignment.end_date) : 'en cours'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Statut</p>
-                            <p class="value">${assignment.status || '—'}</p>
+                            <p class="label">Description</p>
+                            <p class="value">${document.description || '—'}</p>
                         </div>
                     `,
                     'Aucune affectation enregistrée.'

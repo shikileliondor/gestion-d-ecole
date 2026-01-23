@@ -12,4 +12,6 @@ class StaffDocument extends Model
     protected $table = 'staff_documents';
 
     protected $guarded = [];
+
+    public $timestamps = false;
 }

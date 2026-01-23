@@ -153,6 +153,16 @@
     color: #b91c1c;
 }
 
+.status-suspended {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-departed {
+    background: #e5e7eb;
+    color: #374151;
+}
+
 .link-button {
     border: none;
     background: none;
@@ -340,6 +350,32 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
+}
+
+.documents-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.document-row {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+}
+
+.document-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.helper-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 8px 0 0;
 }
 
 .form-field {
