@@ -7,7 +7,9 @@ use App\Models\School;
 use App\Models\Staff;
 use App\Models\StaffAssignment;
 use App\Models\StaffContract;
+use App\Models\StaffDocument;
 use App\Models\Subject;
+use App\Models\Teacher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,11 +42,31 @@ class StaffController extends Controller
             'subjects' => ['nullable', 'array'],
             'subjects.*' => ['integer', 'exists:subjects,id'],
             'contract_file' => ['required', 'file', 'mimes:pdf', 'max:5120'],
+            'teacher_code' => ['nullable', 'string', 'max:50', 'unique:teachers,teacher_code'],
+            'grade' => ['nullable', 'string', 'max:255'],
+            'speciality' => ['nullable', 'string', 'max:255'],
+            'qualification' => ['nullable', 'string', 'max:255'],
+            'teaching_load_hours' => ['nullable', 'integer', 'min:0', 'max:200'],
+            'pedagogical_responsibility' => ['nullable', 'string', 'max:255'],
+            'start_teaching_date' => ['nullable', 'date'],
+            'teaching_experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'research_interests' => ['nullable', 'string', 'max:2000'],
+            'professional_development' => ['nullable', 'string', 'max:2000'],
+            'teacher_evaluation' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'teacher_documents' => ['nullable', 'array'],
+            'teacher_documents.*' => ['file', 'mimes:pdf', 'max:5120'],
         ]);
 
         $validator->after(function ($validator) use ($request) {
-            if ($request->input('position') === 'Enseignant' && empty($request->input('subjects'))) {
+            $isTeacher = str_contains(strtolower($request->input('position', '')), 'enseignant');
+
+            if ($isTeacher && empty($request->input('subjects'))) {
                 $validator->errors()->add('subjects', 'Veuillez sélectionner au moins une matière.');
+            }
+
+            if ($isTeacher && empty($request->input('teacher_code'))) {
+                $validator->errors()->add('teacher_code', 'Veuillez renseigner le code enseignant.');
             }
         });
 
@@ -64,7 +86,9 @@ class StaffController extends Controller
         $contractFile = $request->file('contract_file');
         $filePath = $contractFile?->store('documents/staff-contracts', 'public');
 
-        DB::transaction(function () use ($data, $schoolId, $firstName, $lastName, $middleName, $filePath, $contractFile) {
+        $isTeacher = str_contains(strtolower($data['position']), 'enseignant');
+
+        DB::transaction(function () use ($data, $schoolId, $firstName, $lastName, $middleName, $filePath, $contractFile, $isTeacher, $request) {
             $staff = Staff::create([
                 'school_id' => $schoolId,
                 'staff_number' => $this->generateStaffNumber(),
@@ -110,6 +134,48 @@ class StaffController extends Controller
                     ]);
                 }
             }
+
+            if ($isTeacher) {
+                Teacher::create([
+                    'staff_id' => $staff->id,
+                    'teacher_code' => $data['teacher_code'],
+                    'grade' => $data['grade'] ?? null,
+                    'speciality' => $data['speciality'] ?? null,
+                    'qualification' => $data['qualification'] ?? null,
+                    'teaching_load_hours' => $data['teaching_load_hours'] ?? null,
+                    'pedagogical_responsibility' => $data['pedagogical_responsibility'] ?? null,
+                    'start_teaching_date' => $data['start_teaching_date'] ?? null,
+                    'teaching_experience_years' => $data['teaching_experience_years'] ?? null,
+                    'research_interests' => $data['research_interests'] ?? null,
+                    'professional_development' => $data['professional_development'] ?? null,
+                    'teacher_evaluation' => $data['teacher_evaluation'] ?? null,
+                    'notes' => $data['notes'] ?? null,
+                ]);
+
+                $teacherDocuments = $request->file('teacher_documents', []);
+                foreach ($teacherDocuments as $uploadedFile) {
+                    $documentPath = $uploadedFile->store('documents/teacher', 'public');
+
+                    $document = Document::create([
+                        'school_id' => $schoolId,
+                        'category' => 'teacher_document',
+                        'name' => $uploadedFile->getClientOriginalName(),
+                        'description' => 'Document enseignant',
+                        'file_path' => $documentPath,
+                        'mime_type' => $uploadedFile->getClientMimeType(),
+                        'size' => $uploadedFile->getSize(),
+                        'is_public' => false,
+                        'status' => 'active',
+                    ]);
+
+                    StaffDocument::create([
+                        'staff_id' => $staff->id,
+                        'document_id' => $document->id,
+                        'is_required' => false,
+                        'status' => 'received',
+                    ]);
+                }
+            }
         });
 
         return redirect()
@@ -149,10 +215,24 @@ class StaffController extends Controller
             ->orderByDesc('staff_assignments.start_date')
             ->get();
 
+        $teacher = Teacher::query()
+            ->where('staff_id', $staff->id)
+            ->first();
+
+        $documents = StaffDocument::query()
+            ->where('staff_documents.staff_id', $staff->id)
+            ->leftJoin('documents', 'staff_documents.document_id', '=', 'documents.id')
+            ->where('documents.category', 'teacher_document')
+            ->select('documents.name', 'documents.file_path', 'documents.category', 'staff_documents.status')
+            ->orderByDesc('staff_documents.created_at')
+            ->get();
+
         return response()->json([
             'staff' => $staff,
             'contract' => $latestContract,
             'assignments' => $assignments,
+            'teacher' => $teacher,
+            'documents' => $documents,
         ]);
     }
 
