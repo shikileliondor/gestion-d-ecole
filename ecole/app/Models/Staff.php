@@ -109,8 +109,4 @@ class Staff extends Model
         return $this->hasMany(StaffAssignment::class);
     }
 
-    public function teacher()
-    {
-        return $this->hasOne(Teacher::class);
-    }
 }

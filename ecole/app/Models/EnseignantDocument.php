@@ -6,14 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Teacher extends Model
+class EnseignantDocument extends Model
 {
     use HasFactory;
 
+    public const TYPES = ['CNI', 'DIPLOME', 'CONTRAT', 'CV', 'COURS', 'AUTRE'];
+
     protected $guarded = [];
 
-    public function staff(): BelongsTo
+    public function enseignant(): BelongsTo
     {
-        return $this->belongsTo(Staff::class);
+        return $this->belongsTo(Enseignant::class);
     }
 }

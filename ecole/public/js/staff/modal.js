@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButtons = modal?.querySelectorAll('[data-staff-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-tab]') || [];
     const panels = modal?.querySelectorAll('[data-panel]') || [];
-
     if (!modal) {
         return;
     }
@@ -24,29 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
         statut: modal.querySelector('[data-field="statut"]'),
     };
 
-    const rhFields = {
-        type_contrat: modal.querySelector('[data-field="type_contrat"]'),
-        date_debut_service: modal.querySelector('[data-field="date_debut_service"]'),
-        date_fin_service: modal.querySelector('[data-field="date_fin_service"]'),
-        num_cni: modal.querySelector('[data-field="num_cni"]'),
-        date_expiration_cni: modal.querySelector('[data-field="date_expiration_cni"]'),
-        photo_url: modal.querySelector('[data-field="photo_url"]'),
-    };
-
-    const urgenceFields = {
-        contact_urgence_nom: modal.querySelector('[data-field="contact_urgence_nom"]'),
-        contact_urgence_lien: modal.querySelector('[data-field="contact_urgence_lien"]'),
-        contact_urgence_tel: modal.querySelector('[data-field="contact_urgence_tel"]'),
-    };
-
-    const paieFields = {
-        mode_paiement: modal.querySelector('[data-field="mode_paiement"]'),
-        numero_paiement: modal.querySelector('[data-field="numero_paiement"]'),
-        salaire_base: modal.querySelector('[data-field="salaire_base"]'),
-    };
-
     const listFields = {
-        documents: modal.querySelector('[data-field="documents"]'),
+        assignments: modal.querySelector('[data-field="assignments"]'),
     };
 
     const formatDate = (value) => {
@@ -159,11 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
             modalTitle.textContent = `${prefix} - ${staffName}`;
         }
 
-        Object.values(infoFields).forEach((field) => setText(field, '—'));
-        Object.values(rhFields).forEach((field) => setText(field, '—'));
-        Object.values(urgenceFields).forEach((field) => setText(field, '—'));
-        Object.values(paieFields).forEach((field) => setText(field, '—'));
-        setList(listFields.documents, [], () => '', 'Aucun document enregistré.');
+        setText(infoFields.staff_number, '—');
+        setText(infoFields.full_name, '—');
+        setText(infoFields.position, '—');
+        setText(infoFields.contact, '—');
+        setText(infoFields.contract, '—');
+        setText(infoFields.hire_date, '—');
+        setText(infoFields.status, '—');
+        setList(listFields.assignments, [], () => '', 'Aucune affectation enregistrée.');
 
         if (!staffUrl) {
             return;
@@ -183,17 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then((data) => {
                 const staff = data.staff || {};
-
-                setText(infoFields.code_personnel, staff.code_personnel);
-                setText(infoFields.nom, staff.nom);
-                setText(infoFields.prenoms, staff.prenoms);
-                setText(infoFields.sexe, labelMaps.sexe[staff.sexe] || staff.sexe);
-                setText(infoFields.date_naissance, formatDate(staff.date_naissance));
-                setText(
-                    infoFields.categorie_personnel,
-                    labelMaps.categorie_personnel[staff.categorie_personnel] || staff.categorie_personnel
-                );
-                setText(infoFields.poste, staff.poste);
+                const contract = data.contract || {};
+                setText(infoFields.staff_number, staff.staff_number);
+                setText(infoFields.full_name, `${staff.last_name || ''} ${staff.first_name || ''}`.trim());
+                setText(infoFields.position, staff.position);
                 setText(
                     infoFields.contact,
                     [staff.telephone_1, staff.telephone_2, staff.email].filter((item) => item).join(' · ')
@@ -201,27 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setText(infoFields.adresse, staff.adresse);
                 setText(infoFields.commune, staff.commune);
                 setText(infoFields.statut, labelMaps.statut[staff.statut] || staff.statut);
-
-                setText(rhFields.type_contrat, labelMaps.type_contrat[staff.type_contrat] || staff.type_contrat);
-                setText(rhFields.date_debut_service, formatDate(staff.date_debut_service));
-                setText(rhFields.date_fin_service, formatDate(staff.date_fin_service));
-                setText(rhFields.num_cni, staff.num_cni);
-                setText(rhFields.date_expiration_cni, formatDate(staff.date_expiration_cni));
-                setText(rhFields.photo_url, staff.photo_url);
-
-                setText(urgenceFields.contact_urgence_nom, staff.contact_urgence_nom);
-                setText(
-                    urgenceFields.contact_urgence_lien,
-                    labelMaps.contact_urgence_lien[staff.contact_urgence_lien] || staff.contact_urgence_lien
-                );
-                setText(urgenceFields.contact_urgence_tel, staff.contact_urgence_tel);
-
-                setText(
-                    paieFields.mode_paiement,
-                    labelMaps.mode_paiement[staff.mode_paiement] || staff.mode_paiement
-                );
-                setText(paieFields.numero_paiement, staff.numero_paiement);
-                setText(paieFields.salaire_base, formatCurrency(staff.salaire_base));
 
                 setList(
                     listFields.documents,
@@ -239,20 +192,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <p class="label">Description</p>
                             <p class="value">${document.description || '—'}</p>
                         </div>
-                        <div>
-                            <p class="label">Ajouté le</p>
-                            <p class="value">${formatDate(document.created_at)}</p>
-                        </div>
-                        <div>
-                            <p class="label">Fichier</p>
-                            <p class="value">${document.url ? `<a href="${document.url}" target="_blank" rel="noreferrer">Télécharger</a>` : '—'}</p>
-                        </div>
                     `,
-                    'Aucun document enregistré.'
+                    'Aucune affectation enregistrée.'
                 );
+
             })
             .catch(() => {
-                setList(listFields.documents, [], () => '', 'Impossible de charger les documents.');
+                setList(listFields.assignments, [], () => '', 'Impossible de charger les informations.');
             });
     };
 

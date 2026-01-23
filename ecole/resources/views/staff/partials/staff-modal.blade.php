@@ -21,11 +21,8 @@
         </header>
 
         <div class="staff-modal__tabs" role="tablist">
-            <button class="tab-button is-active" type="button" data-tab="info" role="tab" aria-selected="true">Identité</button>
-            <button class="tab-button" type="button" data-tab="rh" role="tab" aria-selected="false">RH</button>
-            <button class="tab-button" type="button" data-tab="urgence" role="tab" aria-selected="false">Urgence</button>
-            <button class="tab-button" type="button" data-tab="paie" role="tab" aria-selected="false">Paie</button>
-            <button class="tab-button" type="button" data-tab="documents" role="tab" aria-selected="false">Documents</button>
+            <button class="tab-button is-active" type="button" data-tab="info" role="tab" aria-selected="true">Informations</button>
+            <button class="tab-button" type="button" data-tab="assignments" role="tab" aria-selected="false">Affectations</button>
         </div>
 
         <div class="staff-modal__panel is-active" data-panel="info" role="tabpanel">
@@ -77,71 +74,8 @@
             </div>
         </div>
 
-        <div class="staff-modal__panel" data-panel="rh" role="tabpanel">
-            <div class="info-grid">
-                <div>
-                    <p class="label">Type de contrat</p>
-                    <p class="value" data-field="type_contrat">—</p>
-                </div>
-                <div>
-                    <p class="label">Début de service</p>
-                    <p class="value" data-field="date_debut_service">—</p>
-                </div>
-                <div>
-                    <p class="label">Fin de service</p>
-                    <p class="value" data-field="date_fin_service">—</p>
-                </div>
-                <div>
-                    <p class="label">Numéro CNI</p>
-                    <p class="value" data-field="num_cni">—</p>
-                </div>
-                <div>
-                    <p class="label">Expiration CNI</p>
-                    <p class="value" data-field="date_expiration_cni">—</p>
-                </div>
-                <div>
-                    <p class="label">Photo</p>
-                    <p class="value" data-field="photo_url">—</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="staff-modal__panel" data-panel="urgence" role="tabpanel">
-            <div class="info-grid">
-                <div>
-                    <p class="label">Nom du contact</p>
-                    <p class="value" data-field="contact_urgence_nom">—</p>
-                </div>
-                <div>
-                    <p class="label">Lien</p>
-                    <p class="value" data-field="contact_urgence_lien">—</p>
-                </div>
-                <div>
-                    <p class="label">Téléphone</p>
-                    <p class="value" data-field="contact_urgence_tel">—</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="staff-modal__panel" data-panel="paie" role="tabpanel">
-            <div class="info-grid">
-                <div>
-                    <p class="label">Mode de paiement</p>
-                    <p class="value" data-field="mode_paiement">—</p>
-                </div>
-                <div>
-                    <p class="label">Numéro paiement</p>
-                    <p class="value" data-field="numero_paiement">—</p>
-                </div>
-                <div>
-                    <p class="label">Salaire de base</p>
-                    <p class="value" data-field="salaire_base">—</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="staff-modal__panel" data-panel="documents" role="tabpanel">
-            <div class="list-stack" data-field="documents"></div>
+        <div class="staff-modal__panel" data-panel="assignments" role="tabpanel">
+            <div class="list-stack" data-field="assignments"></div>
         </div>
     </div>
 </div>

@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButtons = modal?.querySelectorAll('[data-form-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-form-tab]') || [];
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
+    const positionInput = modal?.querySelector('#position');
+    const subjectSelect = modal?.querySelector('#subjects');
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
     const documentsStack = modal?.querySelector('[data-documents-stack]');
@@ -91,20 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const addDocumentRow = () => {
-        if (!documentsStack) {
-            return;
-        }
-        const template = documentsStack.querySelector('[data-document-row]');
-        if (!template) {
-            return;
-        }
-        const clone = template.cloneNode(true);
-        clearRowInputs(clone);
-        documentsStack.appendChild(clone);
-        reindexDocuments();
-    };
-
     openButtons.forEach((button) => {
         button.addEventListener('click', () => openModal(button));
     });
@@ -122,32 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    addDocumentButton?.addEventListener('click', addDocumentRow);
-
-    documentsStack?.addEventListener('click', (event) => {
-        const removeButton = event.target.closest('[data-document-remove]');
-        if (!removeButton || !documentsStack) {
-            return;
-        }
-        const row = removeButton.closest('[data-document-row]');
-        if (!row) {
-            return;
-        }
-        const rows = documentsStack.querySelectorAll('[data-document-row]');
-        if (rows.length <= 1) {
-            return;
-        }
-        row.remove();
-        reindexDocuments();
-    });
-
+    positionInput?.addEventListener('input', toggleSubjects);
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeModal();
         }
     });
 
-    reindexDocuments();
+    toggleSubjects();
 
     if (modal.dataset.openOnLoad === 'true') {
         openModal();

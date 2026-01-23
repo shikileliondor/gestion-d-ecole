@@ -44,12 +44,6 @@
                 <button class="tab-button" type="button" data-form-tab="urgence" role="tab" aria-selected="false">
                     Urgence
                 </button>
-                <button class="tab-button" type="button" data-form-tab="paie" role="tab" aria-selected="false">
-                    Paie
-                </button>
-                <button class="tab-button" type="button" data-form-tab="documents" role="tab" aria-selected="false">
-                    Documents
-                </button>
             </div>
 
             <div class="staff-form__panel is-active" data-form-panel="identity" role="tabpanel">
@@ -129,122 +123,6 @@
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <div class="staff-form__panel" data-form-panel="rh" role="tabpanel">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="type_contrat">Type de contrat *</label>
-                        <select id="type_contrat" name="type_contrat" required>
-                            <option value="">Sélectionner</option>
-                            <option value="CDI" @selected(old('type_contrat') === 'CDI')>CDI</option>
-                            <option value="CDD" @selected(old('type_contrat') === 'CDD')>CDD</option>
-                            <option value="VACATAIRE" @selected(old('type_contrat') === 'VACATAIRE')>Vacataire</option>
-                            <option value="STAGE" @selected(old('type_contrat') === 'STAGE')>Stage</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label for="date_debut_service">Date début service *</label>
-                        <input type="date" id="date_debut_service" name="date_debut_service" value="{{ old('date_debut_service') }}" required>
-                    </div>
-                    <div class="form-field">
-                        <label for="date_fin_service">Date fin service</label>
-                        <input type="date" id="date_fin_service" name="date_fin_service" value="{{ old('date_fin_service') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="num_cni">Numéro CNI</label>
-                        <input type="text" id="num_cni" name="num_cni" value="{{ old('num_cni') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="date_expiration_cni">Expiration CNI</label>
-                        <input type="date" id="date_expiration_cni" name="date_expiration_cni" value="{{ old('date_expiration_cni') }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="staff-form__panel" data-form-panel="urgence" role="tabpanel">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="contact_urgence_nom">Nom du contact</label>
-                        <input type="text" id="contact_urgence_nom" name="contact_urgence_nom" value="{{ old('contact_urgence_nom') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="contact_urgence_lien">Lien</label>
-                        <select id="contact_urgence_lien" name="contact_urgence_lien">
-                            <option value="">Sélectionner</option>
-                            <option value="PERE" @selected(old('contact_urgence_lien') === 'PERE')>Père</option>
-                            <option value="MERE" @selected(old('contact_urgence_lien') === 'MERE')>Mère</option>
-                            <option value="CONJOINT" @selected(old('contact_urgence_lien') === 'CONJOINT')>Conjoint</option>
-                            <option value="FRERE_SOEUR" @selected(old('contact_urgence_lien') === 'FRERE_SOEUR')>Frère/Soeur</option>
-                            <option value="TUTEUR" @selected(old('contact_urgence_lien') === 'TUTEUR')>Tuteur</option>
-                            <option value="AUTRE" @selected(old('contact_urgence_lien') === 'AUTRE')>Autre</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label for="contact_urgence_tel">Téléphone</label>
-                        <input type="text" id="contact_urgence_tel" name="contact_urgence_tel" value="{{ old('contact_urgence_tel') }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="staff-form__panel" data-form-panel="paie" role="tabpanel">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="mode_paiement">Mode de paiement</label>
-                        <select id="mode_paiement" name="mode_paiement">
-                            <option value="">Sélectionner</option>
-                            <option value="MOBILE_MONEY" @selected(old('mode_paiement') === 'MOBILE_MONEY')>Mobile Money</option>
-                            <option value="VIREMENT" @selected(old('mode_paiement') === 'VIREMENT')>Virement</option>
-                            <option value="CASH" @selected(old('mode_paiement') === 'CASH')>Cash</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label for="numero_paiement">Numéro de paiement</label>
-                        <input type="text" id="numero_paiement" name="numero_paiement" value="{{ old('numero_paiement') }}">
-                    </div>
-                    <div class="form-field">
-                        <label for="salaire_base">Salaire de base</label>
-                        <input type="number" id="salaire_base" name="salaire_base" min="0" step="0.01" value="{{ old('salaire_base') }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="staff-form__panel" data-form-panel="documents" role="tabpanel">
-                <div class="documents-stack" data-documents-stack>
-                    <div class="document-row" data-document-row>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label>Type de document</label>
-                                <select name="documents[0][type_document]">
-                                    <option value="">Sélectionner</option>
-                                    <option value="CNI">CNI</option>
-                                    <option value="CONTRAT">Contrat</option>
-                                    <option value="DIPLOME">Diplôme</option>
-                                    <option value="CV">CV</option>
-                                    <option value="ATTESTATION">Attestation</option>
-                                    <option value="AUTRE">Autre</option>
-                                </select>
-                            </div>
-                            <div class="form-field">
-                                <label>Libellé</label>
-                                <input type="text" name="documents[0][libelle]" value="">
-                            </div>
-                            <div class="form-field">
-                                <label>Description</label>
-                                <input type="text" name="documents[0][description]" value="">
-                            </div>
-                            <div class="form-field">
-                                <label>Fichier (PDF, image, docx)</label>
-                                <input type="file" name="documents[0][fichier]" accept="application/pdf,image/*,.doc,.docx">
-                            </div>
-                        </div>
-                        <div class="document-actions">
-                            <button class="secondary-button" type="button" data-document-remove>Retirer</button>
-                        </div>
-                    </div>
-                </div>
-                <button class="primary-button" type="button" data-document-add>+ Ajouter un document</button>
-                <p class="helper-text">Formats autorisés : PDF, images, DOC/DOCX. Taille max 5MB.</p>
             </div>
 
             <div class="form-actions">
