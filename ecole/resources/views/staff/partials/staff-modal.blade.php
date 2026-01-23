@@ -23,6 +23,7 @@
         <div class="staff-modal__tabs" role="tablist">
             <button class="tab-button is-active" type="button" data-tab="info" role="tab" aria-selected="true">Informations</button>
             <button class="tab-button" type="button" data-tab="assignments" role="tab" aria-selected="false">Affectations</button>
+            <button class="tab-button" type="button" data-tab="teacher" role="tab" aria-selected="false">Profil enseignant</button>
         </div>
 
         <div class="staff-modal__panel is-active" data-panel="info" role="tabpanel">
@@ -60,6 +61,64 @@
 
         <div class="staff-modal__panel" data-panel="assignments" role="tabpanel">
             <div class="list-stack" data-field="assignments"></div>
+        </div>
+
+        <div class="staff-modal__panel" data-panel="teacher" role="tabpanel">
+            <div class="info-grid">
+                <div>
+                    <p class="label">Code enseignant</p>
+                    <p class="value" data-field="teacher_code">—</p>
+                </div>
+                <div>
+                    <p class="label">Grade / Rang</p>
+                    <p class="value" data-field="teacher_grade">—</p>
+                </div>
+                <div>
+                    <p class="label">Spécialité</p>
+                    <p class="value" data-field="teacher_speciality">—</p>
+                </div>
+                <div>
+                    <p class="label">Qualification</p>
+                    <p class="value" data-field="teacher_qualification">—</p>
+                </div>
+                <div>
+                    <p class="label">Charge horaire</p>
+                    <p class="value" data-field="teacher_load">—</p>
+                </div>
+                <div>
+                    <p class="label">Responsabilité pédagogique</p>
+                    <p class="value" data-field="teacher_responsibility">—</p>
+                </div>
+                <div>
+                    <p class="label">Début enseignement</p>
+                    <p class="value" data-field="teacher_start">—</p>
+                </div>
+                <div>
+                    <p class="label">Années d'expérience</p>
+                    <p class="value" data-field="teacher_experience">—</p>
+                </div>
+                <div>
+                    <p class="label">Évaluation</p>
+                    <p class="value" data-field="teacher_evaluation">—</p>
+                </div>
+                <div>
+                    <p class="label">Intérêts de recherche</p>
+                    <p class="value" data-field="teacher_research">—</p>
+                </div>
+                <div>
+                    <p class="label">Développement professionnel</p>
+                    <p class="value" data-field="teacher_development">—</p>
+                </div>
+                <div>
+                    <p class="label">Notes</p>
+                    <p class="value" data-field="teacher_notes">—</p>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <p class="label">Documents pédagogiques</p>
+            </div>
+            <div class="list-stack" data-field="teacher_documents"></div>
         </div>
     </div>
 </div>

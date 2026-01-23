@@ -312,6 +312,10 @@
     gap: 12px;
 }
 
+.section-header {
+    margin: 20px 0 8px;
+}
+
 .list-item {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -351,7 +355,8 @@
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 10px 12px;
@@ -360,8 +365,16 @@
     background: #fff;
 }
 
+.is-hidden {
+    display: none;
+}
+
 .form-field.is-disabled {
     opacity: 0.5;
+}
+
+.staff-form__panel.is-disabled {
+    opacity: 0.6;
 }
 
 .form-actions {
