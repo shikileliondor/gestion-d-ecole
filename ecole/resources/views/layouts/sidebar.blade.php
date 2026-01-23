@@ -269,11 +269,11 @@
     ];
 @endphp
 
-<aside class="{{ $classes ?? '' }} bg-white text-slate-900">
-    <div class="flex h-full flex-col border-r border-slate-200 px-6 py-8">
-        <a href="{{ route('dashboard') }}" class="space-y-1">
-            <div class="text-lg font-semibold text-slate-900">Schermo ERP</div>
-            <div class="text-sm text-slate-500">Gestion Scolaire</div>
+<aside class="{{ $classes ?? '' }} bg-slate-900 text-slate-100">
+    <div class="flex h-full flex-col border-r border-slate-800 px-6 py-8">
+        <a href="{{ route('dashboard') }}" class="space-y-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 shadow-lg">
+            <div class="text-lg font-semibold text-white">Schermo ERP</div>
+            <div class="text-xs text-blue-100/80">Gestion Scolaire</div>
         </a>
 
         <nav class="mt-10 flex-1 space-y-2">
@@ -296,7 +296,7 @@
                 @endphp
                 @if ($hasChildren)
                     <details class="group space-y-1" @if ($childActive) open @endif>
-                        <summary class="{{ $childActive ? 'text-blue-600' : 'text-slate-600' }} flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                        <summary class="{{ $childActive ? 'text-white' : 'text-slate-300' }} flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 [&::-webkit-details-marker]:hidden">
                             <span class="flex items-center gap-3">
                                 <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
                                     {!! $link['icon'] !!}
@@ -318,9 +318,9 @@
                                         $grandActive = collect($child['children'])->contains(fn ($grandchild) => $grandchild['active'] ?? false);
                                     @endphp
                                     <details class="group space-y-1" @if ($grandActive) open @endif>
-                                        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide transition hover:text-slate-700 {{ $grandActive ? 'text-blue-600' : 'text-slate-500' }} [&::-webkit-details-marker]:hidden">
+                                        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide transition hover:text-white {{ $grandActive ? 'text-white' : 'text-slate-400' }} [&::-webkit-details-marker]:hidden">
                                             <span>{{ $child['label'] }}</span>
-                                            <svg class="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <svg class="h-3.5 w-3.5 text-slate-500 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </summary>
@@ -332,7 +332,7 @@
                                                 @endphp
                                                 <a
                                                     href="{{ $grandHref }}"
-                                                    class="{{ $grandIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                                                    class="{{ $grandIsActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
                                                     @if ($grandIsActive) aria-current="page" @endif
                                                 >
                                                     <span>{{ $grandchild['label'] }}</span>
@@ -343,7 +343,7 @@
                                 @else
                                     <a
                                         href="{{ $childHref }}"
-                                        class="{{ $childIsActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                                        class="{{ $childIsActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
                                         @if ($childIsActive) aria-current="page" @endif
                                     >
                                         <span>{{ $child['label'] }}</span>
@@ -355,7 +355,7 @@
                 @else
                     <a
                         href="{{ $href }}"
-                        class="{{ $isActive ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+                        class="{{ $isActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
                         @if ($isActive) aria-current="page" @endif
                     >
                         <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
