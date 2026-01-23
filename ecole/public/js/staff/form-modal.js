@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
     const positionInput = modal?.querySelector('#position');
     const subjectSelect = modal?.querySelector('#subjects');
-    const teacherPanel = modal?.querySelector('[data-form-panel="teacher"]');
-    const teacherInputs = teacherPanel?.querySelectorAll('input, textarea, select') || [];
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
 
@@ -68,17 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         subjectSelect.closest('.form-field')?.classList.toggle('is-disabled', !isTeacher);
     };
 
-    const toggleTeacherFields = () => {
-        if (!teacherPanel) {
-            return;
-        }
-        const isTeacher = positionInput?.value?.toLowerCase().includes('enseignant');
-        teacherInputs.forEach((input) => {
-            input.disabled = !isTeacher;
-        });
-        teacherPanel.classList.toggle('is-disabled', !isTeacher);
-    };
-
     openButtons.forEach((button) => {
         button.addEventListener('click', () => openModal(button));
     });
@@ -97,8 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     positionInput?.addEventListener('input', toggleSubjects);
-    positionInput?.addEventListener('input', toggleTeacherFields);
-
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeModal();
@@ -106,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     toggleSubjects();
-    toggleTeacherFields();
 
     if (modal.dataset.openOnLoad === 'true') {
         openModal();
