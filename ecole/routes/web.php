@@ -23,7 +23,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
-    Route::get('/students/{id}', [StudentController::class, 'show'])->name('students.show');
+    Route::get('/students/{id}', [StudentController::class, 'show'])
+        ->whereNumber('id')
+        ->name('students.show');
     Route::get('/students/enrollments', fn () => view('students.enrollments'))
         ->name('students.enrollments');
     Route::get('/students/re-enrollments', fn () => view('students.re-enrollments'))
