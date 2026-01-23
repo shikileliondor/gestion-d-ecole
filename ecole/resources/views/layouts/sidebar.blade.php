@@ -295,13 +295,18 @@
                         : false;
                 @endphp
                 @if ($hasChildren)
-                    <div class="space-y-1">
-                        <div class="{{ $childActive ? 'text-blue-600' : 'text-slate-600' }} flex items-center gap-3 px-3 py-2 text-xs font-semibold uppercase tracking-wide">
-                            <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
-                                {!! $link['icon'] !!}
+                    <details class="group space-y-1" @if ($childActive) open @endif>
+                        <summary class="{{ $childActive ? 'text-blue-600' : 'text-slate-600' }} flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-3">
+                                <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                                    {!! $link['icon'] !!}
+                                </svg>
+                                <span>{{ $link['label'] }}</span>
+                            </span>
+                            <svg class="h-4 w-4 text-slate-400 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
-                            <span>{{ $link['label'] }}</span>
-                        </div>
+                        </summary>
                         <div class="space-y-2 pl-8">
                             @foreach ($link['children'] as $child)
                                 @php
@@ -312,10 +317,13 @@
                                     @php
                                         $grandActive = collect($child['children'])->contains(fn ($grandchild) => $grandchild['active'] ?? false);
                                     @endphp
-                                    <div class="space-y-1">
-                                        <div class="px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide {{ $grandActive ? 'text-blue-600' : 'text-slate-500' }}">
-                                            {{ $child['label'] }}
-                                        </div>
+                                    <details class="group space-y-1" @if ($grandActive) open @endif>
+                                        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-3 pt-3 text-[11px] font-semibold uppercase tracking-wide transition hover:text-slate-700 {{ $grandActive ? 'text-blue-600' : 'text-slate-500' }} [&::-webkit-details-marker]:hidden">
+                                            <span>{{ $child['label'] }}</span>
+                                            <svg class="h-3.5 w-3.5 text-slate-400 transition group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </summary>
                                         <div class="space-y-1 pl-4">
                                             @foreach ($child['children'] as $grandchild)
                                                 @php
@@ -331,7 +339,7 @@
                                                 </a>
                                             @endforeach
                                         </div>
-                                    </div>
+                                    </details>
                                 @else
                                     <a
                                         href="{{ $childHref }}"
@@ -343,7 +351,7 @@
                                 @endif
                             @endforeach
                         </div>
-                    </div>
+                    </details>
                 @else
                     <a
                         href="{{ $href }}"
