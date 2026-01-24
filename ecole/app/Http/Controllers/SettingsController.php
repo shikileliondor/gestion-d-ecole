@@ -8,6 +8,7 @@ use App\Models\Matiere;
 use App\Models\ModePaiement;
 use App\Models\Niveau;
 use App\Models\ParametreEcole;
+use App\Models\Periode;
 use App\Models\Serie;
 use App\Models\TypeFrais;
 use Illuminate\Http\RedirectResponse;
@@ -61,6 +62,10 @@ class SettingsController extends Controller
             ->get();
 
         $schoolSettings = ParametreEcole::query()->first();
+        $periods = Periode::query()
+            ->orderBy('ordre')
+            ->get();
+        $activePeriodType = $periods->firstWhere('actif', true)?->type;
 
         if ($selectedAcademicYear) {
             $fees = $this->buildFees($selectedAcademicYear->id);
@@ -80,6 +85,8 @@ class SettingsController extends Controller
             'paymentModes' => $paymentModes,
             'schoolSettings' => $schoolSettings,
             'documents' => $this->buildDocuments($schoolSettings),
+            'periods' => $periods,
+            'activePeriodType' => $activePeriodType,
         ]);
     }
 
@@ -161,6 +168,47 @@ class SettingsController extends Controller
         $validator->validate();
 
         return back()->with('status', 'Les trimestres ont été enregistrés.');
+    }
+
+    public function storePeriods(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'period_type' => ['required', 'in:TRIMESTRE,SEMESTRE'],
+        ]);
+
+        $type = $data['period_type'];
+        $templates = $type === 'TRIMESTRE'
+            ? [
+                ['ordre' => 1, 'libelle' => 'Trimestre 1'],
+                ['ordre' => 2, 'libelle' => 'Trimestre 2'],
+                ['ordre' => 3, 'libelle' => 'Trimestre 3'],
+            ]
+            : [
+                ['ordre' => 1, 'libelle' => 'Semestre 1'],
+                ['ordre' => 2, 'libelle' => 'Semestre 2'],
+            ];
+
+        $activeIds = [];
+
+        foreach ($templates as $template) {
+            $period = Periode::query()->updateOrCreate(
+                ['type' => $type, 'ordre' => $template['ordre']],
+                ['libelle' => $template['libelle'], 'actif' => true],
+            );
+
+            $activeIds[] = $period->id;
+        }
+
+        Periode::query()
+            ->where('type', $type)
+            ->whereNotIn('id', $activeIds)
+            ->update(['actif' => false]);
+
+        Periode::query()
+            ->where('type', '!=', $type)
+            ->update(['actif' => false]);
+
+        return back()->with('status', 'Les périodes ont été enregistrées.');
     }
 
     public function storeFee(Request $request): RedirectResponse

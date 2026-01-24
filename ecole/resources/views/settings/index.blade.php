@@ -152,6 +152,52 @@
                                 <p class="text-sm text-gray-500">Aucune année scolaire pour le moment.</p>
                             @endforelse
                         </div>
+
+                        <div class="mt-8 grid gap-6 lg:grid-cols-2">
+                            <form method="post" action="{{ route('settings.periods.store') }}" class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                @csrf
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="text-base font-semibold text-gray-800">Périodes scolaires</h4>
+                                        <p class="text-xs text-gray-500">Générer les trimestres ou les semestres actifs.</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 space-y-4 text-sm text-gray-700">
+                                    <label class="block text-xs font-semibold text-gray-500">Type de période</label>
+                                    <select name="period_type" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                        <option value="TRIMESTRE" @selected(old('period_type', $activePeriodType) === 'TRIMESTRE')>Trimestres (1, 2, 3)</option>
+                                        <option value="SEMESTRE" @selected(old('period_type', $activePeriodType) === 'SEMESTRE')>Semestres (1, 2)</option>
+                                    </select>
+                                </div>
+                                <button class="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                                    Enregistrer les périodes
+                                </button>
+                            </form>
+
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h4 class="text-base font-semibold text-gray-800">Périodes configurées</h4>
+                                        <p class="text-xs text-gray-500">Statut des périodes actuelles.</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4 space-y-2 text-sm">
+                                    @forelse ($periods as $period)
+                                        <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                                            <div>
+                                                <p class="font-medium text-gray-800">{{ $period->libelle }}</p>
+                                                <p class="text-xs text-gray-500">{{ ucfirst(strtolower($period->type)) }}</p>
+                                            </div>
+                                            <span class="text-xs font-semibold {{ $period->actif ? 'text-emerald-600' : 'text-gray-400' }}">
+                                                {{ $period->actif ? 'Actif' : 'Désactivé' }}
+                                            </span>
+                                        </div>
+                                    @empty
+                                        <p class="text-sm text-gray-500">Aucune période configurée.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div x-show="tab === 'referentiels'" x-transition>
