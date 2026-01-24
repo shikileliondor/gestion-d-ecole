@@ -29,43 +29,19 @@
             <div class="info-grid">
                 <div>
                     <p class="label">{{ $identifierLabel ?? 'ID employé' }}</p>
-                    <p class="value" data-field="code_personnel">—</p>
+                    <p class="value" data-field="staff_number">—</p>
                 </div>
                 <div>
                     <p class="label">Nom</p>
-                    <p class="value" data-field="nom">—</p>
+                    <p class="value" data-field="last_name">—</p>
                 </div>
                 <div>
                     <p class="label">Prénoms</p>
-                    <p class="value" data-field="prenoms">—</p>
+                    <p class="value" data-field="first_name">—</p>
                 </div>
                 <div>
-                    <p class="label">Sexe</p>
-                    <p class="value" data-field="sexe">—</p>
-                </div>
-                <div>
-                    <p class="label">Date de naissance</p>
-                    <p class="value" data-field="date_naissance">—</p>
-                </div>
-                <div>
-                    <p class="label">Catégorie</p>
-                    <p class="value" data-field="categorie_personnel">—</p>
-                </div>
-                <div>
-                    <p class="label">Poste</p>
-                    <p class="value" data-field="poste">—</p>
-                </div>
-                <div>
-                    <p class="label">Contact</p>
-                    <p class="value" data-field="contact">—</p>
-                </div>
-                <div>
-                    <p class="label">Adresse</p>
-                    <p class="value" data-field="adresse">—</p>
-                </div>
-                <div>
-                    <p class="label">Commune</p>
-                    <p class="value" data-field="commune">—</p>
+                    <p class="label">Email</p>
+                    <p class="value" data-field="email">—</p>
                 </div>
                 <div>
                     <p class="label">Statut</p>
