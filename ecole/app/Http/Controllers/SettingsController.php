@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcademicTerm;
-use App\Models\AcademicYear;
-use App\Models\Fee;
-use App\Models\School;
-use App\Models\SchoolClass;
+use App\Models\AnneeScolaire;
+use App\Models\Frais;
+use App\Models\Niveau;
+use App\Models\TypeFrais;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
@@ -16,47 +16,28 @@ class SettingsController extends Controller
 {
     public function index(Request $request): View
     {
-        $schoolId = School::query()->value('id');
-        $academicYears = collect();
-        $selectedAcademicYear = null;
+        $academicYears = AnneeScolaire::query()
+            ->orderByDesc('date_debut')
+            ->get()
+            ->each(fn (AnneeScolaire $annee) => $this->hydrateAcademicYear($annee));
+
+        $selectedAcademicYear = $academicYears
+            ->firstWhere('id', $request->integer('academic_year_id'))
+            ?? $academicYears->first();
+
         $terms = collect();
         $fees = collect();
         $levels = collect();
 
-        if ($schoolId) {
-            $academicYears = AcademicYear::query()
-                ->where('school_id', $schoolId)
-                ->orderByDesc('start_date')
-                ->get();
-
-            $selectedAcademicYear = $academicYears
-                ->firstWhere('id', $request->integer('academic_year_id'))
-                ?? $academicYears->firstWhere('status', 'active')
-                ?? $academicYears->first();
-
-            if ($selectedAcademicYear) {
-                $terms = AcademicTerm::query()
-                    ->where('academic_year_id', $selectedAcademicYear->id)
-                    ->orderBy('sequence')
-                    ->get();
-
-                $fees = Fee::query()
-                    ->where('academic_year_id', $selectedAcademicYear->id)
-                    ->orderBy('level')
-                    ->orderBy('name')
-                    ->get();
-            }
-
-            $levels = SchoolClass::query()
-                ->where('school_id', $schoolId)
-                ->whereNotNull('level')
-                ->distinct()
-                ->orderBy('level')
-                ->pluck('level');
+        if ($selectedAcademicYear) {
+            $fees = $this->buildFees($selectedAcademicYear->id);
+            $levels = Niveau::query()
+                ->orderBy('ordre')
+                ->pluck('code');
         }
 
         return view('settings.index', [
-            'schoolId' => $schoolId,
+            'schoolId' => null,
             'academicYears' => $academicYears,
             'selectedAcademicYear' => $selectedAcademicYear,
             'terms' => $terms,
@@ -67,40 +48,31 @@ class SettingsController extends Controller
 
     public function storeAcademicYear(Request $request): RedirectResponse
     {
-        $schoolId = School::query()->value('id');
-
-        if (! $schoolId) {
-            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])->withInput();
-        }
-
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:50', 'unique:academic_years,name,NULL,id,school_id,'.$schoolId],
+            'name' => ['required', 'string', 'max:50', 'unique:annees_scolaires,libelle'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
         ]);
 
-        AcademicYear::query()->create([
-            'school_id' => $schoolId,
-            'name' => $data['name'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'],
-            'is_current' => false,
-            'status' => 'planned',
+        AnneeScolaire::query()->create([
+            'libelle' => $data['name'],
+            'date_debut' => $data['start_date'],
+            'date_fin' => $data['end_date'],
+            'statut' => 'PLANNED',
         ]);
 
         return back()->with('status', "L'année scolaire a été ajoutée.");
     }
 
-    public function updateAcademicYearStatus(Request $request, AcademicYear $academicYear): RedirectResponse
+    public function updateAcademicYearStatus(Request $request, AnneeScolaire $academicYear): RedirectResponse
     {
         $data = $request->validate([
             'status' => ['required', 'in:planned,active,closed,archived'],
         ]);
 
         if ($data['status'] === 'active') {
-            $anotherActive = AcademicYear::query()
-                ->where('school_id', $academicYear->school_id)
-                ->where('status', 'active')
+            $anotherActive = AnneeScolaire::query()
+                ->where('statut', 'ACTIVE')
                 ->where('id', '!=', $academicYear->id)
                 ->exists();
 
@@ -112,14 +84,13 @@ class SettingsController extends Controller
         }
 
         $academicYear->update([
-            'status' => $data['status'],
-            'is_current' => $data['status'] === 'active',
+            'statut' => $this->mapAcademicYearStatus($data['status']),
         ]);
 
         return back()->with('status', "Le statut de l'année scolaire a été mis à jour.");
     }
 
-    public function storeTerms(Request $request, AcademicYear $academicYear): RedirectResponse
+    public function storeTerms(Request $request, AnneeScolaire $academicYear): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'terms' => ['required', 'array', 'size:3'],
@@ -140,47 +111,25 @@ class SettingsController extends Controller
                     $validator->errors()->add("terms.$index.end_date", 'La date de fin doit être postérieure à la date de début.');
                 }
 
-                if ($startDate && ($startDate < $academicYear->start_date || $startDate > $academicYear->end_date)) {
+                if ($startDate && ($startDate < $academicYear->date_debut || $startDate > $academicYear->date_fin)) {
                     $validator->errors()->add("terms.$index.start_date", "La date doit se situer dans l'année scolaire.");
                 }
 
-                if ($endDate && ($endDate < $academicYear->start_date || $endDate > $academicYear->end_date)) {
+                if ($endDate && ($endDate < $academicYear->date_debut || $endDate > $academicYear->date_fin)) {
                     $validator->errors()->add("terms.$index.end_date", "La date doit se situer dans l'année scolaire.");
                 }
             }
         });
 
-        $data = $validator->validate();
-
-        foreach ($data['terms'] as $term) {
-            AcademicTerm::query()->updateOrCreate(
-                [
-                    'academic_year_id' => $academicYear->id,
-                    'sequence' => $term['sequence'],
-                ],
-                [
-                    'school_id' => $academicYear->school_id,
-                    'name' => $term['name'],
-                    'start_date' => $term['start_date'],
-                    'end_date' => $term['end_date'],
-                    'status' => 'active',
-                ]
-            );
-        }
+        $validator->validate();
 
         return back()->with('status', 'Les trimestres ont été enregistrés.');
     }
 
     public function storeFee(Request $request): RedirectResponse
     {
-        $schoolId = School::query()->value('id');
-
-        if (! $schoolId) {
-            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])->withInput();
-        }
-
         $data = $request->validate([
-            'academic_year_id' => ['required', 'exists:academic_years,id'],
+            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
             'level' => ['required', 'string', 'max:50'],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],
@@ -188,21 +137,92 @@ class SettingsController extends Controller
             'payment_terms' => ['nullable', 'string'],
         ]);
 
-        Fee::query()->create([
-            'school_id' => $schoolId,
-            'academic_year_id' => $data['academic_year_id'],
-            'level' => $data['level'],
-            'name' => $data['name'],
-            'description' => null,
-            'amount' => $data['amount'],
-            'due_date' => null,
-            'fee_type' => null,
-            'billing_cycle' => $data['billing_cycle'] ?? null,
-            'payment_terms' => $data['payment_terms'] ?? null,
-            'is_mandatory' => true,
-            'status' => 'active',
-        ]);
+        $niveau = Niveau::query()->firstOrCreate(
+            ['code' => $data['level']],
+            [
+                'ordre' => (int) Niveau::query()->max('ordre') + 1,
+                'actif' => true,
+            ]
+        );
+
+        $typeFrais = TypeFrais::query()->firstOrCreate(
+            ['libelle' => $data['name']],
+            ['obligatoire' => true, 'actif' => true]
+        );
+
+        Frais::query()->updateOrCreate(
+            [
+                'annee_scolaire_id' => $data['academic_year_id'],
+                'niveau_id' => $niveau->id,
+                'type_frais_id' => $typeFrais->id,
+            ],
+            [
+                'periodicite' => $this->mapBillingCycle($data['billing_cycle'] ?? null),
+                'montant' => $data['amount'],
+                'actif' => true,
+            ]
+        );
 
         return back()->with('status', 'Le frais a été ajouté au niveau sélectionné.');
+    }
+
+    private function hydrateAcademicYear(AnneeScolaire $annee): void
+    {
+        $annee->setAttribute('name', $annee->libelle);
+        $annee->setAttribute('start_date', $annee->date_debut);
+        $annee->setAttribute('end_date', $annee->date_fin);
+        $annee->setAttribute('status', $this->formatAcademicYearStatus($annee->statut));
+    }
+
+    private function buildFees(int $academicYearId): Collection
+    {
+        $levels = Niveau::query()->pluck('code', 'id');
+        $types = TypeFrais::query()->pluck('libelle', 'id');
+
+        return Frais::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->orderBy('niveau_id')
+            ->get()
+            ->map(function (Frais $frais) use ($levels, $types) {
+                return (object) [
+                    'level' => $levels[$frais->niveau_id] ?? null,
+                    'name' => $types[$frais->type_frais_id] ?? '—',
+                    'amount' => $frais->montant,
+                    'billing_cycle' => $frais->periodicite,
+                    'payment_terms' => null,
+                ];
+            });
+    }
+
+    private function mapAcademicYearStatus(string $status): string
+    {
+        return match ($status) {
+            'active' => 'ACTIVE',
+            'closed' => 'CLOSED',
+            'archived' => 'ARCHIVED',
+            default => 'PLANNED',
+        };
+    }
+
+    private function formatAcademicYearStatus(?string $status): string
+    {
+        return match ($status) {
+            'ACTIVE' => 'active',
+            'CLOSED' => 'closed',
+            'ARCHIVED' => 'archived',
+            default => 'planned',
+        };
+    }
+
+    private function mapBillingCycle(?string $billingCycle): string
+    {
+        $value = strtolower(trim((string) $billingCycle));
+
+        return match (true) {
+            str_contains($value, 'mens') => 'MENSUEL',
+            str_contains($value, 'trim') => 'TRIMESTRIEL',
+            str_contains($value, 'annu') => 'ANNUEL',
+            default => 'UNIQUE',
+        };
     }
 }

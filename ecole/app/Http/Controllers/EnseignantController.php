@@ -4,15 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Enseignant;
 use App\Models\EnseignantDocument;
-use App\Models\School;
-use App\Services\MatriculeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use RuntimeException;
 
 class EnseignantController extends Controller
 {
@@ -21,7 +18,8 @@ class EnseignantController extends Controller
         $enseignants = Enseignant::query()
             ->orderBy('nom')
             ->orderBy('prenoms')
-            ->get();
+            ->get()
+            ->each(fn (Enseignant $enseignant) => $enseignant->setAttribute('code_enseignant', $enseignant->matricule));
 
         return view('teachers.index', compact('enseignants'));
     }
@@ -35,22 +33,8 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request);
 
-        $schoolId = School::query()->value('id');
-        if (! $schoolId) {
-            return back()->withErrors(['school_id' => "Aucune école n'est configurée."])
-                ->withInput();
-        }
-
-        try {
-            $matricule = app(MatriculeService::class)->generateForEnseignant($schoolId);
-        } catch (RuntimeException $exception) {
-            return back()->withErrors(['academic_year' => $exception->getMessage()])
-                ->withInput();
-        }
-
-        $enseignant = Enseignant::create(array_merge($data, [
-            'matricule' => $matricule,
-        ]));
+        $enseignant = Enseignant::create($this->mapEnseignantData($data));
+        $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
 
         return redirect()
             ->route('teachers.show', $enseignant)
@@ -60,6 +44,8 @@ class EnseignantController extends Controller
     public function show(Enseignant $enseignant): View
     {
         $enseignant->load('documents');
+        $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
+        $enseignant->setAttribute('photo_url', $enseignant->photo_path);
 
         return view('teachers.show', [
             'enseignant' => $enseignant,
@@ -69,6 +55,9 @@ class EnseignantController extends Controller
 
     public function edit(Enseignant $enseignant): View
     {
+        $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
+        $enseignant->setAttribute('photo_url', $enseignant->photo_path);
+
         return view('teachers.edit', array_merge(
             ['enseignant' => $enseignant],
             $this->formOptions()
@@ -79,7 +68,7 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request, $enseignant);
 
-        $enseignant->update($data);
+        $enseignant->update($this->mapEnseignantData($data));
 
         return redirect()
             ->route('teachers.show', $enseignant)
@@ -159,44 +148,41 @@ class EnseignantController extends Controller
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('enseignants', 'code_enseignant')->ignore($enseignant?->id),
+                Rule::unique('enseignants', 'matricule')->ignore($enseignant?->id),
             ],
             'nom' => ['required', 'string', 'max:255'],
             'prenoms' => ['required', 'string', 'max:255'],
             'sexe' => ['nullable', Rule::in(Enseignant::SEXES)],
-            'date_naissance' => ['nullable', 'date'],
-            'photo_url' => ['nullable', 'string', 'max:255'],
             'telephone_1' => ['required', 'string', 'max:30'],
             'telephone_2' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
-            'adresse' => ['nullable', 'string', 'max:255'],
+            'photo_url' => ['nullable', 'string', 'max:2048'],
             'specialite' => ['required', 'string', 'max:255'],
-            'niveau_enseignement' => ['nullable', Rule::in(Enseignant::NIVEAUX)],
-            'qualification' => ['nullable', 'string', 'max:255'],
             'type_enseignant' => ['required', Rule::in(Enseignant::TYPES)],
             'date_debut_service' => ['required', 'date'],
             'date_fin_service' => ['nullable', 'date', 'after_or_equal:date_debut_service'],
             'statut' => ['required', Rule::in(Enseignant::STATUTS)],
-            'num_cni' => ['nullable', 'string', 'max:100'],
-            'date_expiration_cni' => ['nullable', 'date'],
-            'contact_urgence_nom' => ['nullable', 'string', 'max:255'],
-            'contact_urgence_lien' => ['nullable', Rule::in(Enseignant::CONTACT_LIENS)],
-            'contact_urgence_tel' => ['nullable', 'string', 'max:30'],
-            'mode_paiement' => ['nullable', Rule::in(Enseignant::MODES_PAIEMENT)],
-            'numero_paiement' => ['nullable', 'string', 'max:100'],
-            'salaire_base' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $validator->after(function ($validator) use ($request) {
-            if (filled($request->input('mode_paiement')) && ! filled($request->input('numero_paiement'))) {
-                $validator->errors()->add('numero_paiement', 'Le numéro de paiement est obligatoire si un mode est sélectionné.');
-            }
-
-            if ($request->input('statut') === 'PARTI' && ! filled($request->input('date_fin_service'))) {
-                $validator->errors()->add('date_fin_service', 'La date de fin de service est requise si le statut est "PARTI".');
-            }
-        });
-
         return $validator->validate();
+    }
+
+    private function mapEnseignantData(array $data): array
+    {
+        return [
+            'matricule' => $data['code_enseignant'],
+            'nom' => $data['nom'],
+            'prenoms' => $data['prenoms'],
+            'sexe' => $data['sexe'] ?? null,
+            'telephone_1' => $data['telephone_1'],
+            'telephone_2' => $data['telephone_2'] ?? null,
+            'email' => $data['email'] ?? null,
+            'specialite' => $data['specialite'],
+            'photo_path' => $data['photo_url'] ?? null,
+            'type_enseignant' => $data['type_enseignant'],
+            'date_debut_service' => $data['date_debut_service'],
+            'date_fin_service' => $data['date_fin_service'] ?? null,
+            'statut' => $data['statut'],
+        ];
     }
 }
