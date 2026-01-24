@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\AnneeScolaire;
 use App\Models\Frais;
+use App\Models\Matiere;
+use App\Models\ModePaiement;
 use App\Models\Niveau;
+use App\Models\ParametreEcole;
+use App\Models\Serie;
 use App\Models\TypeFrais;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,13 +31,35 @@ class SettingsController extends Controller
 
         $terms = collect();
         $fees = collect();
-        $levels = collect();
+
+        $levels = Niveau::query()
+            ->where('actif', true)
+            ->orderBy('ordre')
+            ->pluck('code');
+
+        $series = Serie::query()
+            ->where('actif', true)
+            ->orderBy('code')
+            ->get();
+
+        $subjects = Matiere::query()
+            ->where('actif', true)
+            ->orderBy('nom')
+            ->get();
+
+        $feeTypes = TypeFrais::query()
+            ->where('actif', true)
+            ->orderBy('libelle')
+            ->get();
+
+        $paymentModes = ModePaiement::query()
+            ->orderBy('libelle')
+            ->get();
+
+        $schoolSettings = ParametreEcole::query()->first();
 
         if ($selectedAcademicYear) {
             $fees = $this->buildFees($selectedAcademicYear->id);
-            $levels = Niveau::query()
-                ->orderBy('ordre')
-                ->pluck('code');
         }
 
         return view('settings.index', [
@@ -43,6 +69,12 @@ class SettingsController extends Controller
             'terms' => $terms,
             'fees' => $fees,
             'levels' => $levels,
+            'series' => $series,
+            'subjects' => $subjects,
+            'feeTypes' => $feeTypes,
+            'paymentModes' => $paymentModes,
+            'schoolSettings' => $schoolSettings,
+            'documents' => $this->buildDocuments($schoolSettings),
         ]);
     }
 
@@ -224,5 +256,46 @@ class SettingsController extends Controller
             str_contains($value, 'annu') => 'ANNUEL',
             default => 'UNIQUE',
         };
+    }
+
+    private function buildDocuments(?ParametreEcole $settings): Collection
+    {
+        $logoValue = collect([$settings?->logo_path, $settings?->cachet_path])
+            ->filter()
+            ->map(fn (string $path) => basename($path))
+            ->implode(' • ');
+
+        $items = collect([
+            [
+                'label' => 'Logo & cachet',
+                'value' => $logoValue ?: null,
+            ],
+            [
+                'label' => 'Signature direction',
+                'value' => $settings?->signature_path,
+            ],
+            [
+                'label' => 'Numérotation facture',
+                'value' => $settings?->facture_prefix,
+            ],
+            [
+                'label' => 'Numérotation reçu',
+                'value' => $settings?->recu_prefix,
+            ],
+            [
+                'label' => 'Numérotation matricule',
+                'value' => $settings?->matricule_prefix,
+            ],
+        ]);
+
+        return $items->map(function (array $item) {
+            $value = $item['value'];
+            $display = $value ? basename((string) $value) : 'Non renseigné';
+
+            return [
+                'label' => $item['label'],
+                'value' => $display,
+            ];
+        });
     }
 }

@@ -9,21 +9,10 @@
     </x-slot>
 
     @php
-        $series = ['A', 'C', 'D', 'G'];
-        $subjects = ['Mathématiques', 'Français', 'Anglais', 'SVT', 'Physique-Chimie', 'HG'];
         $users = [
             ['name' => 'Adama Koné', 'email' => 'adama.kone@lycee.ci', 'role' => 'ADMIN', 'status' => 'Actif'],
             ['name' => 'Mariam Traoré', 'email' => 'mariam.traore@lycee.ci', 'role' => 'SCOLARITÉ', 'status' => 'Actif'],
             ['name' => 'Koffi Yao', 'email' => 'koffi.yao@lycee.ci', 'role' => 'COMPTABLE', 'status' => 'Désactivé'],
-        ];
-        $feeTypes = ['Inscription', 'Scolarité', 'Tenue', 'Examen', 'Transport', 'Cantine', 'Autre'];
-        $paymentModes = ['Espèces', 'Mobile Money', 'Virement', 'Chèque'];
-        $documents = [
-            ['label' => 'Logo & cachet', 'value' => 'Fichier logo-lycee.png'],
-            ['label' => 'Signature direction', 'value' => 'Signature DGE.pdf'],
-            ['label' => 'Numérotation facture', 'value' => 'FACT-{YYYY}-{####}'],
-            ['label' => 'Numérotation reçu', 'value' => 'REC-{YYYY}-{####}'],
-            ['label' => 'Numérotation matricule', 'value' => 'LYC-{YY}-{####}'],
         ];
     @endphp
 
@@ -220,9 +209,9 @@
                                     </button>
                                 </div>
                                 <div class="mt-4 space-y-2">
-                                    @foreach ($series as $serie)
+                                    @forelse ($series as $serie)
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">
-                                            <span class="font-medium text-gray-800">Série {{ $serie }}</span>
+                                            <span class="font-medium text-gray-800">Série {{ $serie->code }}</span>
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     type="button"
@@ -240,7 +229,9 @@
                                                 </button>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <p class="text-xs text-gray-500">Aucune série enregistrée.</p>
+                                    @endforelse
                                 </div>
                             </div>
 
@@ -259,9 +250,9 @@
                                     </button>
                                 </div>
                                 <div class="mt-4 space-y-2">
-                                    @foreach ($subjects as $subject)
+                                    @forelse ($subjects as $subject)
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">
-                                            <span class="font-medium text-gray-800">{{ $subject }}</span>
+                                            <span class="font-medium text-gray-800">{{ $subject->nom }}</span>
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     type="button"
@@ -279,7 +270,9 @@
                                                 </button>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <p class="text-xs text-gray-500">Aucune matière enregistrée.</p>
+                                    @endforelse
                                 </div>
                             </div>
                         </div>
@@ -303,9 +296,9 @@
                                         </button>
                                     </div>
                                     <div class="mt-4 space-y-2">
-                                        @foreach ($feeTypes as $feeType)
+                                        @forelse ($feeTypes as $feeType)
                                             <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">
-                                                <span class="font-medium text-gray-800">{{ $feeType }}</span>
+                                                <span class="font-medium text-gray-800">{{ $feeType->libelle }}</span>
                                                 <div class="flex items-center gap-2">
                                                     <button
                                                         type="button"
@@ -323,7 +316,9 @@
                                                     </button>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        @empty
+                                            <p class="text-xs text-gray-500">Aucun type de frais enregistré.</p>
+                                        @endforelse
                                     </div>
                                 </div>
 
@@ -335,12 +330,14 @@
                                         </div>
                                     </div>
                                     <div class="mt-4 space-y-3 text-sm text-gray-700">
-                                        @foreach ($paymentModes as $mode)
+                                        @forelse ($paymentModes as $mode)
                                             <label class="flex items-center gap-2 rounded-lg bg-white px-3 py-2">
-                                                <input type="checkbox" class="rounded border-gray-300 text-blue-600" checked />
-                                                <span>{{ $mode }}</span>
+                                                <input type="checkbox" class="rounded border-gray-300 text-blue-600" @checked($mode->actif) />
+                                                <span>{{ $mode->libelle }}</span>
                                             </label>
-                                        @endforeach
+                                        @empty
+                                            <p class="rounded-lg bg-white px-3 py-2 text-xs text-gray-500">Aucun mode de paiement enregistré.</p>
+                                        @endforelse
                                     </div>
                                 </div>
 
@@ -351,15 +348,15 @@
                                     </div>
                                     <div class="mt-4 space-y-3 text-sm text-gray-700">
                                         <label class="flex items-center gap-2 rounded-lg bg-white px-3 py-2">
-                                            <input type="radio" name="impayes" class="text-blue-600" checked />
+                                            <input type="radio" name="impayes" class="text-blue-600" value="BLOCK" @checked($schoolSettings?->politique_impayes === 'BLOCK') />
                                             <span>Bloquer les services</span>
                                         </label>
                                         <label class="flex items-center gap-2 rounded-lg bg-white px-3 py-2">
-                                            <input type="radio" name="impayes" class="text-blue-600" />
+                                            <input type="radio" name="impayes" class="text-blue-600" value="ALLOW" @checked($schoolSettings?->politique_impayes === 'ALLOW') />
                                             <span>Autoriser malgré impayés</span>
                                         </label>
                                         <label class="flex items-center gap-2 rounded-lg bg-white px-3 py-2">
-                                            <input type="radio" name="impayes" class="text-blue-600" />
+                                            <input type="radio" name="impayes" class="text-blue-600" value="ALLOW_WITH_APPROVAL" @checked($schoolSettings?->politique_impayes === 'ALLOW_WITH_APPROVAL') />
                                             <span>Autoriser avec validation Direction</span>
                                         </label>
                                     </div>
@@ -462,15 +459,19 @@
                                     <div class="mt-4 space-y-2 text-sm text-gray-700">
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
                                             <span>Remises activées</span>
-                                            <span class="text-xs font-semibold text-emerald-600">Oui</span>
+                                            <span class="text-xs font-semibold {{ $schoolSettings?->remises_actives ? 'text-emerald-600' : 'text-gray-600' }}">
+                                                {{ $schoolSettings?->remises_actives ? 'Oui' : 'Non' }}
+                                            </span>
                                         </div>
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
                                             <span>Plafond par remise</span>
-                                            <span class="text-xs font-semibold text-gray-600">20%</span>
+                                            <span class="text-xs font-semibold text-gray-600">
+                                                {{ $schoolSettings?->plafond_remise ? $schoolSettings->plafond_remise . '%' : 'Non défini' }}
+                                            </span>
                                         </div>
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
                                             <span>Validation</span>
-                                            <span class="text-xs font-semibold text-gray-600">Direction uniquement</span>
+                                            <span class="text-xs font-semibold text-gray-600">{{ $schoolSettings?->validation_remise ?? 'Non définie' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -493,7 +494,7 @@
                                         </div>
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
                                             <span>Modes de paiement actifs</span>
-                                            <span class="text-xs font-semibold text-gray-600">{{ count($paymentModes) }}</span>
+                                            <span class="text-xs font-semibold text-gray-600">{{ $paymentModes->where('actif', true)->count() }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -626,7 +627,7 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier l'année scolaire</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" value="2024-2025" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
@@ -664,7 +665,7 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier le niveau</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" value="3e" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
@@ -692,7 +693,7 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier la série</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" value="D" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
@@ -720,7 +721,7 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier la matière</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" value="SVT" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
@@ -748,7 +749,7 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier le type de frais</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" value="Transport" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
                     <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
@@ -801,20 +802,20 @@
                 <h3 class="text-lg font-semibold text-gray-800">Modifier un frais</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Niveau</label>
-                    <input type="text" value="2nde" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Type de frais</label>
-                    <input type="text" value="Scolarité" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="text-sm font-medium text-gray-700">Montant</label>
-                        <input type="number" step="0.01" value="250000" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="number" step="0.01" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Périodicité</label>
-                        <input type="text" value="Mensuel" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-2">
@@ -828,19 +829,19 @@
             <form method="dialog" class="space-y-4 p-6">
                 <h3 class="text-lg font-semibold text-gray-800">Règles de remise</h3>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" class="rounded border-gray-300 text-blue-600" checked />
+                    <input type="checkbox" class="rounded border-gray-300 text-blue-600" @checked($schoolSettings?->remises_actives) />
                     <span class="text-sm text-gray-700">Activer les remises</span>
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Plafond (%)</label>
-                    <input type="number" value="20" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="number" value="{{ $schoolSettings?->plafond_remise }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Qui peut accorder</label>
                     <select class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                        <option>Direction uniquement</option>
-                        <option>Direction & Comptable</option>
-                        <option>Tout responsable</option>
+                        <option @selected($schoolSettings?->validation_remise === 'Direction uniquement')>Direction uniquement</option>
+                        <option @selected($schoolSettings?->validation_remise === 'Direction & Comptable')>Direction & Comptable</option>
+                        <option @selected($schoolSettings?->validation_remise === 'Tout responsable')>Tout responsable</option>
                     </select>
                 </div>
                 <div class="flex justify-end gap-2">
@@ -864,15 +865,15 @@
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <label class="text-sm font-medium text-gray-700">Numéro facture</label>
-                        <input type="text" value="FACT-{YYYY}-{####}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" value="{{ $schoolSettings?->facture_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Numéro reçu</label>
-                        <input type="text" value="REC-{YYYY}-{####}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" value="{{ $schoolSettings?->recu_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Matricule</label>
-                        <input type="text" value="LYC-{YY}-{####}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" value="{{ $schoolSettings?->matricule_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-2">
