@@ -70,6 +70,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/academic-years/{academicYear}/terms', [SettingsController::class, 'storeTerms'])
         ->name('settings.academic-years.terms.store');
     Route::post('/settings/fees', [SettingsController::class, 'storeFee'])->name('settings.fees.store');
+    Route::post('/settings/levels', [SettingsController::class, 'storeLevel'])->name('settings.levels.store');
+    Route::put('/settings/levels/{level}', [SettingsController::class, 'updateLevel'])->name('settings.levels.update');
+    Route::post('/settings/levels/{level}/status', [SettingsController::class, 'updateLevelStatus'])
+        ->name('settings.levels.status');
+    Route::post('/settings/series', [SettingsController::class, 'storeSerie'])->name('settings.series.store');
+    Route::put('/settings/series/{serie}', [SettingsController::class, 'updateSerie'])->name('settings.series.update');
+    Route::post('/settings/series/{serie}/status', [SettingsController::class, 'updateSerieStatus'])
+        ->name('settings.series.status');
+    Route::post('/settings/subjects', [SettingsController::class, 'storeSubject'])->name('settings.subjects.store');
+    Route::put('/settings/subjects/{subject}', [SettingsController::class, 'updateSubject'])->name('settings.subjects.update');
+    Route::post('/settings/subjects/{subject}/status', [SettingsController::class, 'updateSubjectStatus'])
+        ->name('settings.subjects.status');
+    Route::post('/settings/documents', [SettingsController::class, 'updateDocuments'])->name('settings.documents.update');
 
     Route::prefix('accounting')->name('accounting.')->group(function () {
         Route::get('/dashboard', fn () => view('accounting.dashboard'))->name('dashboard');
