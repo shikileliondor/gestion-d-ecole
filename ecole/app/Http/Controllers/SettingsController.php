@@ -95,7 +95,7 @@ class SettingsController extends Controller
             'libelle' => $data['name'],
             'date_debut' => $data['start_date'],
             'date_fin' => $data['end_date'],
-            'statut' => 'PLANNED',
+            'statut' => $this->defaultAcademicYearStatus(),
         ]);
 
         return back()->with('status', "L'année scolaire a été ajoutée.");
@@ -400,9 +400,9 @@ class SettingsController extends Controller
     {
         return match ($status) {
             'active' => 'ACTIVE',
-            'closed' => 'CLOSED',
-            'archived' => 'ARCHIVED',
-            default => 'PLANNED',
+            'closed' => 'CLOTUREE',
+            'archived' => 'ARCHIVEE',
+            default => 'CLOTUREE',
         };
     }
 
@@ -410,10 +410,18 @@ class SettingsController extends Controller
     {
         return match ($status) {
             'ACTIVE' => 'active',
-            'CLOSED' => 'closed',
-            'ARCHIVED' => 'archived',
+            'CLOTUREE', 'CLOSED' => 'closed',
+            'ARCHIVEE', 'ARCHIVED' => 'archived',
+            'PLANNED' => 'planned',
             default => 'planned',
         };
+    }
+
+    private function defaultAcademicYearStatus(): string
+    {
+        $hasActive = AnneeScolaire::query()->where('statut', 'ACTIVE')->exists();
+
+        return $hasActive ? 'CLOTUREE' : 'ACTIVE';
     }
 
     private function mapBillingCycle(?string $billingCycle): string

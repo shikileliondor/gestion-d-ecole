@@ -19,7 +19,7 @@
         $subjectUpdateRoute = route('settings.subjects.update', ['subject' => '__SUBJECT__']);
     @endphp
 
-    <div class="py-8" x-data="{ tab: 'annee', editLevel: null, editSerie: null, editSubject: null }">
+    <div class="py-8" x-data="{ tab: localStorage.getItem('settingsTab') ?? 'annee', editLevel: null, editSerie: null, editSubject: null }">
         <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <div class="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -48,7 +48,7 @@
                             type="button"
                             class="rounded-full px-4 py-2 text-xs font-semibold transition"
                             :class="tab === 'annee' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            @click="tab = 'annee'"
+                            @click="tab = 'annee'; localStorage.setItem('settingsTab', tab)"
                         >
                             Année scolaire
                         </button>
@@ -56,7 +56,7 @@
                             type="button"
                             class="rounded-full px-4 py-2 text-xs font-semibold transition"
                             :class="tab === 'referentiels' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            @click="tab = 'referentiels'"
+                            @click="tab = 'referentiels'; localStorage.setItem('settingsTab', tab)"
                         >
                             Référentiels
                         </button>
@@ -64,7 +64,7 @@
                             type="button"
                             class="rounded-full px-4 py-2 text-xs font-semibold transition"
                             :class="tab === 'scolarite' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            @click="tab = 'scolarite'"
+                            @click="tab = 'scolarite'; localStorage.setItem('settingsTab', tab)"
                         >
                             Scolarité
                         </button>
@@ -72,7 +72,7 @@
                             type="button"
                             class="rounded-full px-4 py-2 text-xs font-semibold transition"
                             :class="tab === 'documents' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            @click="tab = 'documents'"
+                            @click="tab = 'documents'; localStorage.setItem('settingsTab', tab)"
                         >
                             Documents officiels
                         </button>
@@ -80,7 +80,7 @@
                             type="button"
                             class="rounded-full px-4 py-2 text-xs font-semibold transition"
                             :class="tab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            @click="tab = 'users'"
+                            @click="tab = 'users'; localStorage.setItem('settingsTab', tab)"
                         >
                             Utilisateurs & rôles
                         </button>
