@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JournalAction;
 use App\Models\Paiement;
+use App\Models\FraisInscription;
 use App\Models\Facture;
 use App\Models\Classe;
 use App\Models\Enseignant;
@@ -24,9 +25,10 @@ class DashboardController extends Controller
         $studentCount = Eleve::count();
         $classCount = Classe::count();
         $staffCount = Enseignant::count();
-        $pendingPayments = Paiement::whereIn('statut', ['EN_ATTENTE', 'PARTIEL'])->count();
+        $pendingPayments = FraisInscription::whereIn('statut', ['IMPAYE', 'PARTIEL'])->count();
         $totalRevenue = Paiement::sum('montant_paye');
-        $totalOutstanding = Paiement::sum('solde_du');
+        $totalOutstanding = FraisInscription::whereIn('statut', ['IMPAYE', 'PARTIEL'])
+            ->sum('montant_du');
 
         $studentsThisMonth = Eleve::whereBetween('created_at', [$startOfMonth, $now])->count();
         $studentsLastMonth = Eleve::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->count();
@@ -113,9 +115,9 @@ class DashboardController extends Controller
         $maxTrend = $trendData->flatMap(fn (array $data) => [$data['entries'], $data['payments']])->max() ?: 1;
 
         $classDistribution = DB::table('classes')
-            ->leftJoin('student_classes', 'classes.id', '=', 'student_classes.class_id')
-            ->select('classes.name', DB::raw('count(student_classes.student_id) as total'))
-            ->groupBy('classes.id', 'classes.name')
+            ->leftJoin('inscriptions', 'classes.id', '=', 'inscriptions.classe_id')
+            ->select('classes.nom as name', DB::raw('count(inscriptions.id) as total'))
+            ->groupBy('classes.id', 'classes.nom')
             ->orderByDesc('total')
             ->limit(6)
             ->get();
@@ -137,7 +139,7 @@ class DashboardController extends Controller
 
         $statusBreakdown = $statusDistribution->map(function ($status) use ($totalStudents) {
             return [
-                'label' => ucfirst($status->status ?? 'Autres'),
+                'label' => ucfirst($status->statut ?? 'Autres'),
                 'total' => (int) $status->total,
                 'percentage' => round(((int) $status->total / $totalStudents) * 100, 1),
             ];
