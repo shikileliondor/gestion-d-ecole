@@ -13,6 +13,8 @@ use App\Models\TypeFrais;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
@@ -35,7 +37,9 @@ class SettingsController extends Controller
         $levels = Niveau::query()
             ->where('actif', true)
             ->orderBy('ordre')
-            ->pluck('code');
+            ->get();
+
+        $levelOptions = $levels->pluck('code');
 
         $series = Serie::query()
             ->where('actif', true)
@@ -69,6 +73,7 @@ class SettingsController extends Controller
             'terms' => $terms,
             'fees' => $fees,
             'levels' => $levels,
+            'levelOptions' => $levelOptions,
             'series' => $series,
             'subjects' => $subjects,
             'feeTypes' => $feeTypes,
@@ -198,6 +203,171 @@ class SettingsController extends Controller
         return back()->with('status', 'Le frais a été ajouté au niveau sélectionné.');
     }
 
+    public function storeLevel(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:20', 'unique:niveaux,code'],
+        ]);
+
+        $maxOrder = (int) Niveau::query()->max('ordre');
+
+        Niveau::query()->create([
+            'code' => $data['code'],
+            'ordre' => $maxOrder + 1,
+            'actif' => true,
+        ]);
+
+        return back()->with('status', 'Le niveau a été ajouté.');
+    }
+
+    public function updateLevel(Request $request, Niveau $level): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:20', Rule::unique('niveaux', 'code')->ignore($level->id)],
+        ]);
+
+        $level->update([
+            'code' => $data['code'],
+        ]);
+
+        return back()->with('status', 'Le niveau a été mis à jour.');
+    }
+
+    public function updateLevelStatus(Request $request, Niveau $level): RedirectResponse
+    {
+        $data = $request->validate([
+            'active' => ['required', 'boolean'],
+        ]);
+
+        $level->update([
+            'actif' => (bool) $data['active'],
+        ]);
+
+        return back()->with('status', 'Le niveau a été mis à jour.');
+    }
+
+    public function storeSerie(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:10', 'unique:series,code'],
+            'label' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        Serie::query()->create([
+            'code' => $data['code'],
+            'libelle' => $data['label'] ?: $data['code'],
+            'actif' => true,
+        ]);
+
+        return back()->with('status', 'La série a été ajoutée.');
+    }
+
+    public function updateSerie(Request $request, Serie $serie): RedirectResponse
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:10', Rule::unique('series', 'code')->ignore($serie->id)],
+            'label' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $serie->update([
+            'code' => $data['code'],
+            'libelle' => $data['label'] ?: $data['code'],
+        ]);
+
+        return back()->with('status', 'La série a été mise à jour.');
+    }
+
+    public function updateSerieStatus(Request $request, Serie $serie): RedirectResponse
+    {
+        $data = $request->validate([
+            'active' => ['required', 'boolean'],
+        ]);
+
+        $serie->update([
+            'actif' => (bool) $data['active'],
+        ]);
+
+        return back()->with('status', 'La série a été mise à jour.');
+    }
+
+    public function storeSubject(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:matieres,nom'],
+            'code' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        Matiere::query()->create([
+            'nom' => $data['name'],
+            'code' => $data['code'],
+            'actif' => true,
+        ]);
+
+        return back()->with('status', 'La matière a été ajoutée.');
+    }
+
+    public function updateSubject(Request $request, Matiere $subject): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:100', Rule::unique('matieres', 'nom')->ignore($subject->id)],
+            'code' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $subject->update([
+            'nom' => $data['name'],
+            'code' => $data['code'],
+        ]);
+
+        return back()->with('status', 'La matière a été mise à jour.');
+    }
+
+    public function updateSubjectStatus(Request $request, Matiere $subject): RedirectResponse
+    {
+        $data = $request->validate([
+            'active' => ['required', 'boolean'],
+        ]);
+
+        $subject->update([
+            'actif' => (bool) $data['active'],
+        ]);
+
+        return back()->with('status', 'La matière a été mise à jour.');
+    }
+
+    public function updateDocuments(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'logo' => ['nullable', 'image', 'max:2048'],
+            'cachet' => ['nullable', 'image', 'max:2048'],
+            'signature' => ['nullable', 'image', 'max:2048'],
+            'facture_prefix' => ['nullable', 'string', 'max:20'],
+            'recu_prefix' => ['nullable', 'string', 'max:20'],
+            'matricule_prefix' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $settings = ParametreEcole::query()->firstOrCreate([]);
+
+        if ($request->hasFile('logo')) {
+            $settings->logo_path = $request->file('logo')->store('documents', 'public');
+        }
+
+        if ($request->hasFile('cachet')) {
+            $settings->cachet_path = $request->file('cachet')->store('documents', 'public');
+        }
+
+        if ($request->hasFile('signature')) {
+            $settings->signature_path = $request->file('signature')->store('documents', 'public');
+        }
+
+        $settings->facture_prefix = $data['facture_prefix'] ?? $settings->facture_prefix;
+        $settings->recu_prefix = $data['recu_prefix'] ?? $settings->recu_prefix;
+        $settings->matricule_prefix = $data['matricule_prefix'] ?? $settings->matricule_prefix;
+
+        $settings->save();
+
+        return back()->with('status', 'Les documents officiels ont été mis à jour.');
+    }
+
     private function hydrateAcademicYear(AnneeScolaire $annee): void
     {
         $annee->setAttribute('name', $annee->libelle);
@@ -260,15 +430,14 @@ class SettingsController extends Controller
 
     private function buildDocuments(?ParametreEcole $settings): Collection
     {
-        $logoValue = collect([$settings?->logo_path, $settings?->cachet_path])
-            ->filter()
-            ->map(fn (string $path) => basename($path))
-            ->implode(' • ');
-
         $items = collect([
             [
-                'label' => 'Logo & cachet',
-                'value' => $logoValue ?: null,
+                'label' => 'Logo établissement',
+                'value' => $settings?->logo_path,
+            ],
+            [
+                'label' => 'Cachet établissement',
+                'value' => $settings?->cachet_path,
             ],
             [
                 'label' => 'Signature direction',
@@ -290,11 +459,17 @@ class SettingsController extends Controller
 
         return $items->map(function (array $item) {
             $value = $item['value'];
+            $isFile = is_string($value) && str_contains($value, '/');
+            $url = $isFile ? Storage::disk('public')->url($value) : null;
             $display = $value ? basename((string) $value) : 'Non renseigné';
+            $extension = $value ? strtolower(pathinfo((string) $value, PATHINFO_EXTENSION)) : '';
+            $isImage = in_array($extension, ['png', 'jpg', 'jpeg', 'gif', 'webp'], true);
 
             return [
                 'label' => $item['label'],
                 'value' => $display,
+                'url' => $url,
+                'is_image' => $isImage,
             ];
         });
     }

@@ -14,9 +14,12 @@
             ['name' => 'Mariam Traoré', 'email' => 'mariam.traore@lycee.ci', 'role' => 'SCOLARITÉ', 'status' => 'Actif'],
             ['name' => 'Koffi Yao', 'email' => 'koffi.yao@lycee.ci', 'role' => 'COMPTABLE', 'status' => 'Désactivé'],
         ];
+        $levelUpdateRoute = route('settings.levels.update', ['level' => '__LEVEL__']);
+        $serieUpdateRoute = route('settings.series.update', ['serie' => '__SERIE__']);
+        $subjectUpdateRoute = route('settings.subjects.update', ['subject' => '__SUBJECT__']);
     @endphp
 
-    <div class="py-8" x-data="{ tab: 'annee' }">
+    <div class="py-8" x-data="{ tab: 'annee', editLevel: null, editSerie: null, editSubject: null }">
         <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <div class="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -170,22 +173,25 @@
                                 <div class="mt-4 space-y-2">
                                     @forelse ($levels as $level)
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm">
-                                            <span class="font-medium text-gray-800">{{ $level }}</span>
+                                            <span class="font-medium text-gray-800">{{ $level->code }}</span>
                                             <div class="flex items-center gap-2">
                                                 <button
                                                     type="button"
                                                     class="text-xs font-semibold text-blue-600"
-                                                    @click="$refs.editLevel.showModal()"
+                                                    @click="editLevel = { id: {{ $level->id }}, code: @js($level->code) }; $refs.editLevel.showModal()"
                                                 >
                                                     Modifier
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    class="text-xs font-semibold text-gray-500"
-                                                    onclick="return confirm('Désactiver ce niveau ?');"
-                                                >
-                                                    Désactiver
-                                                </button>
+                                                <form method="post" action="{{ route('settings.levels.status', $level) }}" onsubmit="return confirm('Désactiver ce niveau ?');">
+                                                    @csrf
+                                                    <input type="hidden" name="active" value="0" />
+                                                    <button
+                                                        type="submit"
+                                                        class="text-xs font-semibold text-gray-500"
+                                                    >
+                                                        Désactiver
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     @empty
@@ -216,17 +222,20 @@
                                                 <button
                                                     type="button"
                                                     class="text-xs font-semibold text-blue-600"
-                                                    @click="$refs.editSerie.showModal()"
+                                                    @click="editSerie = { id: {{ $serie->id }}, code: @js($serie->code), label: @js($serie->libelle) }; $refs.editSerie.showModal()"
                                                 >
                                                     Modifier
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    class="text-xs font-semibold text-gray-500"
-                                                    onclick="return confirm('Désactiver cette série ?');"
-                                                >
-                                                    Désactiver
-                                                </button>
+                                                <form method="post" action="{{ route('settings.series.status', $serie) }}" onsubmit="return confirm('Désactiver cette série ?');">
+                                                    @csrf
+                                                    <input type="hidden" name="active" value="0" />
+                                                    <button
+                                                        type="submit"
+                                                        class="text-xs font-semibold text-gray-500"
+                                                    >
+                                                        Désactiver
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     @empty
@@ -257,17 +266,20 @@
                                                 <button
                                                     type="button"
                                                     class="text-xs font-semibold text-blue-600"
-                                                    @click="$refs.editSubject.showModal()"
+                                                    @click="editSubject = { id: {{ $subject->id }}, name: @js($subject->nom), code: @js($subject->code) }; $refs.editSubject.showModal()"
                                                 >
                                                     Modifier
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    class="text-xs font-semibold text-gray-500"
-                                                    onclick="return confirm('Désactiver cette matière ?');"
-                                                >
-                                                    Désactiver
-                                                </button>
+                                                <form method="post" action="{{ route('settings.subjects.status', $subject) }}" onsubmit="return confirm('Désactiver cette matière ?');">
+                                                    @csrf
+                                                    <input type="hidden" name="active" value="0" />
+                                                    <button
+                                                        type="submit"
+                                                        class="text-xs font-semibold text-gray-500"
+                                                    >
+                                                        Désactiver
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     @empty
@@ -384,7 +396,7 @@
                                             <label class="text-xs text-gray-500">Niveau</label>
                                             <select class="rounded-lg border border-gray-300 px-3 py-2 text-xs">
                                                 <option value="">Tous</option>
-                                                @foreach ($levels as $level)
+                                                @foreach ($levelOptions as $level)
                                                     <option value="{{ $level }}">{{ $level }}</option>
                                                 @endforeach
                                             </select>
@@ -523,6 +535,16 @@
                                     <div class="rounded-xl border border-gray-200 bg-gray-50 p-4">
                                         <div class="text-xs font-semibold uppercase text-gray-500">{{ $document['label'] }}</div>
                                         <div class="mt-2 text-sm font-medium text-gray-800">{{ $document['value'] }}</div>
+                                        @if ($document['url'])
+                                            <div class="mt-3 space-y-2">
+                                                @if ($document['is_image'])
+                                                    <img src="{{ $document['url'] }}" alt="{{ $document['label'] }}" class="h-24 w-24 rounded-lg border border-gray-200 object-cover" />
+                                                @endif
+                                                <a href="{{ $document['url'] }}" class="text-xs font-semibold text-blue-600" target="_blank" rel="noopener">
+                                                    Voir le document
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -647,84 +669,109 @@
         </dialog>
 
         <dialog x-ref="addLevel" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" action="{{ route('settings.levels.store') }}" class="space-y-4 p-6">
+                @csrf
                 <h3 class="text-lg font-semibold text-gray-800">Ajouter un niveau</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" placeholder="6e" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="code" placeholder="6e" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.addLevel.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
         </dialog>
 
         <dialog x-ref="editLevel" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" class="space-y-4 p-6" x-bind:action="editLevel ? '{{ $levelUpdateRoute }}'.replace('__LEVEL__', editLevel.id) : ''">
+                @csrf
+                @method('put')
                 <h3 class="text-lg font-semibold text-gray-800">Modifier le niveau</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="code" x-model="editLevel.code" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.editLevel.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
         </dialog>
 
         <dialog x-ref="addSerie" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" action="{{ route('settings.series.store') }}" class="space-y-4 p-6">
+                @csrf
                 <h3 class="text-lg font-semibold text-gray-800">Ajouter une série</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" placeholder="A" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="code" placeholder="A" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Nom complet</label>
+                    <input type="text" name="label" placeholder="Série A" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.addSerie.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
         </dialog>
 
         <dialog x-ref="editSerie" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" class="space-y-4 p-6" x-bind:action="editSerie ? '{{ $serieUpdateRoute }}'.replace('__SERIE__', editSerie.id) : ''">
+                @csrf
+                @method('put')
                 <h3 class="text-lg font-semibold text-gray-800">Modifier la série</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="code" x-model="editSerie.code" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Nom complet</label>
+                    <input type="text" name="label" x-model="editSerie.label" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.editSerie.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
         </dialog>
 
         <dialog x-ref="addSubject" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" action="{{ route('settings.subjects.store') }}" class="space-y-4 p-6">
+                @csrf
                 <h3 class="text-lg font-semibold text-gray-800">Ajouter une matière</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" placeholder="Mathématiques" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="name" placeholder="Mathématiques" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Code matière</label>
+                    <input type="text" name="code" placeholder="MATH" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.addSubject.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
         </dialog>
 
         <dialog x-ref="editSubject" class="w-full max-w-lg rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" class="space-y-4 p-6" x-bind:action="editSubject ? '{{ $subjectUpdateRoute }}'.replace('__SUBJECT__', editSubject.id) : ''">
+                @csrf
+                @method('put')
                 <h3 class="text-lg font-semibold text-gray-800">Modifier la matière</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Libellé</label>
-                    <input type="text" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="text" name="name" x-model="editSubject.name" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Code matière</label>
+                    <input type="text" name="code" x-model="editSubject.code" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.editSubject.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
@@ -767,10 +814,10 @@
                     <label class="text-sm font-medium text-gray-700">Niveau</label>
                     <input list="levels" name="level" placeholder="6e" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
                     <datalist id="levels">
-                        @foreach ($levels as $level)
-                            <option value="{{ $level }}"></option>
-                        @endforeach
-                    </datalist>
+                                                @foreach ($levelOptions as $level)
+                                                    <option value="{{ $level }}"></option>
+                                                @endforeach
+                                            </datalist>
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Type de frais</label>
@@ -852,32 +899,37 @@
         </dialog>
 
         <dialog x-ref="editDocuments" class="w-full max-w-xl rounded-2xl p-0 shadow-xl backdrop:bg-slate-900/50">
-            <form method="dialog" class="space-y-4 p-6">
+            <form method="post" action="{{ route('settings.documents.update') }}" class="space-y-4 p-6" enctype="multipart/form-data">
+                @csrf
                 <h3 class="text-lg font-semibold text-gray-800">Documents officiels</h3>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Logo établissement</label>
-                    <input type="file" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="file" name="logo" accept="image/*" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div>
                     <label class="text-sm font-medium text-gray-700">Cachet & signatures</label>
-                    <input type="file" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                    <input type="file" name="cachet" accept="image/*" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Signature direction</label>
+                    <input type="file" name="signature" accept="image/*" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                 </div>
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div>
                         <label class="text-sm font-medium text-gray-700">Numéro facture</label>
-                        <input type="text" value="{{ $schoolSettings?->facture_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" name="facture_prefix" value="{{ $schoolSettings?->facture_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Numéro reçu</label>
-                        <input type="text" value="{{ $schoolSettings?->recu_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" name="recu_prefix" value="{{ $schoolSettings?->recu_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Matricule</label>
-                        <input type="text" value="{{ $schoolSettings?->matricule_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                        <input type="text" name="matricule_prefix" value="{{ $schoolSettings?->matricule_prefix }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                     </div>
                 </div>
                 <div class="flex justify-end gap-2">
-                    <button type="submit" class="rounded-lg border border-gray-300 px-4 py-2 text-sm">Annuler</button>
+                    <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm" @click="$refs.editDocuments.close()">Annuler</button>
                     <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>
                 </div>
             </form>
