@@ -27,6 +27,8 @@
             action=""
             data-action-target
             data-action-fallback="{{ old('action_target_student') }}"
+            data-async-form
+            data-async-action="assign-student"
         >
             @csrf
             <input type="hidden" name="action_target_student" value="{{ old('action_target_student') }}" data-action-input>

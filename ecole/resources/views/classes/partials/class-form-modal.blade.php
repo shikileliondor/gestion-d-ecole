@@ -21,7 +21,7 @@
             </button>
         </div>
 
-        <form class="modal__form" method="POST" action="{{ route('classes.store') }}">
+        <form class="modal__form" method="POST" action="{{ route('classes.store') }}" data-async-form data-async-action="class-create">
             @csrf
             <div class="form-grid">
                 <div class="form-field">

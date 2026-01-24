@@ -21,7 +21,7 @@
             </button>
         </div>
 
-        <form class="modal__form" method="POST" action="{{ route('classes.series.store') }}">
+        <form class="modal__form" method="POST" action="{{ route('classes.series.store') }}" data-async-form data-async-action="series-update">
             @csrf
             <div class="form-grid">
                 <div class="form-field form-field--full">

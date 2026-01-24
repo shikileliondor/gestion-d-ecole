@@ -27,6 +27,8 @@
             action=""
             data-action-target
             data-action-fallback="{{ old('action_target_subject') }}"
+            data-async-form
+            data-async-action="assign-subject"
         >
             @csrf
             <input type="hidden" name="action_target_subject" value="{{ old('action_target_subject') }}" data-action-input>
@@ -34,7 +36,7 @@
             <div class="form-grid">
                 <div class="form-field form-field--full">
                     <label for="subject_id">Matière</label>
-                    <select id="subject_id" name="subject_id" required>
+                    <select id="subject_id" name="subject_id" required data-assign-subject-select>
                         <option value="">Sélectionner</option>
                         @foreach ($subjects as $subject)
                             <option value="{{ $subject->id }}" @selected(old('subject_id') == $subject->id)>
