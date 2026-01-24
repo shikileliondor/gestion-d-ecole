@@ -22,13 +22,13 @@
             'children' => [
                 [
                     'label' => 'Élèves',
-                    'route' => 'eleves.index',
-                    'active' => 'eleves.index',
+                    'route' => 'students.index',
+                    'active' => 'students.index',
                 ],
                 [
                     'label' => 'Inscriptions / Réinscriptions',
-                    'route' => 'inscriptions.index',
-                    'active' => 'inscriptions.index',
+                    'route' => 'students.enrollments',
+                    'active' => 'students.enrollments',
                 ],
                 [
                     'label' => 'Classes',
@@ -37,8 +37,8 @@
                 ],
                 [
                     'label' => 'Paiements',
-                    'route' => 'paiements.index',
-                    'active' => 'paiements.index',
+                    'route' => 'accounting.income.index',
+                    'active' => 'accounting.income.index',
                 ],
                 [
                     'label' => 'Impayés',
@@ -67,18 +67,18 @@
                     'children' => [
                         [
                             'label' => 'Matières',
-                            'route' => 'matieres.index',
-                            'active' => 'matieres.index',
+                            'url' => '#',
+                            'todo' => true,
                         ],
                         [
                             'label' => 'Programme & Coefficients',
-                            'route' => 'programme.index',
-                            'active' => 'programme.index',
+                            'url' => '#',
+                            'todo' => true,
                         ],
                         [
                             'label' => 'Affectations enseignants',
-                            'route' => 'affectations.index',
-                            'active' => 'affectations.index',
+                            'url' => '#',
+                            'todo' => true,
                         ],
                     ],
                 ],
@@ -87,8 +87,8 @@
                     'children' => [
                         [
                             'label' => 'Évaluations',
-                            'route' => 'evaluations.index',
-                            'active' => 'evaluations.index',
+                            'url' => '#',
+                            'todo' => true,
                         ],
                         [
                             'label' => 'Saisie des notes',
@@ -116,13 +116,13 @@
             'children' => [
                 [
                     'label' => 'Enseignants',
-                    'route' => 'enseignants.index',
-                    'active' => 'enseignants.index',
+                    'route' => 'teachers.index',
+                    'active' => 'teachers.index',
                 ],
                 [
                     'label' => 'Personnel administratif',
-                    'route' => 'personnels.index',
-                    'active' => 'personnels.index',
+                    'route' => 'staff.index',
+                    'active' => 'staff.index',
                 ],
                 [
                     'label' => 'Documents RH & Urgences',
@@ -138,13 +138,13 @@
             'children' => [
                 [
                     'label' => 'Factures',
-                    'route' => 'factures.index',
-                    'active' => 'factures.index',
+                    'route' => 'accounting.invoices.index',
+                    'active' => 'accounting.invoices.index',
                 ],
                 [
                     'label' => 'Reçus',
-                    'route' => 'recus.index',
-                    'active' => 'recus.index',
+                    'route' => 'accounting.receipts.list',
+                    'active' => 'accounting.receipts.list',
                 ],
                 [
                     'label' => 'Journal',
