@@ -17,6 +17,9 @@
         $levelUpdateRoute = route('settings.levels.update', ['level' => '__LEVEL__']);
         $serieUpdateRoute = route('settings.series.update', ['serie' => '__SERIE__']);
         $subjectUpdateRoute = route('settings.subjects.update', ['subject' => '__SUBJECT__']);
+        $coefficientsStoreRoute = route('settings.coefficients.store');
+        $coefficientsDefaultsRoute = route('settings.coefficients.defaults');
+        $coefficientsCopyRoute = route('settings.coefficients.copy');
     @endphp
 
     <div class="py-8" x-data="{ tab: localStorage.getItem('settingsTab') ?? 'annee', editLevel: null, editSerie: null, editSubject: null }">
@@ -332,6 +335,184 @@
                                         <p class="text-xs text-gray-500">Aucune matière enregistrée.</p>
                                     @endforelse
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                            x-data="officialCoefficientsManager({
+                                levels: @js($levels->map(fn ($level) => ['id' => $level->id, 'code' => $level->code])),
+                                series: @js($series->map(fn ($serie) => ['id' => $serie->id, 'code' => $serie->code, 'label' => $serie->libelle])),
+                                subjects: @js($coefficientSubjects->map(fn ($subject) => ['id' => $subject->id, 'name' => $subject->nom, 'active' => (bool) $subject->actif])),
+                                coefficients: @js($officialCoefficients->map(fn ($coef) => [
+                                    'id' => $coef->id,
+                                    'annee_scolaire_id' => $coef->annee_scolaire_id,
+                                    'niveau_id' => $coef->niveau_id,
+                                    'serie_id' => $coef->serie_id,
+                                    'matiere_id' => $coef->matiere_id,
+                                    'coefficient' => $coef->coefficient,
+                                    'obligatoire' => $coef->obligatoire,
+                                    'actif' => $coef->actif,
+                                ])),
+                                academicYearId: @js($coefficientAcademicYearId),
+                                usesSeries: @js($series->isNotEmpty()),
+                                storeUrl: @js($coefficientsStoreRoute),
+                                defaultsUrl: @js($coefficientsDefaultsRoute),
+                                copyUrl: @js($coefficientsCopyRoute),
+                            })"
+                            x-init="init()"
+                        >
+                            <div class="flex flex-col gap-4 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
+                                <div>
+                                    <h4 class="text-base font-semibold text-gray-800">Coefficients officiels</h4>
+                                    <p class="text-xs text-gray-500">Définir les coefficients par niveau, matière et série.</p>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                                        :disabled="!canEdit || isSaving"
+                                        @click="save()"
+                                    >
+                                        <span x-text="isSaving ? 'Enregistrement...' : 'Enregistrer'"></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-blue-300"
+                                        :disabled="!canEdit || isApplying"
+                                        @click="applyDefaults()"
+                                    >
+                                        <span x-text="isApplying ? 'Application...' : 'Appliquer coefficients par défaut'"></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300"
+                                        :disabled="!canEdit"
+                                        @click="resetForm()"
+                                    >
+                                        Réinitialiser
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 space-y-4">
+                                <div class="grid gap-4 lg:grid-cols-3">
+                                    <div>
+                                        <label class="text-xs font-semibold text-gray-500">Niveau</label>
+                                        <select
+                                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                            x-model.number="selectedLevelId"
+                                            @change="refreshRows()"
+                                        >
+                                            <template x-for="level in levels" :key="level.id">
+                                                <option :value="level.id" x-text="level.code"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div x-show="usesSeries">
+                                        <label class="text-xs font-semibold text-gray-500">Série</label>
+                                        <select
+                                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                            x-model.number="selectedSerieId"
+                                            @change="refreshRows()"
+                                        >
+                                            <option :value="null">Toutes les séries</option>
+                                            <template x-for="serie in series" :key="serie.id">
+                                                <option :value="serie.id" x-text="serie.code"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700" x-show="missingCount > 0">
+                                        <strong x-text="missingCount"></strong> matières sans coefficient pour ce niveau.
+                                    </div>
+                                </div>
+
+                                <div class="rounded-lg border border-gray-200 bg-white">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                            <thead class="bg-gray-50">
+                                                <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                                    <th class="px-4 py-3">Matière</th>
+                                                    <th class="px-4 py-3">Coefficient</th>
+                                                    <th class="px-4 py-3">Statut</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                <template x-for="row in rows" :key="row.matiere_id">
+                                                    <tr>
+                                                        <td class="px-4 py-3">
+                                                            <div class="font-medium text-gray-900" x-text="row.name"></div>
+                                                            <div class="text-xs text-gray-500" x-show="!row.subjectActive">Matière désactivée</div>
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                step="0.01"
+                                                                class="w-32 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                                                x-model.number="row.coefficient"
+                                                                @input="row.isDefined = Boolean(row.coefficient); updateMissingCount()"
+                                                                :disabled="!row.subjectActive"
+                                                            />
+                                                        </td>
+                                                        <td class="px-4 py-3">
+                                                            <span
+                                                                class="rounded-full px-2 py-1 text-xs font-semibold"
+                                                                :class="!row.subjectActive ? 'bg-gray-200 text-gray-600' : (row.isDefined ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')"
+                                                                x-text="!row.subjectActive ? 'Désactivée' : (row.isDefined ? 'Défini' : 'Manquant')"
+                                                            ></span>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-4 lg:grid-cols-3">
+                                    <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white px-4 py-3">
+                                        <div class="flex flex-col gap-3 md:flex-row md:items-end">
+                                            <div class="flex-1">
+                                                <label class="text-xs font-semibold text-gray-500">Copier depuis un autre niveau</label>
+                                                <div class="mt-1 grid gap-3 md:grid-cols-2">
+                                                    <select class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" x-model.number="copyFromLevelId">
+                                                        <option value="">Choisir un niveau</option>
+                                                        <template x-for="level in levels" :key="`copy-${level.id}`">
+                                                            <option :value="level.id" x-text="level.code"></option>
+                                                        </template>
+                                                    </select>
+                                                    <select
+                                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                                        x-model.number="copyFromSerieId"
+                                                        x-show="usesSeries"
+                                                    >
+                                                        <option :value="null">Toutes les séries</option>
+                                                        <template x-for="serie in series" :key="`copy-serie-${serie.id}`">
+                                                            <option :value="serie.id" x-text="serie.code"></option>
+                                                        </template>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                class="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300"
+                                                :disabled="!canEdit || !copyFromLevelId || isCopying"
+                                                @click="copyFromLevel()"
+                                            >
+                                                <span x-text="isCopying ? 'Copie...' : 'Copier'"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 text-xs text-gray-500">
+                                        Les coefficients sont uniques par niveau + matière (et série si activée). Toute mise à jour conserve l'historique.
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="rounded-lg px-4 py-3 text-sm"
+                                    x-show="statusMessage"
+                                    :class="statusType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+                                    x-text="statusMessage"
+                                ></div>
                             </div>
                         </div>
                     </div>
@@ -1032,5 +1213,222 @@
                 </div>
             </form>
         </dialog>
+
+        <script>
+            function officialCoefficientsManager(config) {
+                return {
+                    levels: config.levels ?? [],
+                    series: config.series ?? [],
+                    subjects: config.subjects ?? [],
+                    coefficients: config.coefficients ?? [],
+                    academicYearId: config.academicYearId,
+                    usesSeries: config.usesSeries ?? false,
+                    storeUrl: config.storeUrl,
+                    defaultsUrl: config.defaultsUrl,
+                    copyUrl: config.copyUrl,
+                    selectedLevelId: config.levels?.[0]?.id ?? null,
+                    selectedSerieId: config.usesSeries ? (config.series?.[0]?.id ?? null) : null,
+                    copyFromLevelId: null,
+                    copyFromSerieId: null,
+                    rows: [],
+                    initialSnapshot: [],
+                    missingCount: 0,
+                    statusMessage: '',
+                    statusType: 'success',
+                    isSaving: false,
+                    isApplying: false,
+                    isCopying: false,
+                    get canEdit() {
+                        return Boolean(this.academicYearId && this.selectedLevelId);
+                    },
+                    init() {
+                        this.refreshRows();
+                    },
+                    refreshRows() {
+                        const filtered = this.coefficients.filter((coef) => {
+                            const matchesLevel = coef.niveau_id === this.selectedLevelId;
+                            const matchesSerie = this.usesSeries
+                                ? ((coef.serie_id ?? null) === (this.selectedSerieId ?? null))
+                                : (coef.serie_id ?? null) === null;
+
+                            return matchesLevel && matchesSerie;
+                        });
+
+                        const coefficientMap = new Map();
+
+                        filtered.forEach((coef) => {
+                            coefficientMap.set(coef.matiere_id, coef);
+                        });
+
+                        this.rows = this.subjects.map((subject) => {
+                            const existing = coefficientMap.get(subject.id);
+                            const isDefined = Boolean(existing && existing.actif);
+
+                            return {
+                                matiere_id: subject.id,
+                                name: subject.name,
+                                subjectActive: subject.active,
+                                coefficient: isDefined ? Number(existing.coefficient) : null,
+                                isDefined,
+                            };
+                        });
+
+                        this.initialSnapshot = this.rows.map((row) => ({ ...row }));
+                        this.updateMissingCount();
+                    },
+                    updateMissingCount() {
+                        this.missingCount = this.rows.filter((row) => row.subjectActive && !row.coefficient).length;
+                    },
+                    resolveErrorMessage(data, fallback) {
+                        if (data?.errors) {
+                            const firstField = Object.keys(data.errors)[0];
+                            if (firstField && data.errors[firstField]?.length) {
+                                return data.errors[firstField][0];
+                            }
+                        }
+
+                        return data?.message ?? fallback;
+                    },
+                    resetForm() {
+                        this.rows = this.initialSnapshot.map((row) => ({ ...row }));
+                        this.updateMissingCount();
+                    },
+                    async save() {
+                        if (!this.canEdit) {
+                            return;
+                        }
+
+                        this.statusMessage = '';
+                        this.statusType = 'success';
+                        this.isSaving = true;
+
+                        const payload = {
+                            academic_year_id: this.academicYearId,
+                            niveau_id: this.selectedLevelId,
+                            serie_id: this.usesSeries ? this.selectedSerieId : null,
+                            coefficients: this.rows.map((row) => ({
+                                matiere_id: row.matiere_id,
+                                coefficient: row.coefficient ?? null,
+                            })),
+                        };
+
+                        try {
+                            const response = await fetch(this.storeUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify(payload),
+                            });
+
+                            const data = await response.json();
+
+                            if (!response.ok) {
+                                this.statusType = 'error';
+                                this.statusMessage = this.resolveErrorMessage(data, 'Impossible d\'enregistrer les coefficients.');
+                                return;
+                            }
+
+                            this.coefficients = data.coefficients ?? [];
+                            this.statusMessage = data.message ?? 'Les coefficients ont été enregistrés.';
+                            this.refreshRows();
+                        } catch (error) {
+                            this.statusType = 'error';
+                            this.statusMessage = 'Erreur réseau lors de la sauvegarde.';
+                        } finally {
+                            this.isSaving = false;
+                        }
+                    },
+                    async applyDefaults() {
+                        if (!this.canEdit) {
+                            return;
+                        }
+
+                        this.statusMessage = '';
+                        this.statusType = 'success';
+                        this.isApplying = true;
+
+                        try {
+                            const response = await fetch(this.defaultsUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    academic_year_id: this.academicYearId,
+                                    niveau_id: this.selectedLevelId,
+                                    serie_id: this.usesSeries ? this.selectedSerieId : null,
+                                }),
+                            });
+
+                            const data = await response.json();
+
+                            if (!response.ok) {
+                                this.statusType = 'error';
+                                this.statusMessage = this.resolveErrorMessage(data, 'Impossible d\'appliquer les coefficients par défaut.');
+                                return;
+                            }
+
+                            this.coefficients = data.coefficients ?? [];
+                            this.statusMessage = data.message ?? 'Les coefficients par défaut ont été appliqués.';
+                            this.refreshRows();
+                        } catch (error) {
+                            this.statusType = 'error';
+                            this.statusMessage = 'Erreur réseau lors de l\'application des coefficients.';
+                        } finally {
+                            this.isApplying = false;
+                        }
+                    },
+                    async copyFromLevel() {
+                        if (!this.canEdit || !this.copyFromLevelId) {
+                            return;
+                        }
+
+                        this.statusMessage = '';
+                        this.statusType = 'success';
+                        this.isCopying = true;
+
+                        try {
+                            const response = await fetch(this.copyUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    academic_year_id: this.academicYearId,
+                                    source_niveau_id: this.copyFromLevelId,
+                                    source_serie_id: this.usesSeries ? this.copyFromSerieId : null,
+                                    target_niveau_id: this.selectedLevelId,
+                                    target_serie_id: this.usesSeries ? this.selectedSerieId : null,
+                                }),
+                            });
+
+                            const data = await response.json();
+
+                            if (!response.ok) {
+                                this.statusType = 'error';
+                                this.statusMessage = this.resolveErrorMessage(data, 'Impossible de copier les coefficients.');
+                                return;
+                            }
+
+                            this.coefficients = data.coefficients ?? [];
+                            this.statusMessage = data.message ?? 'Les coefficients ont été copiés.';
+                            this.refreshRows();
+                        } catch (error) {
+                            this.statusType = 'error';
+                            this.statusMessage = 'Erreur réseau lors de la copie.';
+                        } finally {
+                            this.isCopying = false;
+                        }
+                    },
+                };
+            }
+        </script>
     </div>
 </x-app-layout>
