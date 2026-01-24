@@ -25,7 +25,7 @@
                     ->take(2)
                     ->implode('')
                 : '';
-            $notificationCount = \App\Models\ActivityLog::whereDate('created_at', $now->toDateString())->count();
+            $notificationCount = \App\Models\JournalAction::whereDate('created_at', $now->toDateString())->count();
         @endphp
         <div x-data="{ sidebarOpen: false }" class="min-h-screen">
             <div class="flex min-h-screen">
