@@ -10,16 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const infoFields = {
-        code_personnel: modal.querySelector('[data-field="code_personnel"]'),
-        nom: modal.querySelector('[data-field="nom"]'),
-        prenoms: modal.querySelector('[data-field="prenoms"]'),
-        sexe: modal.querySelector('[data-field="sexe"]'),
-        date_naissance: modal.querySelector('[data-field="date_naissance"]'),
-        categorie_personnel: modal.querySelector('[data-field="categorie_personnel"]'),
-        poste: modal.querySelector('[data-field="poste"]'),
-        contact: modal.querySelector('[data-field="contact"]'),
-        adresse: modal.querySelector('[data-field="adresse"]'),
-        commune: modal.querySelector('[data-field="commune"]'),
+        staff_number: modal.querySelector('[data-field="staff_number"]'),
+        first_name: modal.querySelector('[data-field="first_name"]'),
+        last_name: modal.querySelector('[data-field="last_name"]'),
+        email: modal.querySelector('[data-field="email"]'),
         statut: modal.querySelector('[data-field="statut"]'),
     };
 
@@ -98,34 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const labelMaps = {
-        sexe: { M: 'M', F: 'F', AUTRE: 'Autre' },
-        categorie_personnel: {
-            ADMINISTRATION: 'Administration',
-            SURVEILLANCE: 'Surveillance',
-            INTENDANCE: 'Intendance',
-            COMPTABILITE: 'Comptabilité',
-            TECHNIQUE: 'Technique',
-            SERVICE: 'Service',
-        },
-        type_contrat: { CDI: 'CDI', CDD: 'CDD', VACATAIRE: 'Vacataire', STAGE: 'Stage' },
         statut: { ACTIF: 'Actif', SUSPENDU: 'Suspendu', PARTI: 'Parti' },
-        mode_paiement: { MOBILE_MONEY: 'Mobile Money', VIREMENT: 'Virement', CASH: 'Cash' },
-        contact_urgence_lien: {
-            PERE: 'Père',
-            MERE: 'Mère',
-            CONJOINT: 'Conjoint',
-            FRERE_SOEUR: 'Frère/Soeur',
-            TUTEUR: 'Tuteur',
-            AUTRE: 'Autre',
-        },
-        type_document: {
-            CNI: 'CNI',
-            CONTRAT: 'Contrat',
-            DIPLOME: 'Diplôme',
-            CV: 'CV',
-            ATTESTATION: 'Attestation',
-            AUTRE: 'Autre',
-        },
     };
 
     const openModal = (staffUrl, staffName) => {
@@ -138,12 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setText(infoFields.staff_number, '—');
-        setText(infoFields.full_name, '—');
-        setText(infoFields.position, '—');
-        setText(infoFields.contact, '—');
-        setText(infoFields.contract, '—');
-        setText(infoFields.hire_date, '—');
-        setText(infoFields.status, '—');
+        setText(infoFields.first_name, '—');
+        setText(infoFields.last_name, '—');
+        setText(infoFields.email, '—');
+        setText(infoFields.statut, '—');
         setList(listFields.assignments, [], () => '', 'Aucune affectation enregistrée.');
 
         if (!staffUrl) {
@@ -164,37 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then((data) => {
                 const staff = data.staff || {};
-                const contract = data.contract || {};
                 setText(infoFields.staff_number, staff.staff_number);
-                setText(infoFields.full_name, `${staff.last_name || ''} ${staff.first_name || ''}`.trim());
-                setText(infoFields.position, staff.position);
-                setText(
-                    infoFields.contact,
-                    [staff.telephone_1, staff.telephone_2, staff.email].filter((item) => item).join(' · ')
-                );
-                setText(infoFields.adresse, staff.adresse);
-                setText(infoFields.commune, staff.commune);
+                setText(infoFields.first_name, staff.first_name);
+                setText(infoFields.last_name, staff.last_name);
+                setText(infoFields.email, staff.email);
                 setText(infoFields.statut, labelMaps.statut[staff.statut] || staff.statut);
-
-                setList(
-                    listFields.documents,
-                    data.documents,
-                    (document) => `
-                        <div>
-                            <p class="label">Libellé</p>
-                            <p class="value">${document.libelle || '—'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Type</p>
-                            <p class="value">${labelMaps.type_document[document.type_document] || document.type_document || '—'}</p>
-                        </div>
-                        <div>
-                            <p class="label">Description</p>
-                            <p class="value">${document.description || '—'}</p>
-                        </div>
-                    `,
-                    'Aucune affectation enregistrée.'
-                );
 
             })
             .catch(() => {

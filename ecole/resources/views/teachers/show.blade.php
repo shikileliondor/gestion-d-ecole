@@ -54,10 +54,6 @@
                     <p>{{ $enseignant->sexe ?? '—' }}</p>
                 </div>
                 <div class="form-field">
-                    <label>Date de naissance</label>
-                    <p>{{ $enseignant->date_naissance?->format('d/m/Y') ?? '—' }}</p>
-                </div>
-                <div class="form-field">
                     <label>Photo</label>
                     <p>
                         @if ($enseignant->photo_url)
@@ -85,10 +81,6 @@
                     <label>Email</label>
                     <p>{{ $enseignant->email ?? '—' }}</p>
                 </div>
-                <div class="form-field">
-                    <label>Adresse / Commune</label>
-                    <p>{{ $enseignant->adresse ?? '—' }}</p>
-                </div>
             </div>
         </div>
 
@@ -98,14 +90,6 @@
                 <div class="form-field">
                     <label>Spécialité</label>
                     <p>{{ $enseignant->specialite }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Niveau d'enseignement</label>
-                    <p>{{ $enseignant->niveau_enseignement ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Qualification</label>
-                    <p>{{ $enseignant->qualification ?? '—' }}</p>
                 </div>
             </div>
         </div>
@@ -128,50 +112,6 @@
                 <div class="form-field">
                     <label>Statut</label>
                     <p>{{ $enseignant->statut }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Numéro CNI</label>
-                    <p>{{ $enseignant->num_cni ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Expiration CNI</label>
-                    <p>{{ $enseignant->date_expiration_cni?->format('d/m/Y') ?? '—' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h2>Urgence</h2>
-            <div class="form-grid">
-                <div class="form-field">
-                    <label>Nom contact</label>
-                    <p>{{ $enseignant->contact_urgence_nom ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Lien</label>
-                    <p>{{ $enseignant->contact_urgence_lien ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Téléphone</label>
-                    <p>{{ $enseignant->contact_urgence_tel ?? '—' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h2>Paie (optionnel)</h2>
-            <div class="form-grid">
-                <div class="form-field">
-                    <label>Mode de paiement</label>
-                    <p>{{ $enseignant->mode_paiement ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Numéro paiement</label>
-                    <p>{{ $enseignant->numero_paiement ?? '—' }}</p>
-                </div>
-                <div class="form-field">
-                    <label>Salaire de base</label>
-                    <p>{{ $enseignant->salaire_base ?? '—' }}</p>
                 </div>
             </div>
         </div>
