@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
         ->name('settings.academic-years.status');
     Route::post('/settings/academic-years/{academicYear}/terms', [SettingsController::class, 'storeTerms'])
         ->name('settings.academic-years.terms.store');
+    Route::post('/settings/periods', [SettingsController::class, 'storePeriods'])
+        ->name('settings.periods.store');
     Route::post('/settings/fees', [SettingsController::class, 'storeFee'])->name('settings.fees.store');
     Route::post('/settings/levels', [SettingsController::class, 'storeLevel'])->name('settings.levels.store');
     Route::put('/settings/levels/{level}', [SettingsController::class, 'updateLevel'])->name('settings.levels.update');
