@@ -13,6 +13,7 @@ use App\Models\Niveau;
 use App\Models\Serie;
 use App\Services\ClasseService;
 use App\Services\MatiereService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -118,7 +119,7 @@ class SchoolClassController extends Controller
         return view('classes.index', compact('classes', 'academicYears', 'subjects', 'students', 'staff', 'seriesOptions'));
     }
 
-    public function store(Request $request, ClasseService $service): RedirectResponse
+    public function store(Request $request, ClasseService $service): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('classForm', [
             'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
@@ -132,7 +133,7 @@ class SchoolClassController extends Controller
         $niveauId = $this->resolveNiveauId($data['level'] ?? null);
         $serieId = $this->resolveSerieId($data['series'] ?? null);
 
-        $service->create([
+        $classe = $service->create([
             'annee_scolaire_id' => $data['academic_year_id'],
             'niveau_id' => $niveauId,
             'serie_id' => $serieId,
@@ -141,10 +142,21 @@ class SchoolClassController extends Controller
             'actif' => ($data['status'] ?? 'active') === 'active',
         ]);
 
+        if ($request->expectsJson()) {
+            $classe = $this->hydrateClassCard($classe);
+            $cardHtml = view('classes.partials.class-card', ['class' => $classe])->render();
+
+            return response()->json([
+                'message' => 'La classe a été créée avec succès.',
+                'class_id' => $classe->id,
+                'card_html' => $cardHtml,
+            ]);
+        }
+
         return back()->with('status', 'La classe a été créée avec succès.');
     }
 
-    public function updateHeadcount(Request $request, Classe $class, ClasseService $service): RedirectResponse
+    public function updateHeadcount(Request $request, Classe $class, ClasseService $service): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('headcountForm', [
             'manual_headcount' => ['nullable', 'integer', 'min:0'],
@@ -154,10 +166,21 @@ class SchoolClassController extends Controller
             'effectif_max' => $data['manual_headcount'] ?? null,
         ]);
 
+        if ($request->expectsJson()) {
+            $classe = $this->hydrateClassCard($class->refresh());
+            $cardHtml = view('classes.partials.class-card', ['class' => $classe])->render();
+
+            return response()->json([
+                'message' => "L'effectif de la classe a été mis à jour.",
+                'class_id' => $classe->id,
+                'card_html' => $cardHtml,
+            ]);
+        }
+
         return back()->with('status', "L'effectif de la classe a été mis à jour.");
     }
 
-    public function storeSubject(Request $request, MatiereService $service): RedirectResponse
+    public function storeSubject(Request $request, MatiereService $service): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('subjectForm', [
             'code' => ['required', 'string', 'max:50', 'unique:matieres,code'],
@@ -165,16 +188,29 @@ class SchoolClassController extends Controller
             'status' => ['nullable', 'in:active,inactive'],
         ]);
 
-        $service->create([
+        $subject = $service->create([
             'code' => $data['code'],
             'nom' => $data['name'],
             'actif' => ($data['status'] ?? 'active') === 'active',
         ]);
 
+        if ($request->expectsJson()) {
+            $subject->setAttribute('name', $subject->nom);
+            $subject->setAttribute('level', $subject->niveau_id ? optional(Niveau::query()->find($subject->niveau_id))->code : null);
+            $subject->setAttribute('series', $subject->serie_id ? optional(Serie::query()->find($subject->serie_id))->code : null);
+
+            $optionHtml = view('classes.partials.subject-option', ['subject' => $subject])->render();
+
+            return response()->json([
+                'message' => 'La matière a été créée avec succès.',
+                'subject_option_html' => $optionHtml,
+            ]);
+        }
+
         return back()->with('status', 'La matière a été créée avec succès.');
     }
 
-    public function assignSubject(Request $request, Classe $class): RedirectResponse
+    public function assignSubject(Request $request, Classe $class): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('assignSubjectForm', [
             'subject_id' => ['required', 'exists:matieres,id'],
@@ -197,10 +233,23 @@ class SchoolClassController extends Controller
             ]);
         }
 
+        if ($request->expectsJson()) {
+            $classe = $this->hydrateClassCard($class->refresh());
+            $cardHtml = view('classes.partials.class-card', ['class' => $classe])->render();
+            $summaryHtml = view('classes.partials.subject-summary', ['class' => $classe])->render();
+
+            return response()->json([
+                'message' => 'La matière a été affectée à la classe.',
+                'class_id' => $classe->id,
+                'card_html' => $cardHtml,
+                'subject_summary_html' => $summaryHtml,
+            ]);
+        }
+
         return back()->with('status', 'La matière a été affectée à la classe.');
     }
 
-    public function assignStudent(Request $request, Classe $class): RedirectResponse
+    public function assignStudent(Request $request, Classe $class): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('assignStudentForm', [
             'student_id' => ['required', 'exists:eleves,id'],
@@ -227,10 +276,21 @@ class SchoolClassController extends Controller
             'statut' => $this->mapAssignmentStatus($data['status'] ?? null),
         ]);
 
+        if ($request->expectsJson()) {
+            $classe = $this->hydrateClassCard($class->refresh());
+            $cardHtml = view('classes.partials.class-card', ['class' => $classe])->render();
+
+            return response()->json([
+                'message' => "L'élève a été affecté à la classe.",
+                'class_id' => $classe->id,
+                'card_html' => $cardHtml,
+            ]);
+        }
+
         return back()->with('status', "L'élève a été affecté à la classe.");
     }
 
-    public function storeSeries(Request $request): RedirectResponse
+    public function storeSeries(Request $request): JsonResponse|RedirectResponse
     {
         $data = $request->validate([
             'series_list' => ['nullable', 'string', 'max:255'],
@@ -247,6 +307,18 @@ class SchoolClassController extends Controller
                 ['code' => $code],
                 ['libelle' => null, 'actif' => true]
             );
+        }
+
+        if ($request->expectsJson()) {
+            $seriesOptions = Serie::query()
+                ->orderBy('code')
+                ->pluck('code');
+            $seriesOptionsHtml = view('classes.partials.series-options', ['seriesOptions' => $seriesOptions])->render();
+
+            return response()->json([
+                'message' => 'Les séries ont été mises à jour.',
+                'series_options_html' => $seriesOptionsHtml,
+            ]);
         }
 
         return back()->with('status', 'Les séries ont été mises à jour.');
@@ -342,5 +414,30 @@ class SchoolClassController extends Controller
                 'color' => null,
             ];
         });
+    }
+
+    private function hydrateClassCard(Classe $classe): Classe
+    {
+        $classe->setAttribute('name', $classe->nom);
+        $classe->setAttribute('level', optional(Niveau::query()->find($classe->niveau_id))->code);
+        $classe->setAttribute('series', optional(Serie::query()->find($classe->serie_id))->code);
+        $classe->setAttribute('section', null);
+        $classe->setAttribute('room', null);
+        $classe->setAttribute('manual_headcount', $classe->effectif_max);
+        $classe->setAttribute('student_assignments_count', Inscription::query()->where('classe_id', $classe->id)->count());
+        $classe->setAttribute('subject_assignments_count', AffectationEnseignant::query()->where('classe_id', $classe->id)->count());
+
+        $academicYear = AnneeScolaire::query()->find($classe->annee_scolaire_id);
+        if ($academicYear) {
+            $academicYear->setAttribute('name', $academicYear->libelle);
+            $classe->setRelation('academicYear', $academicYear);
+        }
+
+        $enseignantsById = Enseignant::query()->orderBy('nom')->orderBy('prenoms')->get()->keyBy('id');
+        $matieresById = Matiere::query()->orderBy('nom')->get()->keyBy('id');
+        $assignments = AffectationEnseignant::query()->where('classe_id', $classe->id)->get();
+        $classe->setRelation('subjectAssignments', $this->mapAssignments($assignments, $enseignantsById, $matieresById));
+
+        return $classe;
     }
 }
