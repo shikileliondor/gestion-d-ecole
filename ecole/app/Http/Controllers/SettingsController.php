@@ -9,8 +9,10 @@ use App\Models\ModePaiement;
 use App\Models\Niveau;
 use App\Models\ParametreEcole;
 use App\Models\Periode;
+use App\Models\ProgrammeMatiere;
 use App\Models\Serie;
 use App\Models\TypeFrais;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -52,6 +54,10 @@ class SettingsController extends Controller
             ->orderBy('nom')
             ->get();
 
+        $coefficientSubjects = Matiere::query()
+            ->orderBy('nom')
+            ->get();
+
         $feeTypes = TypeFrais::query()
             ->where('actif', true)
             ->orderBy('libelle')
@@ -71,6 +77,13 @@ class SettingsController extends Controller
             $fees = $this->buildFees($selectedAcademicYear->id);
         }
 
+        $coefficientAcademicYearId = $selectedAcademicYear?->id ?? $academicYears->first()?->id;
+        $officialCoefficients = $coefficientAcademicYearId
+            ? ProgrammeMatiere::query()
+                ->where('annee_scolaire_id', $coefficientAcademicYearId)
+                ->get()
+            : collect();
+
         return view('settings.index', [
             'schoolId' => null,
             'academicYears' => $academicYears,
@@ -81,12 +94,15 @@ class SettingsController extends Controller
             'levelOptions' => $levelOptions,
             'series' => $series,
             'subjects' => $subjects,
+            'coefficientSubjects' => $coefficientSubjects,
             'feeTypes' => $feeTypes,
             'paymentModes' => $paymentModes,
             'schoolSettings' => $schoolSettings,
             'documents' => $this->buildDocuments($schoolSettings),
             'periods' => $periods,
             'activePeriodType' => $activePeriodType,
+            'coefficientAcademicYearId' => $coefficientAcademicYearId,
+            'officialCoefficients' => $officialCoefficients,
         ]);
     }
 
@@ -382,6 +398,181 @@ class SettingsController extends Controller
         return back()->with('status', 'La matière a été mise à jour.');
     }
 
+    public function storeOfficialCoefficients(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
+            'niveau_id' => ['required', 'exists:niveaux,id'],
+            'serie_id' => ['nullable', 'exists:series,id'],
+            'coefficients' => ['required', 'array'],
+            'coefficients.*.matiere_id' => ['required', 'distinct', 'exists:matieres,id'],
+            'coefficients.*.coefficient' => ['nullable', 'numeric', 'min:1'],
+        ]);
+
+        $serieId = $data['serie_id'] ?? null;
+        $levelId = $data['niveau_id'];
+        $academicYearId = $data['academic_year_id'];
+
+        $existing = $this->coefficientQuery($academicYearId, $levelId, $serieId)
+            ->orderBy('id')
+            ->get()
+            ->groupBy('matiere_id');
+
+        foreach ($data['coefficients'] as $entry) {
+            $matiereId = $entry['matiere_id'];
+            $coefficientValue = $entry['coefficient'] ?? null;
+            $records = $existing->get($matiereId, collect());
+            $primary = $records->first();
+
+            if ($coefficientValue !== null && $coefficientValue !== '') {
+                $payload = [
+                    'coefficient' => $coefficientValue,
+                    'obligatoire' => true,
+                    'actif' => true,
+                ];
+
+                if ($primary) {
+                    $primary->update($payload);
+                } else {
+                    ProgrammeMatiere::query()->create(array_merge($payload, [
+                        'annee_scolaire_id' => $academicYearId,
+                        'niveau_id' => $levelId,
+                        'serie_id' => $serieId,
+                        'matiere_id' => $matiereId,
+                    ]));
+                }
+
+                $records->skip(1)->each(fn (ProgrammeMatiere $matiere) => $matiere->update(['actif' => false]));
+            } elseif ($primary) {
+                $primary->update(['actif' => false]);
+                $records->skip(1)->each(fn (ProgrammeMatiere $matiere) => $matiere->update(['actif' => false]));
+            }
+        }
+
+        return response()->json([
+            'message' => 'Les coefficients officiels ont été enregistrés.',
+            'coefficients' => $this->formatCoefficients(
+                $this->coefficientQuery($academicYearId, $levelId, $serieId)->get()
+            ),
+        ]);
+    }
+
+    public function applyDefaultOfficialCoefficients(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
+            'niveau_id' => ['required', 'exists:niveaux,id'],
+            'serie_id' => ['nullable', 'exists:series,id'],
+        ]);
+
+        $serieId = $data['serie_id'] ?? null;
+        $levelId = $data['niveau_id'];
+        $academicYearId = $data['academic_year_id'];
+
+        $subjects = Matiere::query()
+            ->where('actif', true)
+            ->get();
+
+        $existing = $this->coefficientQuery($academicYearId, $levelId, $serieId)
+            ->orderBy('id')
+            ->get()
+            ->groupBy('matiere_id');
+
+        foreach ($subjects as $subject) {
+            $records = $existing->get($subject->id, collect());
+            $primary = $records->first();
+
+            if (! $primary || ! $primary->actif) {
+                $payload = [
+                    'coefficient' => 1,
+                    'obligatoire' => true,
+                    'actif' => true,
+                ];
+
+                if ($primary) {
+                    $primary->update($payload);
+                } else {
+                    ProgrammeMatiere::query()->create(array_merge($payload, [
+                        'annee_scolaire_id' => $academicYearId,
+                        'niveau_id' => $levelId,
+                        'serie_id' => $serieId,
+                        'matiere_id' => $subject->id,
+                    ]));
+                }
+            }
+
+            $records->skip(1)->each(fn (ProgrammeMatiere $matiere) => $matiere->update(['actif' => false]));
+        }
+
+        return response()->json([
+            'message' => 'Les coefficients par défaut ont été appliqués.',
+            'coefficients' => $this->formatCoefficients(
+                $this->coefficientQuery($academicYearId, $levelId, $serieId)->get()
+            ),
+        ]);
+    }
+
+    public function copyOfficialCoefficients(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
+            'source_niveau_id' => ['required', 'exists:niveaux,id'],
+            'source_serie_id' => ['nullable', 'exists:series,id'],
+            'target_niveau_id' => ['required', 'exists:niveaux,id'],
+            'target_serie_id' => ['nullable', 'exists:series,id'],
+        ]);
+
+        $academicYearId = $data['academic_year_id'];
+        $sourceSerieId = $data['source_serie_id'] ?? null;
+        $targetSerieId = $data['target_serie_id'] ?? null;
+
+        if ($data['source_niveau_id'] === $data['target_niveau_id'] && $sourceSerieId === $targetSerieId) {
+            return response()->json([
+                'message' => 'Le niveau source doit être différent du niveau cible.',
+            ], 422);
+        }
+
+        $sourceCoefficients = $this->coefficientQuery($academicYearId, $data['source_niveau_id'], $sourceSerieId)
+            ->where('actif', true)
+            ->get();
+
+        $targetExisting = $this->coefficientQuery($academicYearId, $data['target_niveau_id'], $targetSerieId)
+            ->orderBy('id')
+            ->get()
+            ->groupBy('matiere_id');
+
+        foreach ($sourceCoefficients as $source) {
+            $records = $targetExisting->get($source->matiere_id, collect());
+            $primary = $records->first();
+
+            $payload = [
+                'coefficient' => $source->coefficient,
+                'obligatoire' => true,
+                'actif' => true,
+            ];
+
+            if ($primary) {
+                $primary->update($payload);
+            } else {
+                ProgrammeMatiere::query()->create(array_merge($payload, [
+                    'annee_scolaire_id' => $academicYearId,
+                    'niveau_id' => $data['target_niveau_id'],
+                    'serie_id' => $targetSerieId,
+                    'matiere_id' => $source->matiere_id,
+                ]));
+            }
+
+            $records->skip(1)->each(fn (ProgrammeMatiere $matiere) => $matiere->update(['actif' => false]));
+        }
+
+        return response()->json([
+            'message' => 'Les coefficients ont été copiés.',
+            'coefficients' => $this->formatCoefficients(
+                $this->coefficientQuery($academicYearId, $data['target_niveau_id'], $targetSerieId)->get()
+            ),
+        ]);
+    }
+
     public function updateDocuments(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -414,6 +605,32 @@ class SettingsController extends Controller
         $settings->save();
 
         return back()->with('status', 'Les documents officiels ont été mis à jour.');
+    }
+
+    private function coefficientQuery(int $academicYearId, int $levelId, ?int $serieId)
+    {
+        return ProgrammeMatiere::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('niveau_id', $levelId)
+            ->when(
+                $serieId,
+                fn ($query) => $query->where('serie_id', $serieId),
+                fn ($query) => $query->whereNull('serie_id')
+            );
+    }
+
+    private function formatCoefficients(Collection $coefficients): array
+    {
+        return $coefficients->map(fn (ProgrammeMatiere $coeff) => [
+            'id' => $coeff->id,
+            'annee_scolaire_id' => $coeff->annee_scolaire_id,
+            'niveau_id' => $coeff->niveau_id,
+            'serie_id' => $coeff->serie_id,
+            'matiere_id' => $coeff->matiere_id,
+            'coefficient' => $coeff->coefficient,
+            'obligatoire' => $coeff->obligatoire,
+            'actif' => $coeff->actif,
+        ])->values()->all();
     }
 
     private function hydrateAcademicYear(AnneeScolaire $annee): void

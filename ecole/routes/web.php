@@ -84,6 +84,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/settings/subjects/{subject}', [SettingsController::class, 'updateSubject'])->name('settings.subjects.update');
     Route::post('/settings/subjects/{subject}/status', [SettingsController::class, 'updateSubjectStatus'])
         ->name('settings.subjects.status');
+    Route::post('/settings/official-coefficients', [SettingsController::class, 'storeOfficialCoefficients'])
+        ->name('settings.coefficients.store');
+    Route::post('/settings/official-coefficients/defaults', [SettingsController::class, 'applyDefaultOfficialCoefficients'])
+        ->name('settings.coefficients.defaults');
+    Route::post('/settings/official-coefficients/copy', [SettingsController::class, 'copyOfficialCoefficients'])
+        ->name('settings.coefficients.copy');
     Route::post('/settings/documents', [SettingsController::class, 'updateDocuments'])->name('settings.documents.update');
 
     Route::prefix('accounting')->name('accounting.')->group(function () {
