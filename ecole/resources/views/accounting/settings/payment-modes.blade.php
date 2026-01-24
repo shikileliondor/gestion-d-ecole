@@ -6,9 +6,11 @@
         <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 class="text-base font-semibold text-gray-900">Modes actifs</h3>
             <ul class="mt-4 space-y-2 text-sm text-gray-600">
-                <li class="rounded-lg bg-gray-50 px-3 py-2">Espèces</li>
-                <li class="rounded-lg bg-gray-50 px-3 py-2">Mobile Money</li>
-                <li class="rounded-lg bg-gray-50 px-3 py-2">Virement bancaire</li>
+                @forelse ($paymentModes->where('actif', true) as $mode)
+                    <li class="rounded-lg bg-gray-50 px-3 py-2">{{ $mode->libelle }}</li>
+                @empty
+                    <li class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">Aucun mode de paiement actif.</li>
+                @endforelse
             </ul>
         </div>
         <form class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">

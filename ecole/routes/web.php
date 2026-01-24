@@ -7,6 +7,8 @@ use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
+use App\Models\ModePaiement;
+use App\Models\ParametreEcole;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -122,11 +124,15 @@ Route::middleware('auth')->group(function () {
                 ->name('revenue-categories');
             Route::get('/expense-categories', fn () => view('accounting.settings.expense-categories'))
                 ->name('expense-categories');
-            Route::get('/payment-modes', fn () => view('accounting.settings.payment-modes'))
+            Route::get('/payment-modes', fn () => view('accounting.settings.payment-modes', [
+                'paymentModes' => ModePaiement::query()->orderBy('libelle')->get(),
+            ]))
                 ->name('payment-modes');
             Route::get('/custom-fields', fn () => view('accounting.settings.custom-fields'))
                 ->name('custom-fields');
-            Route::get('/templates', fn () => view('accounting.settings.templates'))
+            Route::get('/templates', fn () => view('accounting.settings.templates', [
+                'schoolSettings' => ParametreEcole::query()->first(),
+            ]))
                 ->name('templates');
         });
     });

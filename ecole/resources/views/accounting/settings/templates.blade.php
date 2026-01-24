@@ -18,7 +18,7 @@
             </label>
             <label class="text-sm text-gray-600">
                 Préfixe facture
-                <input type="text" class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2" value="FAC-" />
+                <input type="text" class="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2" value="{{ $schoolSettings?->facture_prefix }}" />
             </label>
         </div>
         <button type="submit" class="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Enregistrer</button>

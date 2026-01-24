@@ -45,6 +45,8 @@ class DatabaseSeeder extends Seeder
             JournalActionSeeder::class,
             JournalConnexionSeeder::class,
             ExportSeeder::class,
+            ModePaiementSeeder::class,
+            ParametreEcoleSeeder::class,
         ]);
     }
 }
