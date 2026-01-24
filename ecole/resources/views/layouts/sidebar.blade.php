@@ -199,63 +199,8 @@
             'id' => 'parametres',
             'label' => 'Paramètres',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3m-7.5 0h1.5m9 0h1.5m-12 6h3m6 0h3m-12 6h1.5m9 0h1.5m-7.5 0h3" />',
-            'children' => [
-                [
-                    'label' => 'Années scolaires',
-                    'url' => '#',
-                    'todo' => true,
-                ],
-                [
-                    'label' => 'Référentiels',
-                    'children' => [
-                        [
-                            'label' => 'Niveaux',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                        [
-                            'label' => 'Séries',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                    ],
-                ],
-                [
-                    'label' => 'Paramètres scolarité',
-                    'children' => [
-                        [
-                            'label' => 'Types de frais',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                        [
-                            'label' => 'Grille des frais',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                        [
-                            'label' => 'Modes de paiement',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                        [
-                            'label' => 'Politique impayés',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                        [
-                            'label' => 'Règles remises',
-                            'url' => '#',
-                            'todo' => true,
-                        ],
-                    ],
-                ],
-                [
-                    'label' => 'Utilisateurs & rôles',
-                    'url' => '#',
-                    'todo' => true,
-                ],
-            ],
+            'route' => 'settings.index',
+            'active' => 'settings.index',
         ],
     ];
 
