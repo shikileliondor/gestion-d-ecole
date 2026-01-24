@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
-use App\Models\Payment;
-use App\Models\SchoolClass;
-use App\Models\Staff;
-use App\Models\Student;
+use App\Models\JournalAction;
+use App\Models\Paiement;
+use App\Models\Facture;
+use App\Models\Classe;
+use App\Models\Enseignant;
+use App\Models\Eleve;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -20,19 +21,19 @@ class DashboardController extends Controller
         $startOfLastMonth = $now->copy()->subMonth()->startOfMonth();
         $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
 
-        $studentCount = Student::count();
-        $classCount = SchoolClass::count();
-        $staffCount = Staff::count();
-        $pendingPayments = Payment::whereIn('status', ['pending', 'partial'])->count();
-        $totalRevenue = Payment::sum('amount_paid');
-        $totalOutstanding = Payment::sum('balance_due');
+        $studentCount = Eleve::count();
+        $classCount = Classe::count();
+        $staffCount = Enseignant::count();
+        $pendingPayments = Paiement::whereIn('statut', ['EN_ATTENTE', 'PARTIEL'])->count();
+        $totalRevenue = Paiement::sum('montant_paye');
+        $totalOutstanding = Paiement::sum('solde_du');
 
-        $studentsThisMonth = Student::whereBetween('created_at', [$startOfMonth, $now])->count();
-        $studentsLastMonth = Student::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->count();
+        $studentsThisMonth = Eleve::whereBetween('created_at', [$startOfMonth, $now])->count();
+        $studentsLastMonth = Eleve::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->count();
         $studentTrend = $this->calculateTrend($studentsThisMonth, $studentsLastMonth);
 
-        $revenueThisMonth = Payment::whereBetween('created_at', [$startOfMonth, $now])->sum('amount_paid');
-        $revenueLastMonth = Payment::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('amount_paid');
+        $revenueThisMonth = Paiement::whereBetween('created_at', [$startOfMonth, $now])->sum('montant_paye');
+        $revenueLastMonth = Paiement::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('montant_paye');
         $revenueTrend = $this->calculateTrend($revenueThisMonth, $revenueLastMonth);
 
         $kpis = [
@@ -66,7 +67,7 @@ class DashboardController extends Controller
             ],
         ];
 
-        $activities = ActivityLog::latest()->take(6)->get();
+        $activities = JournalAction::latest()->take(6)->get();
 
         $quickActions = [
             [
@@ -104,8 +105,8 @@ class DashboardController extends Controller
 
             return [
                 'label' => $month->translatedFormat('M'),
-                'entries' => Student::whereBetween('created_at', [$monthStart, $monthEnd])->count(),
-                'payments' => Payment::whereBetween('created_at', [$monthStart, $monthEnd])->count(),
+                'entries' => Eleve::whereBetween('created_at', [$monthStart, $monthEnd])->count(),
+                'payments' => Paiement::whereBetween('created_at', [$monthStart, $monthEnd])->count(),
             ];
         });
 
@@ -119,9 +120,9 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        $statusDistribution = Student::query()
-            ->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
+        $statusDistribution = DB::table('inscriptions')
+            ->select('statut', DB::raw('count(*) as total'))
+            ->groupBy('statut')
             ->orderByDesc('total')
             ->get();
 
