@@ -8,6 +8,7 @@ use App\Models\SchoolClass;
 use App\Models\Staff;
 use App\Models\Student;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -110,6 +111,37 @@ class DashboardController extends Controller
 
         $maxTrend = $trendData->flatMap(fn (array $data) => [$data['entries'], $data['payments']])->max() ?: 1;
 
+        $classDistribution = DB::table('classes')
+            ->leftJoin('student_classes', 'classes.id', '=', 'student_classes.class_id')
+            ->select('classes.name', DB::raw('count(student_classes.student_id) as total'))
+            ->groupBy('classes.id', 'classes.name')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get();
+
+        $statusDistribution = Student::query()
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->orderByDesc('total')
+            ->get();
+
+        $totalStudents = max($studentCount, 1);
+        $classBreakdown = $classDistribution->map(function ($class) use ($totalStudents) {
+            return [
+                'name' => $class->name,
+                'total' => (int) $class->total,
+                'percentage' => round(((int) $class->total / $totalStudents) * 100, 1),
+            ];
+        });
+
+        $statusBreakdown = $statusDistribution->map(function ($status) use ($totalStudents) {
+            return [
+                'label' => ucfirst($status->status ?? 'Autres'),
+                'total' => (int) $status->total,
+                'percentage' => round(((int) $status->total / $totalStudents) * 100, 1),
+            ];
+        });
+
         return view('dashboard', [
             'kpis' => $kpis,
             'activities' => $activities,
@@ -118,6 +150,8 @@ class DashboardController extends Controller
             'maxTrend' => $maxTrend,
             'totalOutstanding' => $this->formatCurrency($totalOutstanding),
             'staffCount' => number_format($staffCount, 0, ',', ' '),
+            'classBreakdown' => $classBreakdown,
+            'statusBreakdown' => $statusBreakdown,
         ]);
     }
 
