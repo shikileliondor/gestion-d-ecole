@@ -80,6 +80,34 @@ document.addEventListener('DOMContentLoaded', () => {
         window.localStorage.setItem(getStorageKey(classId), JSON.stringify(state));
     };
 
+    const updateTimetableBadge = (classId) => {
+        if (!classId) {
+            return;
+        }
+        const badge = document.querySelector(`[data-edt-status][data-class-id="${classId}"]`);
+        if (!badge) {
+            return;
+        }
+        const raw = window.localStorage?.getItem(getStorageKey(classId));
+        if (!raw) {
+            badge.textContent = 'EDT à planifier';
+            badge.classList.remove('badge--success');
+            badge.classList.add('badge--warning');
+            return;
+        }
+        try {
+            const parsed = JSON.parse(raw);
+            const hasSlots = Array.isArray(parsed.slots) && parsed.slots.length > 0;
+            badge.textContent = hasSlots ? 'EDT en place' : 'EDT à planifier';
+            badge.classList.toggle('badge--success', hasSlots);
+            badge.classList.toggle('badge--warning', !hasSlots);
+        } catch (error) {
+            badge.textContent = 'EDT à planifier';
+            badge.classList.remove('badge--success');
+            badge.classList.add('badge--warning');
+        }
+    };
+
     const openModal = (modal, trigger) => {
         const actionTarget = modal.querySelector('[data-action-target]');
         const classLabel = modal.querySelector('[data-class-label]');
@@ -611,6 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         updatedState.slots.push(payload);
                     }
                     saveTimetableState(getClassId(), updatedState);
+                    updateTimetableBadge(getClassId());
                     renderSchedule();
                     resetForm();
                 });
@@ -619,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const updatedState = getState();
                     updatedState.slots = [];
                     saveTimetableState(getClassId(), updatedState);
+                    updateTimetableBadge(getClassId());
                     renderSchedule();
                     resetForm();
                 });
@@ -631,6 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveButton.addEventListener('click', () => {
                         if (!saveStatus) {
                             saveTimetableState(getClassId(), getState());
+                            updateTimetableBadge(getClassId());
                             return;
                         }
                         if (saveStatusTimeout) {
@@ -647,6 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
                         saveTimetableState(classId, getState());
+                        updateTimetableBadge(classId);
                         saveStatus.textContent = 'Planning enregistré.';
                         saveStatus.classList.remove('is-error');
                         saveStatusTimeout = window.setTimeout(() => {

@@ -67,18 +67,18 @@
                     'children' => [
                         [
                             'label' => 'Matières',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.subjects.index',
+                            'active' => 'pedagogy.subjects.index',
                         ],
                         [
                             'label' => 'Programme & Coefficients',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.programme.index',
+                            'active' => 'pedagogy.programme.index',
                         ],
                         [
                             'label' => 'Affectations enseignants',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.assignments.index',
+                            'active' => 'pedagogy.assignments.index',
                         ],
                     ],
                 ],
@@ -87,23 +87,23 @@
                     'children' => [
                         [
                             'label' => 'Évaluations',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.evaluations.index',
+                            'active' => 'pedagogy.evaluations.index',
                         ],
                         [
                             'label' => 'Saisie des notes',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.grades.index',
+                            'active' => 'pedagogy.grades.index',
                         ],
                         [
                             'label' => 'Bulletins / Classements',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.report-cards.index',
+                            'active' => 'pedagogy.report-cards.index',
                         ],
                         [
                             'label' => 'Relevés de notes',
-                            'url' => '#',
-                            'todo' => true,
+                            'route' => 'pedagogy.transcripts.index',
+                            'active' => 'pedagogy.transcripts.index',
                         ],
                     ],
                 ],

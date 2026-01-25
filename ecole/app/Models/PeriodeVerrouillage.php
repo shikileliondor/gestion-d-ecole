@@ -5,26 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Evaluation extends Model
+class PeriodeVerrouillage extends Model
 {
     use HasFactory;
 
-    protected $table = 'evaluations';
+    protected $table = 'periode_verrouillages';
 
     protected $fillable = [
         'annee_scolaire_id',
         'classe_id',
-        'matiere_id',
         'periode_id',
-        'type',
-        'titre',
-        'date_evaluation',
-        'note_sur',
-        'statut',
+        'verrouille',
     ];
 
     protected $casts = [
-        'date_evaluation' => 'date',
-        'note_sur' => 'decimal:2',
+        'verrouille' => 'boolean',
     ];
 }

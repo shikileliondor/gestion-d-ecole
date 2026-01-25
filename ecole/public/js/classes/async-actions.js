@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const classesGrid = document.querySelector('[data-classes-grid]');
+    let classesGrid = document.querySelector('[data-classes-grid]');
     const successAlert = document.querySelector('[data-feedback-success]');
     const errorAlert = document.querySelector('[data-feedback-error]');
     const modals = document.querySelectorAll('[data-modal]');
@@ -170,6 +170,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const updateTimetableBadges = () => {
+        const badges = document.querySelectorAll('[data-edt-status]');
+        badges.forEach((badge) => {
+            const classId = badge.dataset.classId;
+            if (!classId) {
+                return;
+            }
+            const raw = window.localStorage?.getItem(`timetable:${classId}`);
+            if (!raw) {
+                badge.textContent = 'EDT à planifier';
+                badge.classList.remove('badge--success');
+                badge.classList.add('badge--warning');
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                const hasSlots = Array.isArray(parsed.slots) && parsed.slots.length > 0;
+                badge.textContent = hasSlots ? 'EDT en place' : 'EDT à planifier';
+                badge.classList.toggle('badge--success', hasSlots);
+                badge.classList.toggle('badge--warning', !hasSlots);
+            } catch (error) {
+                badge.textContent = 'EDT à planifier';
+                badge.classList.remove('badge--success');
+                badge.classList.add('badge--warning');
+            }
+        });
+    };
+
+    const handleClassFilter = (payload) => {
+        if (payload.grid_html) {
+            const wrapper = document.querySelector('[data-classes-grid-wrapper]');
+            if (wrapper) {
+                wrapper.innerHTML = payload.grid_html;
+                classesGrid = wrapper.querySelector('[data-classes-grid]');
+            }
+        }
+    };
+
     const handlers = {
         'class-create': (payload) => handleClassCreated(payload.card_html),
         'headcount-update': handleHeadcountUpdated,
@@ -177,12 +215,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'assign-subject': handleSubjectAssigned,
         'subject-create': handleSubjectCreated,
         'series-update': handleSeriesUpdated,
+        'classes-filter': handleClassFilter,
     };
 
     const updateForAction = (action, payload) => {
         const handler = handlers[action];
         if (handler) {
             handler(payload);
+            updateTimetableBadges();
         }
     };
 
@@ -246,7 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modal && !payload?.keep_open) {
                 closeModal(modal);
             }
-            form.reset();
+            if (!form.hasAttribute('data-no-reset')) {
+                form.reset();
+            }
         } catch (error) {
             showAlert(errorAlert, 'Une erreur est survenue. Veuillez réessayer.');
         } finally {
@@ -276,4 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
             errorBox.hidden = true;
         }
     });
+
+    updateTimetableBadges();
 });

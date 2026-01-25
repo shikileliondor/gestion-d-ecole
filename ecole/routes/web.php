@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EnseignantController;
+use App\Http\Controllers\PedagogyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
@@ -156,6 +157,41 @@ Route::middleware('auth')->group(function () {
             ]))
                 ->name('templates');
         });
+    });
+
+    Route::prefix('pedagogy')->name('pedagogy.')->group(function () {
+        Route::get('/subjects', [PedagogyController::class, 'subjects'])->name('subjects.index');
+        Route::patch('/subjects/{subject}/status', [PedagogyController::class, 'updateSubjectStatus'])
+            ->name('subjects.status');
+
+        Route::get('/programme', [PedagogyController::class, 'programme'])->name('programme.index');
+        Route::post('/programme', [PedagogyController::class, 'storeProgrammeSubject'])->name('programme.store');
+        Route::delete('/programme/{programme}', [PedagogyController::class, 'destroyProgrammeSubject'])
+            ->name('programme.destroy');
+
+        Route::get('/assignments', [PedagogyController::class, 'assignments'])->name('assignments.index');
+        Route::post('/assignments', [PedagogyController::class, 'storeAssignment'])->name('assignments.store');
+
+        Route::get('/evaluations', [PedagogyController::class, 'evaluations'])->name('evaluations.index');
+        Route::post('/evaluations', [PedagogyController::class, 'storeEvaluation'])->name('evaluations.store');
+        Route::patch('/evaluations/{evaluation}', [PedagogyController::class, 'updateEvaluation'])->name('evaluations.update');
+        Route::post('/evaluations/{evaluation}/status', [PedagogyController::class, 'updateEvaluationStatus'])
+            ->name('evaluations.status');
+        Route::delete('/evaluations/{evaluation}', [PedagogyController::class, 'destroyEvaluation'])
+            ->name('evaluations.destroy');
+
+        Route::get('/grades', [PedagogyController::class, 'grades'])->name('grades.index');
+        Route::post('/grades/{evaluation}', [PedagogyController::class, 'storeGrades'])->name('grades.store');
+
+        Route::get('/report-cards', [PedagogyController::class, 'reportCards'])->name('report-cards.index');
+        Route::post('/report-cards/lock', [PedagogyController::class, 'toggleReportLock'])
+            ->name('report-cards.lock');
+        Route::get('/report-cards/{class}/{period}/pdf', [PedagogyController::class, 'reportCardsPdf'])
+            ->name('report-cards.pdf');
+
+        Route::get('/transcripts', [PedagogyController::class, 'transcripts'])->name('transcripts.index');
+        Route::get('/transcripts/{student}/pdf', [PedagogyController::class, 'transcriptPdf'])
+            ->name('transcripts.pdf');
     });
 });
 
