@@ -15,6 +15,7 @@ class Note extends Model
         'evaluation_id',
         'inscription_id',
         'valeur',
+        'statut',
     ];
 
     protected $casts = [

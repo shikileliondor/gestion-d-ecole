@@ -10,6 +10,8 @@ use App\Models\Enseignant;
 use App\Models\Inscription;
 use App\Models\Matiere;
 use App\Models\Niveau;
+use App\Models\ProgrammeClasse;
+use App\Models\ProgrammeMatiere;
 use App\Models\Serie;
 use App\Services\ClasseService;
 use App\Services\MatiereService;
@@ -22,16 +24,30 @@ use Illuminate\Support\Facades\DB;
 
 class SchoolClassController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
-        $classes = Classe::query()
-            ->orderBy('nom')
-            ->get();
+        $classesQuery = Classe::query()->orderBy('nom');
 
         $academicYears = AnneeScolaire::query()
             ->orderByDesc('date_debut')
             ->get()
             ->each(fn (AnneeScolaire $annee) => $annee->setAttribute('name', $annee->libelle));
+
+        $selectedAcademicYearId = $request->input('academic_year_id');
+        $selectedLevelId = $request->input('level_id');
+        $selectedSerieId = $request->input('serie_id');
+
+        if ($selectedAcademicYearId) {
+            $classesQuery->where('annee_scolaire_id', $selectedAcademicYearId);
+        }
+        if ($selectedLevelId) {
+            $classesQuery->where('niveau_id', $selectedLevelId);
+        }
+        if ($selectedSerieId) {
+            $classesQuery->where('serie_id', $selectedSerieId);
+        }
+
+        $classes = $classesQuery->get();
 
         $subjects = Matiere::query()
             ->orderBy('nom')
@@ -78,11 +94,23 @@ class SchoolClassController extends Controller
             ->groupBy('classe_id')
             ->pluck('total', 'classe_id');
 
+        $programmeCounts = ProgrammeClasse::query()
+            ->select('classe_id', DB::raw('count(*) as total'))
+            ->groupBy('classe_id')
+            ->pluck('total', 'classe_id');
+
         $enseignantsById = $staff->keyBy('id');
         $matieresById = $subjects->keyBy('id');
         $assignmentsByClass = AffectationEnseignant::query()
             ->get()
             ->groupBy('classe_id');
+        $programmesByClass = ProgrammeClasse::query()
+            ->get()
+            ->groupBy('classe_id');
+
+        $coefficientsByLevel = ProgrammeMatiere::query()
+            ->get()
+            ->groupBy(fn (ProgrammeMatiere $programme) => $programme->annee_scolaire_id.'-'.$programme->niveau_id.'-'.$programme->serie_id);
 
         $classes->each(function (Classe $classe) use (
             $academicYearsById,
@@ -90,7 +118,10 @@ class SchoolClassController extends Controller
             $series,
             $inscriptionCounts,
             $assignmentCounts,
-            $assignmentsByClass
+            $programmeCounts,
+            $assignmentsByClass,
+            $programmesByClass,
+            $coefficientsByLevel
         ) {
             $classe->setAttribute('name', $classe->nom);
             $classe->setAttribute('level', optional($levels->get($classe->niveau_id))->code);
@@ -99,24 +130,61 @@ class SchoolClassController extends Controller
             $classe->setAttribute('room', null);
             $classe->setAttribute('manual_headcount', $classe->effectif_max);
             $classe->setAttribute('student_assignments_count', $inscriptionCounts[$classe->id] ?? 0);
-            $classe->setAttribute('subject_assignments_count', $assignmentCounts[$classe->id] ?? 0);
+            $classe->setAttribute('subject_assignments_count', $programmeCounts[$classe->id] ?? 0);
+            $classe->setAttribute('teacher_assignments_count', $assignmentCounts[$classe->id] ?? 0);
 
             $academicYear = $academicYearsById->get($classe->annee_scolaire_id);
             if ($academicYear) {
                 $classe->setRelation('academicYear', $academicYear);
             }
 
-            $assignments = $this->mapAssignments(
+            $assignments = $this->mapProgrammeAssignments(
+                $programmesByClass->get($classe->id, collect()),
                 $assignmentsByClass->get($classe->id, collect()),
                 $enseignantsById,
                 $matieresById
             );
             $classe->setRelation('subjectAssignments', $assignments);
+
+            $coeffKey = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id;
+            $officialCoefficients = $coefficientsByLevel->get($coeffKey, collect())->keyBy('matiere_id');
+            $programmeMatieres = $programmesByClass->get($classe->id, collect());
+
+            $programmeComplete = $programmeMatieres->isNotEmpty()
+                && $programmeMatieres->every(fn (ProgrammeClasse $programme) => $officialCoefficients->has($programme->matiere_id));
+            $assignmentsComplete = $programmeMatieres->isNotEmpty()
+                && $programmeMatieres->every(function (ProgrammeClasse $programme) use ($assignmentsByClass, $classe) {
+                    return $assignmentsByClass->get($classe->id, collect())->contains('matiere_id', $programme->matiere_id);
+                });
+
+            $classe->setAttribute('programme_complete', $programmeComplete);
+            $classe->setAttribute('assignments_complete', $assignmentsComplete);
         });
 
         $seriesOptions = $series->values()->map(fn (Serie $serie) => $serie->code)->all();
 
-        return view('classes.index', compact('classes', 'academicYears', 'subjects', 'students', 'staff', 'seriesOptions'));
+        if ($request->expectsJson()) {
+            $gridHtml = view('classes.partials.class-grid', ['classes' => $classes])->render();
+
+            return response()->json([
+                'message' => 'Liste mise à jour.',
+                'grid_html' => $gridHtml,
+            ]);
+        }
+
+        return view('classes.index', compact(
+            'classes',
+            'academicYears',
+            'subjects',
+            'students',
+            'staff',
+            'seriesOptions',
+            'levels',
+            'series',
+            'selectedAcademicYearId',
+            'selectedLevelId',
+            'selectedSerieId'
+        ));
     }
 
     public function store(Request $request, ClasseService $service): JsonResponse|RedirectResponse
@@ -232,6 +300,14 @@ class SchoolClassController extends Controller
                 'matiere_id' => $data['subject_id'],
             ]);
         }
+
+        ProgrammeClasse::query()->firstOrCreate([
+            'annee_scolaire_id' => $class->annee_scolaire_id,
+            'classe_id' => $class->id,
+            'matiere_id' => $data['subject_id'],
+        ], [
+            'actif' => true,
+        ]);
 
         if ($request->expectsJson()) {
             $classe = $this->hydrateClassCard($class->refresh());
@@ -385,13 +461,21 @@ class SchoolClassController extends Controller
     }
 
     /**
+     * @param Collection<int, ProgrammeClasse> $programmes
      * @param Collection<int, AffectationEnseignant> $assignments
      */
-    private function mapAssignments(Collection $assignments, Collection $enseignantsById, Collection $matieresById): Collection
-    {
-        return $assignments->map(function (AffectationEnseignant $assignment) use ($enseignantsById, $matieresById) {
-            $subject = $matieresById->get($assignment->matiere_id);
-            $teacher = $enseignantsById->get($assignment->enseignant_id);
+    private function mapProgrammeAssignments(
+        Collection $programmes,
+        Collection $assignments,
+        Collection $enseignantsById,
+        Collection $matieresById
+    ): Collection {
+        $assignmentsBySubject = $assignments->groupBy('matiere_id');
+
+        return $programmes->map(function (ProgrammeClasse $programme) use ($assignmentsBySubject, $enseignantsById, $matieresById) {
+            $subject = $matieresById->get($programme->matiere_id);
+            $assignment = $assignmentsBySubject->get($programme->matiere_id)?->first();
+            $teacher = $assignment ? $enseignantsById->get($assignment->enseignant_id) : null;
 
             $subjectData = $subject ? (object) [
                 'id' => $subject->id,
@@ -425,7 +509,8 @@ class SchoolClassController extends Controller
         $classe->setAttribute('room', null);
         $classe->setAttribute('manual_headcount', $classe->effectif_max);
         $classe->setAttribute('student_assignments_count', Inscription::query()->where('classe_id', $classe->id)->count());
-        $classe->setAttribute('subject_assignments_count', AffectationEnseignant::query()->where('classe_id', $classe->id)->count());
+        $classe->setAttribute('subject_assignments_count', ProgrammeClasse::query()->where('classe_id', $classe->id)->count());
+        $classe->setAttribute('teacher_assignments_count', AffectationEnseignant::query()->where('classe_id', $classe->id)->count());
 
         $academicYear = AnneeScolaire::query()->find($classe->annee_scolaire_id);
         if ($academicYear) {
@@ -436,7 +521,8 @@ class SchoolClassController extends Controller
         $enseignantsById = Enseignant::query()->orderBy('nom')->orderBy('prenoms')->get()->keyBy('id');
         $matieresById = Matiere::query()->orderBy('nom')->get()->keyBy('id');
         $assignments = AffectationEnseignant::query()->where('classe_id', $classe->id)->get();
-        $classe->setRelation('subjectAssignments', $this->mapAssignments($assignments, $enseignantsById, $matieresById));
+        $programmes = ProgrammeClasse::query()->where('classe_id', $classe->id)->get();
+        $classe->setRelation('subjectAssignments', $this->mapProgrammeAssignments($programmes, $assignments, $enseignantsById, $matieresById));
 
         return $classe;
     }

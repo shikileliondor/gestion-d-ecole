@@ -49,6 +49,16 @@
         <span class="badge">{{ $class->academicYear->name ?? 'Année inconnue' }}</span>
     </div>
 
+    <div class="class-card__badges">
+        <span class="badge {{ $class->programme_complete ? 'badge--success' : 'badge--warning' }}">
+            {{ $class->programme_complete ? 'Programme complet' : 'Programme à compléter' }}
+        </span>
+        <span class="badge {{ $class->assignments_complete ? 'badge--success' : 'badge--warning' }}">
+            {{ $class->assignments_complete ? 'Affectations OK' : 'Affectations manquantes' }}
+        </span>
+        <span class="badge badge--warning" data-edt-status data-class-id="{{ $class->id }}">EDT à planifier</span>
+    </div>
+
     <div class="class-card__stats">
         <div class="stat">
             <span>Effectif</span>
@@ -63,7 +73,7 @@
         </div>
         <div class="stat">
             <span>Affectations</span>
-            <strong>{{ $class->student_assignments_count }} <small>assignations</small></strong>
+            <strong>{{ $class->teacher_assignments_count }} <small>enseignants</small></strong>
         </div>
     </div>
 

@@ -28,6 +28,37 @@
             </div>
         </div>
 
+        <form class="filters-bar" method="GET" data-async-form data-async-action="classes-filter" data-no-reset="true">
+            <div class="filter-group">
+                <label for="filter-year">Année</label>
+                <select id="filter-year" name="academic_year_id">
+                    <option value="">Toutes</option>
+                    @foreach ($academicYears as $year)
+                        <option value="{{ $year->id }}" @selected(($selectedAcademicYearId ?? null) == $year->id)>{{ $year->libelle }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-level">Niveau</label>
+                <select id="filter-level" name="level_id">
+                    <option value="">Tous</option>
+                    @foreach ($levels as $level)
+                        <option value="{{ $level->id }}" @selected(($selectedLevelId ?? null) == $level->id)>{{ $level->code }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="filter-serie">Série</label>
+                <select id="filter-serie" name="serie_id">
+                    <option value="">Toutes</option>
+                    @foreach ($series as $serie)
+                        <option value="{{ $serie->id }}" @selected(($selectedSerieId ?? null) == $serie->id)>{{ $serie->code }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button class="secondary-button" type="submit">Filtrer</button>
+        </form>
+
         <div class="alert success" data-feedback-success @if (! $statusMessage) hidden @endif>
             {{ $statusMessage }}
         </div>
@@ -43,15 +74,8 @@
             @endif
         </div>
 
-        <div class="classes-grid" data-classes-grid>
-            @forelse ($classes as $class)
-                @include('classes.partials.class-card', ['class' => $class])
-            @empty
-                <div class="empty-state">
-                    <h3>Aucune classe enregistrée</h3>
-                    <p>Commencez par créer votre première classe pour affecter élèves et matières.</p>
-                </div>
-            @endforelse
+        <div data-classes-grid-wrapper>
+            @include('classes.partials.class-grid', ['classes' => $classes])
         </div>
     </div>
 

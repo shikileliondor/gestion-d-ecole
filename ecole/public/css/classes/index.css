@@ -47,6 +47,34 @@
     flex-wrap: wrap;
 }
 
+.filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.filter-group select {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
 .primary-button,
 .secondary-button,
 .outline-button,
@@ -177,6 +205,23 @@
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.badge--success {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge--warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.class-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 
