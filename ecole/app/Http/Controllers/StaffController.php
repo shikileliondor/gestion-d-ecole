@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,16 +22,18 @@ class StaffController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = Validator::make($request->all(), [
-            'code_personnel' => ['required', 'string', 'max:50'],
+            'code_personnel' => ['nullable', 'string', 'max:50'],
             'nom' => ['required', 'string', 'max:255'],
             'prenoms' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
         ])->validate();
 
         $fullName = trim($data['prenoms'] . ' ' . $data['nom']);
+        $matricule = app(MatriculeService::class)->generateForStaff();
 
         User::create([
             'name' => $fullName,
+            'matricule' => $matricule,
             'email' => $data['email'],
             'password' => Hash::make(Str::random(16)),
         ]);
@@ -51,7 +54,7 @@ class StaffController extends Controller
         return response()->json([
             'staff' => [
                 'id' => $user->id,
-                'staff_number' => (string) $user->id,
+                'staff_number' => $user->matricule ?? (string) $user->id,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'position' => null,
@@ -75,7 +78,7 @@ class StaffController extends Controller
             ->get()
             ->each(function (User $user) {
                 $parts = preg_split('/\s+/', trim($user->name), 2);
-                $user->setAttribute('code_personnel', $user->id);
+                $user->setAttribute('code_personnel', $user->matricule ?? $user->id);
                 $user->setAttribute('nom', $parts[1] ?? $parts[0] ?? '');
                 $user->setAttribute('prenoms', $parts[0] ?? '');
                 $user->setAttribute('poste', null);

@@ -6,8 +6,8 @@
     <h2>Identité</h2>
     <div class="form-grid">
         <div class="form-field">
-            <label for="code_enseignant">Code enseignant *</label>
-            <input type="text" id="code_enseignant" name="code_enseignant" value="{{ old('code_enseignant', $enseignant->code_enseignant ?? '') }}" required>
+            <label for="code_enseignant">Code enseignant (auto-généré)</label>
+            <input type="text" id="code_enseignant" name="code_enseignant" value="{{ old('code_enseignant', $enseignant->code_enseignant ?? '') }}" readonly>
         </div>
         <div class="form-field">
             <label for="nom">Nom *</label>

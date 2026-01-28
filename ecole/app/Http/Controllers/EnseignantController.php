@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enseignant;
 use App\Models\EnseignantDocument;
+use App\Services\MatriculeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,7 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request);
 
+        $data['code_enseignant'] = app(MatriculeService::class)->generateForEnseignant();
         $enseignant = Enseignant::create($this->mapEnseignantData($data));
         $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
 
@@ -68,7 +70,7 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request, $enseignant);
 
-        $enseignant->update($this->mapEnseignantData($data));
+        $enseignant->update($this->mapEnseignantData($data, $enseignant));
 
         return redirect()
             ->route('teachers.show', $enseignant)
@@ -145,7 +147,7 @@ class EnseignantController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'code_enseignant' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('enseignants', 'matricule')->ignore($enseignant?->id),
@@ -167,10 +169,10 @@ class EnseignantController extends Controller
         return $validator->validate();
     }
 
-    private function mapEnseignantData(array $data): array
+    private function mapEnseignantData(array $data, ?Enseignant $enseignant = null): array
     {
         return [
-            'matricule' => $data['code_enseignant'],
+            'matricule' => $data['code_enseignant'] ?? $enseignant?->matricule,
             'nom' => $data['nom'],
             'prenoms' => $data['prenoms'],
             'sexe' => $data['sexe'] ?? null,

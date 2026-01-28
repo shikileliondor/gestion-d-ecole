@@ -9,10 +9,10 @@ use App\Models\EleveContact;
 use App\Models\EleveTuteur;
 use App\Models\EleveUrgence;
 use App\Models\Inscription;
+use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
@@ -150,7 +150,7 @@ class StudentController extends Controller
         $data = $validator->validate();
 
         DB::transaction(function () use ($data) {
-            $matricule = $this->generateMatricule();
+            $matricule = app(MatriculeService::class)->generateForStudent($data['enrollment_date'] ?? null);
             $prenoms = trim($data['first_name'] . ' ' . ($data['middle_name'] ?? ''));
 
             $eleve = Eleve::create([
@@ -311,18 +311,5 @@ class StudentController extends Controller
             'INSCRIT', 'REDOUBLANT', 'TRANSFERE' => 'active',
             default => 'inactive',
         };
-    }
-
-    private function generateMatricule(): string
-    {
-        $year = Carbon::now()->format('Y');
-        $sequence = Eleve::query()->count() + 1;
-
-        do {
-            $candidate = sprintf('ELV-%s-%06d', $year, $sequence);
-            $sequence++;
-        } while (Eleve::query()->where('matricule', $candidate)->exists());
-
-        return $candidate;
     }
 }
