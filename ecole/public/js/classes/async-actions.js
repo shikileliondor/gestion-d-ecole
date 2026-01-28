@@ -285,6 +285,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const refreshClassesGrid = async () => {
+        if (document.hidden) {
+            return;
+        }
+        if (document.querySelector('[data-modal].is-open')) {
+            return;
+        }
+        try {
+            const response = await fetch(window.location.href, fetchOptions);
+            const payload = await parseJson(response);
+            if (!response.ok || !payload) {
+                return;
+            }
+            handleClassFilter(payload);
+            updateTimetableBadges();
+            updateTimetableHours();
+        } catch (error) {
+            // Ignorer les erreurs réseau pour le rafraîchissement automatique.
+        }
+    };
+
     const extractErrorMessages = (payload) => {
         if (!payload) {
             return ['Une erreur est survenue.'];
@@ -380,4 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateTimetableBadges();
     updateTimetableHours();
+
+    const AUTO_REFRESH_MS = 60000;
+    window.setInterval(refreshClassesGrid, AUTO_REFRESH_MS);
 });
