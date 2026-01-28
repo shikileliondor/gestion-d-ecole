@@ -70,16 +70,6 @@
                             'route' => 'classes.index',
                             'active' => 'classes.index',
                         ],
-                        [
-                            'label' => 'Programme & Coefficients',
-                            'route' => 'pedagogy.programme.index',
-                            'active' => 'pedagogy.programme.index',
-                        ],
-                        [
-                            'label' => 'Affectations enseignants',
-                            'route' => 'pedagogy.assignments.index',
-                            'active' => 'pedagogy.assignments.index',
-                        ],
                     ],
                 ],
                 [

@@ -153,7 +153,7 @@
 .class-card {
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 16px;
+    padding: 18px;
     background: #fff;
     display: flex;
     flex-direction: column;
@@ -217,39 +217,12 @@
     color: #b45309;
 }
 
-.class-card__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-
 .class-card__stats {
     display: grid;
-    gap: 10px;
-    padding: 10px 0;
+    gap: 0;
+    padding: 8px 0;
     border-top: 1px solid #f1f5f9;
     border-bottom: 1px solid #f1f5f9;
-}
-
-.class-card__teachers {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--text-dark);
-}
-
-.class-card__teachers > span {
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-.class-card__teachers-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
 }
 
 .stat {
@@ -258,6 +231,11 @@
     align-items: center;
     font-size: 14px;
     color: var(--text-dark);
+    padding: 10px 0;
+}
+
+.stat + .stat {
+    border-top: 1px solid #f1f5f9;
 }
 
 .stat span {
@@ -277,30 +255,10 @@
     font-weight: 500;
 }
 
-.headcount-form label {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.inline-input {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 6px;
-}
-
-.inline-input input {
-    flex: 1;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-size: 14px;
-}
-
 .class-card__actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
-    flex-wrap: wrap;
 }
 
 .pill-button {
