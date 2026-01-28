@@ -198,6 +198,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const toMinutes = (time) => {
+        if (!time) {
+            return null;
+        }
+        const [hours, minutes] = time.split(':').map(Number);
+        if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+            return null;
+        }
+        return hours * 60 + minutes;
+    };
+
+    const calculateHours = (slots) => {
+        if (!Array.isArray(slots)) {
+            return 0;
+        }
+        return slots.reduce((total, slot) => {
+            if (slot?.type === 'pause') {
+                return total;
+            }
+            const start = toMinutes(slot?.start);
+            const end = toMinutes(slot?.end);
+            if (start === null || end === null || end <= start) {
+                return total;
+            }
+            return total + (end - start) / 60;
+        }, 0);
+    };
+
+    const formatHours = (hours) => {
+        if (!hours || hours <= 0) {
+            return '0';
+        }
+        const rounded = Math.round(hours * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    };
+
+    const updateTimetableHours = () => {
+        const hourNodes = document.querySelectorAll('[data-class-hours]');
+        hourNodes.forEach((node) => {
+            const classId = node.dataset.classId;
+            if (!classId) {
+                return;
+            }
+            const raw = window.localStorage?.getItem(`timetable:${classId}`);
+            if (!raw) {
+                node.textContent = '0';
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                const hours = calculateHours(parsed?.slots || []);
+                node.textContent = formatHours(hours);
+            } catch (error) {
+                node.textContent = '0';
+            }
+        });
+    };
+
     const handleClassFilter = (payload) => {
         if (payload.grid_html) {
             const wrapper = document.querySelector('[data-classes-grid-wrapper]');
@@ -223,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (handler) {
             handler(payload);
             updateTimetableBadges();
+            updateTimetableHours();
         }
     };
 
@@ -320,4 +379,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateTimetableBadges();
+    updateTimetableHours();
 });

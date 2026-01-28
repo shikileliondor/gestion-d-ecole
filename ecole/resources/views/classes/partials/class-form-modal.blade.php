@@ -21,19 +21,35 @@
             </button>
         </div>
 
-        <form class="modal__form" method="POST" action="{{ route('classes.store') }}" data-async-form data-async-action="class-create">
+        <form
+            class="modal__form"
+            method="POST"
+            action="{{ route('classes.store') }}"
+            data-async-form
+            data-async-action="class-create"
+            data-lycee-levels='@json($lyceeLevelCodes ?? [])'
+        >
             @csrf
             <div class="form-grid">
                 <div class="form-field">
                     <label for="academic_year_id">Année scolaire</label>
-                    <select id="academic_year_id" name="academic_year_id" required>
-                        <option value="">Sélectionner</option>
-                        @foreach ($academicYears as $year)
-                            <option value="{{ $year->id }}" @selected(old('academic_year_id') == $year->id)>
-                                {{ $year->name ?? $year->start_date?->format('Y') }}
+                    @if (! empty($activeAcademicYear))
+                        <select id="academic_year_id" name="academic_year_id" disabled>
+                            <option value="{{ $activeAcademicYear->id }}" selected>
+                                {{ $activeAcademicYear->name ?? $activeAcademicYear->libelle }}
                             </option>
-                        @endforeach
-                    </select>
+                        </select>
+                        <input type="hidden" name="academic_year_id" value="{{ $activeAcademicYear->id }}">
+                    @else
+                        <select id="academic_year_id" name="academic_year_id" required>
+                            <option value="">Sélectionner</option>
+                            @foreach ($academicYears as $year)
+                                <option value="{{ $year->id }}" @selected(old('academic_year_id') == $year->id)>
+                                    {{ $year->name ?? $year->start_date?->format('Y') }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
                 <div class="form-field">
                     <label for="name">Nom de la classe</label>
@@ -44,11 +60,29 @@
                 </div>
                 <div class="form-field">
                     <label for="level">Niveau</label>
-                    <input id="level" name="level" type="text" value="{{ old('level') }}" placeholder="6e, 5e, Seconde, Terminale">
+                    <select id="level" name="level" required data-level-select>
+                        <option value="">Sélectionner</option>
+                        @foreach ($levels as $level)
+                            <option value="{{ $level->code }}" @selected(old('level') === $level->code)>
+                                {{ $level->code }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @if ($classFormErrors->has('level'))
+                        <span class="error-text">{{ $classFormErrors->first('level') }}</span>
+                    @endif
                 </div>
-                <div class="form-field">
-                    <label for="series">Série (optionnelle)</label>
-                    <input id="series" name="series" type="text" value="{{ old('series') }}" list="series-options" placeholder="A, C, D, Littéraire">
+                <div class="form-field" data-series-field>
+                    <label for="series">Série / Filière (lycée)</label>
+                    <select id="series" name="series">
+                        <option value="">Sélectionner</option>
+                        @foreach ($series as $serie)
+                            <option value="{{ $serie->code }}" @selected(old('series') === $serie->code)>
+                                {{ $serie->code }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="helper-text">Disponible uniquement pour les niveaux lycée.</span>
                 </div>
                 <div class="form-field">
                     <label for="section">Groupe</label>

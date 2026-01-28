@@ -14,9 +14,6 @@
             if ($assignment->subject?->series) {
                 $levelParts[] = 'Série ' . $assignment->subject->series;
             }
-            if ($assignment->coefficient) {
-                $levelParts[] = 'Coef. ' . $assignment->coefficient;
-            }
             $teachers = $assignment->teachers ?? collect();
         @endphp
         <div class="subject-summary__item">

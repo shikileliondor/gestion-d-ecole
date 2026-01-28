@@ -233,6 +233,25 @@
     border-bottom: 1px solid #f1f5f9;
 }
 
+.class-card__teachers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.class-card__teachers > span {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.class-card__teachers-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
 .stat {
     display: flex;
     justify-content: space-between;

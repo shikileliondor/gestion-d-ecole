@@ -68,10 +68,6 @@
                     @endif
                 </div>
                 <div class="form-field">
-                    <label for="coefficient">Coefficient</label>
-                    <input id="coefficient" name="coefficient" type="number" min="1" value="{{ old('coefficient', 1) }}">
-                </div>
-                <div class="form-field">
                     <label for="color">Couleur matière</label>
                     <input id="color" name="color" type="color" value="{{ old('color', '#1d4ed8') }}">
                     @if ($assignSubjectErrors->has('color'))

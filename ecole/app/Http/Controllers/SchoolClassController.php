@@ -82,6 +82,14 @@ class SchoolClassController extends Controller
             ->get()
             ->keyBy('id');
 
+        $activeAcademicYear = AnneeScolaire::query()
+            ->where('statut', 'ACTIVE')
+            ->orderByDesc('date_debut')
+            ->first();
+        if ($activeAcademicYear) {
+            $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
+        }
+
         $academicYearsById = $academicYears->keyBy('id');
 
         $inscriptionCounts = Inscription::query()
@@ -90,7 +98,7 @@ class SchoolClassController extends Controller
             ->pluck('total', 'classe_id');
 
         $assignmentCounts = AffectationEnseignant::query()
-            ->select('classe_id', DB::raw('count(*) as total'))
+            ->select('classe_id', DB::raw('count(distinct enseignant_id) as total'))
             ->groupBy('classe_id')
             ->pluck('total', 'classe_id');
 
@@ -162,6 +170,11 @@ class SchoolClassController extends Controller
         });
 
         $seriesOptions = $series->values()->map(fn (Serie $serie) => $serie->code)->all();
+        $lyceeLevelCodes = $levels
+            ->filter(fn (Niveau $niveau) => $niveau->ordre >= 5)
+            ->values()
+            ->map(fn (Niveau $niveau) => $niveau->code)
+            ->all();
 
         if ($request->expectsJson()) {
             $gridHtml = view('classes.partials.class-grid', ['classes' => $classes])->render();
@@ -181,6 +194,8 @@ class SchoolClassController extends Controller
             'seriesOptions',
             'levels',
             'series',
+            'activeAcademicYear',
+            'lyceeLevelCodes',
             'selectedAcademicYearId',
             'selectedLevelId',
             'selectedSerieId'
@@ -192,7 +207,7 @@ class SchoolClassController extends Controller
         $data = $request->validateWithBag('classForm', [
             'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
             'name' => ['required', 'string', 'max:255'],
-            'level' => ['nullable', 'string', 'max:50'],
+            'level' => ['required', 'string', 'max:50'],
             'series' => ['nullable', 'string', 'max:50'],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'status' => ['nullable', 'in:active,inactive'],
@@ -474,8 +489,11 @@ class SchoolClassController extends Controller
 
         return $programmes->map(function (ProgrammeClasse $programme) use ($assignmentsBySubject, $enseignantsById, $matieresById) {
             $subject = $matieresById->get($programme->matiere_id);
-            $assignment = $assignmentsBySubject->get($programme->matiere_id)?->first();
-            $teacher = $assignment ? $enseignantsById->get($assignment->enseignant_id) : null;
+            $assignmentsForSubject = $assignmentsBySubject->get($programme->matiere_id, collect());
+            $teacherCollection = $assignmentsForSubject
+                ->map(fn (AffectationEnseignant $assignment) => $enseignantsById->get($assignment->enseignant_id))
+                ->filter();
+            $teacher = $teacherCollection->first();
 
             $subjectData = $subject ? (object) [
                 'id' => $subject->id,
@@ -493,7 +511,11 @@ class SchoolClassController extends Controller
             return (object) [
                 'subject' => $subjectData,
                 'teacher' => $teacherData,
-                'teachers' => collect($teacherData ? [$teacherData] : []),
+                'teachers' => $teacherCollection->map(fn (Enseignant $enseignant) => (object) [
+                    'id' => $enseignant->id,
+                    'last_name' => $enseignant->nom,
+                    'first_name' => $enseignant->prenoms,
+                ]),
                 'coefficient' => 1,
                 'color' => null,
             ];
@@ -510,7 +532,10 @@ class SchoolClassController extends Controller
         $classe->setAttribute('manual_headcount', $classe->effectif_max);
         $classe->setAttribute('student_assignments_count', Inscription::query()->where('classe_id', $classe->id)->count());
         $classe->setAttribute('subject_assignments_count', ProgrammeClasse::query()->where('classe_id', $classe->id)->count());
-        $classe->setAttribute('teacher_assignments_count', AffectationEnseignant::query()->where('classe_id', $classe->id)->count());
+        $classe->setAttribute('teacher_assignments_count', AffectationEnseignant::query()
+            ->where('classe_id', $classe->id)
+            ->distinct('enseignant_id')
+            ->count('enseignant_id'));
 
         $academicYear = AnneeScolaire::query()->find($classe->annee_scolaire_id);
         if ($academicYear) {
