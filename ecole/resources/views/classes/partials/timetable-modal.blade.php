@@ -1,7 +1,4 @@
 @php
-    $timetableRooms = isset($classes)
-        ? $classes->pluck('room')->filter()->unique()->values()
-        : collect();
     $timetableStaff = isset($staff)
         ? $staff->map(fn ($member) => [
             'id' => $member->id,
@@ -29,7 +26,7 @@
         <div class="modal__header">
             <div>
                 <h2>Emploi du temps - <span data-class-label data-class-fallback="Classe"></span></h2>
-                <p>Vue hebdomadaire des cours, salles et enseignants</p>
+                <p>Vue hebdomadaire des cours et enseignants</p>
             </div>
             <button class="icon-button" type="button" data-modal-close aria-label="Fermer">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -67,7 +64,7 @@
                 <div class="config-card">
                     <div class="config-card__header">
                         <h3>Planifier un créneau</h3>
-                        <p class="helper-text">Définissez l'horaire, la matière, l'enseignant et la salle.</p>
+                        <p class="helper-text">Définissez l'horaire, la matière et l'enseignant.</p>
                     </div>
                     <form class="slot-form" data-slot-form>
                         <div class="form-grid">
@@ -97,10 +94,6 @@
                             <label>
                                 Enseignant
                                 <select name="teacher" data-teacher-select></select>
-                            </label>
-                            <label>
-                                Salle
-                                <input name="room" type="text" list="timetable-rooms" placeholder="Salle A1">
                             </label>
                         </div>
                         <div class="form-actions">
@@ -152,9 +145,3 @@
         </div>
     </div>
 </div>
-
-<datalist id="timetable-rooms">
-    @foreach ($timetableRooms as $room)
-        <option value="{{ $room }}"></option>
-    @endforeach
-</datalist>

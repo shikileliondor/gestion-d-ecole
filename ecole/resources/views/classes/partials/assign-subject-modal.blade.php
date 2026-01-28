@@ -35,11 +35,10 @@
             <input type="hidden" name="class_label_subject" value="{{ old('class_label_subject') }}" data-class-input>
             <div class="form-grid">
                 <div class="form-field form-field--full">
-                    <label for="subject_id">Matière</label>
-                    <select id="subject_id" name="subject_id" required data-assign-subject-select>
-                        <option value="">Sélectionner</option>
+                    <label for="subject_ids">Matières (multi-sélection)</label>
+                    <select id="subject_ids" name="subject_ids[]" multiple size="5" required data-assign-subject-select>
                         @foreach ($subjects as $subject)
-                            <option value="{{ $subject->id }}" @selected(old('subject_id') == $subject->id)>
+                            <option value="{{ $subject->id }}" @selected(collect(old('subject_ids', []))->contains($subject->id))>
                                 {{ $subject->name }}
                                 @if ($subject->level)
                                     ({{ $subject->level }}@if ($subject->series) • Série {{ $subject->series }}@endif)
@@ -49,8 +48,9 @@
                             </option>
                         @endforeach
                     </select>
-                    @if ($assignSubjectErrors->has('subject_id'))
-                        <span class="error-text">{{ $assignSubjectErrors->first('subject_id') }}</span>
+                    <p class="helper-text">Maintenez Ctrl/⌘ pour sélectionner plusieurs matières.</p>
+                    @if ($assignSubjectErrors->has('subject_ids'))
+                        <span class="error-text">{{ $assignSubjectErrors->first('subject_ids') }}</span>
                     @endif
                 </div>
                 <div class="form-field">
