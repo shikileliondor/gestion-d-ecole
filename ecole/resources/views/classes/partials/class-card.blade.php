@@ -15,6 +15,7 @@
             'name' => $assignment->subject?->name,
             'level' => $assignment->subject?->level,
             'series' => $assignment->subject?->series,
+            'coefficient' => $assignment->coefficient,
             'color' => $assignment->color,
             'teachers' => array_values($teachers),
         ];
@@ -66,20 +67,19 @@
         <button
             class="pill-button"
             type="button"
-            data-modal-open="assign-subject"
-            data-action="{{ route('classes.subjects.assign', $class) }}"
+            data-modal-open="subjects"
             data-class-name="{{ $class->name }}"
             data-class-subjects='@json($subjectAssignmentsData)'
         >
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M19 2H9a2 2 0 0 0-2 2v15a1 1 0 0 0 1.45.9L12 18.12l3.55 1.78A1 1 0 0 0 17 19V4a2 2 0 0 0-2-2Zm0 15.5-2.55-1.28a1 1 0 0 0-.9 0L13 17.5V4h6v13.5Z"/>
             </svg>
-            Matières
+            Matière
         </button>
         <button
             class="pill-button"
             type="button"
-            data-modal-open="timetable"
+            data-modal-open="timetable-preview"
             data-class-name="{{ $class->name }}"
             data-class-id="{{ $class->id }}"
             data-class-subjects='@json($timetableData)'
@@ -87,7 +87,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm0 6v2h2V8H7Zm4 0v2h2V8h-2Zm4 0v2h2V8h-2ZM7 12v2h2v-2H7Zm4 0v2h2v-2h-2Zm4 0v2h2v-2h-2Z"/>
             </svg>
-            Emploi du temps
+            Voir planning
         </button>
     </div>
 </div>
