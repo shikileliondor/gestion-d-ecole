@@ -24,7 +24,7 @@
             </div>
         @endif
 
-        <form class="student-form" method="POST" action="{{ route('teachers.store') }}">
+        <form class="student-form" method="POST" action="{{ route('teachers.store') }}" enctype="multipart/form-data">
             @csrf
 
             @include('teachers.partials.form-fields')
@@ -35,4 +35,6 @@
             </div>
         </form>
     </div>
+
+    <script src="{{ asset('js/teachers/form.js') }}" defer></script>
 </x-app-layout>

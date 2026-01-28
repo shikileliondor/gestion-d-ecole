@@ -24,7 +24,7 @@
             </div>
         @endif
 
-        <form class="student-form" method="POST" action="{{ route('teachers.update', $enseignant) }}">
+        <form class="student-form" method="POST" action="{{ route('teachers.update', $enseignant) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -36,4 +36,6 @@
             </div>
         </form>
     </div>
+
+    <script src="{{ asset('js/teachers/form.js') }}" defer></script>
 </x-app-layout>
