@@ -15,11 +15,16 @@
             'name' => $assignment->subject?->name,
             'level' => $assignment->subject?->level,
             'series' => $assignment->subject?->series,
-            'coefficient' => $assignment->coefficient,
             'color' => $assignment->color,
             'teachers' => array_values($teachers),
         ];
     }
+
+    $teachersList = collect($subjectAssignmentsData)
+        ->flatMap(fn (array $assignment) => $assignment['teachers'] ?? [])
+        ->filter()
+        ->unique(fn ($teacher) => mb_strtolower($teacher))
+        ->values();
 
     // Préparer les données pour l'emploi du temps
     $timetableData = [];
@@ -72,8 +77,25 @@
             <strong>{{ $class->subject_assignments_count }} <small>matières</small></strong>
         </div>
         <div class="stat">
-            <span>Affectations</span>
+            <span>Heures</span>
+            <strong><span data-class-hours data-class-id="{{ $class->id }}">0</span> <small>heures</small></strong>
+        </div>
+        <div class="stat">
+            <span>Enseignants</span>
             <strong>{{ $class->teacher_assignments_count }} <small>enseignants</small></strong>
+        </div>
+    </div>
+
+    <div class="class-card__teachers">
+        <span>Enseignants</span>
+        <div class="class-card__teachers-list">
+            @if ($teachersList->isNotEmpty())
+                @foreach ($teachersList as $teacherName)
+                    <span class="teacher-badge">{{ $teacherName }}</span>
+                @endforeach
+            @else
+                <span class="helper-text">Aucun enseignant affecté.</span>
+            @endif
         </div>
     </div>
 

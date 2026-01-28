@@ -108,6 +108,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const calculateHours = (slots) => {
+        if (!Array.isArray(slots)) {
+            return 0;
+        }
+        return slots.reduce((total, slot) => {
+            if (slot?.type === 'pause') {
+                return total;
+            }
+            const start = toMinutes(slot?.start);
+            const end = toMinutes(slot?.end);
+            if (start === null || end === null || end <= start) {
+                return total;
+            }
+            return total + (end - start) / 60;
+        }, 0);
+    };
+
+    const formatHours = (hours) => {
+        if (!hours || hours <= 0) {
+            return '0';
+        }
+        const rounded = Math.round(hours * 10) / 10;
+        return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+    };
+
+    const updateClassHours = (classId) => {
+        if (!classId) {
+            return;
+        }
+        const hourTarget = document.querySelector(`[data-class-hours][data-class-id="${classId}"]`);
+        if (!hourTarget) {
+            return;
+        }
+        const timetableState = loadTimetableState(classId);
+        const hours = calculateHours(timetableState?.slots || []);
+        hourTarget.textContent = formatHours(hours);
+    };
+
     const openModal = (modal, trigger) => {
         const actionTarget = modal.querySelector('[data-action-target]');
         const classLabel = modal.querySelector('[data-class-label]');
@@ -170,9 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     if (subject.series) {
                         levelParts.push(`Série ${subject.series}`);
-                    }
-                    if (subject.coefficient) {
-                        levelParts.push(`Coef. ${subject.coefficient}`);
                     }
                     meta.textContent = levelParts.length ? levelParts.join(' • ') : 'Tous niveaux';
 
@@ -540,6 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 updatedState.slots = updatedState.slots.filter((item) => item.id !== slot.id);
                                 renderSchedule();
                                 saveTimetableState(getClassId(), updatedState);
+                                updateTimetableBadge(getClassId());
+                                updateClassHours(getClassId());
                             });
 
                             actions.appendChild(editButton);
@@ -640,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     saveTimetableState(getClassId(), updatedState);
                     updateTimetableBadge(getClassId());
+                    updateClassHours(getClassId());
                     renderSchedule();
                     resetForm();
                 });
@@ -649,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updatedState.slots = [];
                     saveTimetableState(getClassId(), updatedState);
                     updateTimetableBadge(getClassId());
+                    updateClassHours(getClassId());
                     renderSchedule();
                     resetForm();
                 });
@@ -659,11 +698,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (saveButton) {
                     saveButton.addEventListener('click', () => {
-                        if (!saveStatus) {
-                            saveTimetableState(getClassId(), getState());
-                            updateTimetableBadge(getClassId());
-                            return;
-                        }
+                    if (!saveStatus) {
+                        saveTimetableState(getClassId(), getState());
+                        updateTimetableBadge(getClassId());
+                        updateClassHours(getClassId());
+                        return;
+                    }
                         if (saveStatusTimeout) {
                             window.clearTimeout(saveStatusTimeout);
                         }
@@ -679,6 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         saveTimetableState(classId, getState());
                         updateTimetableBadge(classId);
+                        updateClassHours(classId);
                         saveStatus.textContent = 'Planning enregistré.';
                         saveStatus.classList.remove('is-error');
                         saveStatusTimeout = window.setTimeout(() => {
@@ -850,6 +891,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal.dataset.openOnLoad === 'true') {
             openModal(modal);
         }
+    });
+
+    document.querySelectorAll('[data-class-hours]').forEach((node) => {
+        const classId = node.dataset.classId;
+        updateClassHours(classId);
+    });
+
+    document.querySelectorAll('[data-level-select]').forEach((select) => {
+        const form = select.closest('form');
+        if (!form) {
+            return;
+        }
+        const seriesField = form.querySelector('[data-series-field]');
+        if (!seriesField) {
+            return;
+        }
+        const rawLyceeLevels = form.dataset.lyceeLevels;
+        const lyceeLevels = rawLyceeLevels ? JSON.parse(rawLyceeLevels) : [];
+        const seriesSelect = seriesField.querySelector('select');
+
+        const toggleSeriesField = () => {
+            const levelValue = select.value;
+            const isLycee = lyceeLevels.includes(levelValue);
+            seriesField.hidden = !isLycee;
+            if (!isLycee && seriesSelect) {
+                seriesSelect.value = '';
+            }
+        };
+
+        select.addEventListener('change', toggleSeriesField);
+        toggleSeriesField();
     });
 
     document.addEventListener('keydown', (event) => {

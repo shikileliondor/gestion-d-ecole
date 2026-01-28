@@ -81,7 +81,11 @@
 
     @include('classes.partials.class-form-modal', [
         'academicYears' => $academicYears,
+        'levels' => $levels,
+        'series' => $series,
         'isOpen' => $classFormErrors->any(),
+        'activeAcademicYear' => $activeAcademicYear ?? null,
+        'lyceeLevelCodes' => $lyceeLevelCodes ?? [],
         'seriesOptions' => $seriesOptions ?? [],
     ])
     @include('classes.partials.subject-form-modal', [
