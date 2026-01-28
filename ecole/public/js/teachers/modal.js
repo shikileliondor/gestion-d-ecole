@@ -1,10 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('staff-modal');
-    const modalTitle = modal?.querySelector('#staff-modal-title');
-    const openButtons = document.querySelectorAll('[data-staff-modal-open]');
-    const closeButtons = modal?.querySelectorAll('[data-staff-modal-close]') || [];
+    const modal = document.getElementById('teacher-modal');
+    const modalTitle = modal?.querySelector('#teacher-modal-title');
+    const openButtons = document.querySelectorAll('[data-teacher-modal-open]');
+    const closeButtons = modal?.querySelectorAll('[data-teacher-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-tab]') || [];
     const panels = modal?.querySelectorAll('[data-panel]') || [];
+    const archiveForm = modal?.querySelector('[data-archive-form]');
+    const photoPreview = modal?.querySelector('[data-photo-preview]');
+    const photoFallback = modal?.querySelector('[data-photo-fallback]');
+
     if (!modal) {
         return;
     }
@@ -14,37 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
         first_name: modal.querySelector('[data-field="first_name"]'),
         last_name: modal.querySelector('[data-field="last_name"]'),
         email: modal.querySelector('[data-field="email"]'),
+        telephone_1: modal.querySelector('[data-field="telephone_1"]'),
+        specialite: modal.querySelector('[data-field="specialite"]'),
+        type_enseignant: modal.querySelector('[data-field="type_enseignant"]'),
         statut: modal.querySelector('[data-field="statut"]'),
     };
 
     const listFields = {
-        assignments: modal.querySelector('[data-field="assignments"]'),
         documents: modal.querySelector('[data-field="documents"]'),
-    };
-
-    const photoPreview = modal.querySelector('[data-photo-preview]');
-    const photoFallback = modal.querySelector('[data-photo-fallback]');
-
-    const formatDate = (value) => {
-        if (!value) {
-            return '—';
-        }
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) {
-            return value;
-        }
-        return new Intl.DateTimeFormat('fr-FR').format(date);
-    };
-
-    const formatCurrency = (value) => {
-        if (value === null || value === undefined || value === '') {
-            return '—';
-        }
-        const numberValue = Number(value);
-        if (Number.isNaN(numberValue)) {
-            return value;
-        }
-        return `${new Intl.NumberFormat('fr-FR').format(numberValue)} FCFA`;
     };
 
     const setText = (element, value) => {
@@ -112,32 +93,38 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const labelMaps = {
-        statut: { ACTIF: 'Actif', SUSPENDU: 'Suspendu', PARTI: 'Parti' },
+        statut: { ACTIF: 'Actif', SUSPENDU: 'Suspendu', PARTI: 'Archivé' },
     };
 
-    const openModal = (staffUrl, staffName) => {
+    const openModal = (teacherUrl, teacherName, archiveUrl) => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         activateTab('info');
+
         if (modalTitle) {
-            const prefix = modal.dataset.modalTitle || 'Fiche personnel';
-            modalTitle.textContent = `${prefix} - ${staffName}`;
+            modalTitle.textContent = `Fiche enseignant - ${teacherName}`;
+        }
+
+        if (archiveForm && archiveUrl) {
+            archiveForm.setAttribute('action', archiveUrl);
         }
 
         setText(infoFields.staff_number, '—');
         setText(infoFields.first_name, '—');
         setText(infoFields.last_name, '—');
         setText(infoFields.email, '—');
+        setText(infoFields.telephone_1, '—');
+        setText(infoFields.specialite, '—');
+        setText(infoFields.type_enseignant, '—');
         setText(infoFields.statut, '—');
-        setList(listFields.assignments, [], () => '', 'Aucune affectation enregistrée.');
         setList(listFields.documents, [], () => '', 'Aucun document enregistré.');
-        setPhoto(null, staffName?.[0] ?? '—');
+        setPhoto(null, teacherName?.[0] ?? '—');
 
-        if (!staffUrl) {
+        if (!teacherUrl) {
             return;
         }
 
-        fetch(staffUrl, {
+        fetch(teacherUrl, {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -150,13 +137,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.json();
             })
             .then((data) => {
-                const staff = data.staff || {};
-                setText(infoFields.staff_number, staff.staff_number);
-                setText(infoFields.first_name, staff.first_name);
-                setText(infoFields.last_name, staff.last_name);
-                setText(infoFields.email, staff.email);
-                setText(infoFields.statut, labelMaps.statut[staff.statut] || staff.statut);
-                setPhoto(staff.photo_url, `${staff.first_name?.[0] ?? ''}${staff.last_name?.[0] ?? ''}`.trim());
+                const teacher = data.teacher || {};
+                setText(infoFields.staff_number, teacher.staff_number);
+                setText(infoFields.first_name, teacher.first_name);
+                setText(infoFields.last_name, teacher.last_name);
+                setText(infoFields.email, teacher.email);
+                setText(infoFields.telephone_1, teacher.telephone_1);
+                setText(infoFields.specialite, teacher.specialite);
+                setText(infoFields.type_enseignant, teacher.type_enseignant);
+                setText(infoFields.statut, labelMaps.statut[teacher.statut] || teacher.statut);
+                setPhoto(teacher.photo_url, `${teacher.first_name?.[0] ?? ''}${teacher.last_name?.[0] ?? ''}`.trim());
 
                 setList(
                     listFields.documents,
@@ -164,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     (document) => `
                         <div>
                             <p class="label">Document</p>
-                            <p class="value">${document.libelle || document.original_name || '—'}</p>
+                            <p class="value">${document.libelle || '—'}</p>
                         </div>
                         <div>
                             <p class="label">Fichier</p>
@@ -173,10 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     `,
                     'Aucun document enregistré.'
                 );
-
             })
             .catch(() => {
-                setList(listFields.assignments, [], () => '', 'Impossible de charger les informations.');
+                setList(listFields.documents, [], () => '', 'Impossible de charger les informations.');
             });
     };
 
@@ -187,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     openButtons.forEach((button) => {
         button.addEventListener('click', () => {
-            openModal(button.dataset.staffUrl, button.dataset.staffName || '');
+            openModal(button.dataset.teacherUrl, button.dataset.teacherName || '', button.dataset.archiveUrl);
         });
     });
 

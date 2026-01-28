@@ -59,6 +59,7 @@
                         ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
                         ->take(2)
                         ->implode('');
+                    $photoUrl = $staff->photo_path ? Storage::url($staff->photo_path) : null;
                     $statusClass = match ($staff->statut) {
                         'ACTIF' => 'status-active',
                         'SUSPENDU' => 'status-suspended',
@@ -74,7 +75,13 @@
                 @endphp
                 <article class="staff-card" data-staff-card>
                     <div class="staff-card__header">
-                        <div class="staff-avatar">{{ $initials ?: '—' }}</div>
+                        <div class="staff-avatar">
+                            @if ($photoUrl)
+                                <img src="{{ $photoUrl }}" alt="Photo de {{ $fullName }}">
+                            @else
+                                {{ $initials ?: '—' }}
+                            @endif
+                        </div>
                         <span class="status-pill {{ $statusClass }}">
                             {{ $statusLabel }}
                         </span>

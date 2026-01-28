@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/teachers/{enseignant}', [EnseignantController::class, 'show'])->name('teachers.show');
     Route::get('/teachers/{enseignant}/edit', [EnseignantController::class, 'edit'])->name('teachers.edit');
     Route::put('/teachers/{enseignant}', [EnseignantController::class, 'update'])->name('teachers.update');
+    Route::put('/teachers/{enseignant}/archive', [EnseignantController::class, 'archive'])->name('teachers.archive');
     Route::delete('/teachers/{enseignant}', [EnseignantController::class, 'destroy'])->name('teachers.destroy');
     Route::post('/teachers/{enseignant}/documents', [EnseignantController::class, 'storeDocument'])
         ->name('teachers.documents.store');

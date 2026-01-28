@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\StaffDocument;
 use App\Models\User;
 use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -26,17 +28,40 @@ class StaffController extends Controller
             'nom' => ['required', 'string', 'max:255'],
             'prenoms' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['file', 'mimes:pdf,jpeg,jpg,png,doc,docx', 'max:10240'],
         ])->validate();
 
         $fullName = trim($data['prenoms'] . ' ' . $data['nom']);
         $matricule = app(MatriculeService::class)->generateForStaff();
 
-        User::create([
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos/staff', 'public');
+        }
+
+        $user = User::create([
             'name' => $fullName,
             'matricule' => $matricule,
             'email' => $data['email'],
             'password' => Hash::make(Str::random(16)),
+            'photo_path' => $photoPath,
         ]);
+
+        if (!empty($data['documents'])) {
+            foreach ($data['documents'] as $document) {
+                $path = $document->store('documents/staff', 'public');
+                StaffDocument::create([
+                    'user_id' => $user->id,
+                    'libelle' => pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
+                    'file_path' => $path,
+                    'original_name' => $document->getClientOriginalName(),
+                    'mime_type' => $document->getClientMimeType(),
+                    'size_bytes' => $document->getSize(),
+                ]);
+            }
+        }
 
         return redirect()
             ->route('staff.index')
@@ -45,7 +70,9 @@ class StaffController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $user = User::query()->findOrFail($id);
+        $user = User::query()
+            ->with('documents')
+            ->findOrFail($id);
 
         $nameParts = preg_split('/\s+/', trim($user->name), 2);
         $firstName = $nameParts[0] ?? '';
@@ -64,10 +91,16 @@ class StaffController extends Controller
                 'adresse' => null,
                 'commune' => null,
                 'statut' => 'ACTIF',
+                'photo_url' => $user->photo_path ? Storage::url($user->photo_path) : null,
             ],
             'contract' => null,
             'assignments' => [],
-            'documents' => [],
+            'documents' => $user->documents->map(fn (StaffDocument $document) => [
+                'id' => $document->id,
+                'libelle' => $document->libelle,
+                'url' => $document->file_path ? Storage::url($document->file_path) : null,
+                'original_name' => $document->original_name,
+            ]),
         ]);
     }
 

@@ -1,16 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('staff-form-modal');
-    const openButtons = document.querySelectorAll('[data-form-modal-open]');
-    const closeButtons = modal?.querySelectorAll('[data-form-modal-close]') || [];
+    const modal = document.getElementById('teacher-form-modal');
+    const openButtons = document.querySelectorAll('[data-teacher-form-modal-open]');
+    const closeButtons = modal?.querySelectorAll('[data-teacher-form-modal-close]') || [];
     const tabButtons = modal?.querySelectorAll('[data-form-tab]') || [];
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
-    const photoInput = modal?.querySelector('[data-photo-input]');
-    const photoPreviewWrapper = modal?.querySelector('[data-photo-preview-wrapper]');
-    const photoPreview = modal?.querySelector('[data-photo-preview]');
-    const documentsInput = modal?.querySelector('[data-documents-input]');
-    const documentsList = modal?.querySelector('[data-documents-list]');
 
     if (!modal) {
         return;
@@ -56,39 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.setAttribute('aria-hidden', 'true');
     };
 
-    const updatePhotoPreview = (file) => {
-        if (!photoPreviewWrapper || !photoPreview) {
-            return;
-        }
-        if (!file) {
-            photoPreviewWrapper.classList.add('is-hidden');
-            photoPreview.src = '';
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            photoPreview.src = event.target?.result;
-            photoPreviewWrapper.classList.remove('is-hidden');
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const updateDocumentsList = (files) => {
-        if (!documentsList) {
-            return;
-        }
-        documentsList.innerHTML = '';
-        if (!files || files.length === 0) {
-            return;
-        }
-        Array.from(files).forEach((file) => {
-            const item = document.createElement('div');
-            item.className = 'file-list__item';
-            item.textContent = file.name;
-            documentsList.appendChild(item);
-        });
-    };
-
     openButtons.forEach((button) => {
         button.addEventListener('click', () => openModal(button));
     });
@@ -115,12 +77,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modal.dataset.openOnLoad === 'true') {
         openModal();
     }
-
-    photoInput?.addEventListener('change', (event) => {
-        updatePhotoPreview(event.target.files?.[0]);
-    });
-
-    documentsInput?.addEventListener('change', (event) => {
-        updateDocumentsList(event.target.files);
-    });
 });

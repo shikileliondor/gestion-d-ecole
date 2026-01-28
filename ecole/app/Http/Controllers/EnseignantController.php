@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Enseignant;
 use App\Models\EnseignantDocument;
 use App\Services\MatriculeService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +21,10 @@ class EnseignantController extends Controller
             ->orderBy('nom')
             ->orderBy('prenoms')
             ->get()
-            ->each(fn (Enseignant $enseignant) => $enseignant->setAttribute('code_enseignant', $enseignant->matricule));
+            ->each(function (Enseignant $enseignant) {
+                $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
+                $enseignant->setAttribute('photo_url', $enseignant->photo_path ? Storage::url($enseignant->photo_path) : null);
+            });
 
         return view('teachers.index', compact('enseignants'));
     }
@@ -35,19 +39,48 @@ class EnseignantController extends Controller
         $data = $this->validateEnseignant($request);
 
         $data['code_enseignant'] = app(MatriculeService::class)->generateForEnseignant();
+        $photoPath = $this->storePhoto($request);
+        if ($photoPath) {
+            $data['photo_path'] = $photoPath;
+        }
+
         $enseignant = Enseignant::create($this->mapEnseignantData($data));
         $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
+        $this->storeDocuments($request, $enseignant);
 
         return redirect()
-            ->route('teachers.show', $enseignant)
+            ->route('teachers.index')
             ->with('status', "L'enseignant a été créé avec succès.");
     }
 
-    public function show(Enseignant $enseignant): View
+    public function show(Request $request, Enseignant $enseignant): View|JsonResponse
     {
         $enseignant->load('documents');
         $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
-        $enseignant->setAttribute('photo_url', $enseignant->photo_path);
+        $enseignant->setAttribute('photo_url', $enseignant->photo_path ? Storage::url($enseignant->photo_path) : null);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'teacher' => [
+                    'id' => $enseignant->id,
+                    'staff_number' => $enseignant->matricule,
+                    'first_name' => $enseignant->prenoms,
+                    'last_name' => $enseignant->nom,
+                    'email' => $enseignant->email,
+                    'telephone_1' => $enseignant->telephone_1,
+                    'telephone_2' => $enseignant->telephone_2,
+                    'specialite' => $enseignant->specialite,
+                    'type_enseignant' => $enseignant->type_enseignant,
+                    'statut' => $enseignant->statut,
+                    'photo_url' => $enseignant->photo_url,
+                ],
+                'documents' => $enseignant->documents->map(fn (EnseignantDocument $document) => [
+                    'id' => $document->id,
+                    'libelle' => $document->libelle,
+                    'url' => $document->fichier_url ? Storage::url($document->fichier_url) : null,
+                ]),
+            ]);
+        }
 
         return view('teachers.show', [
             'enseignant' => $enseignant,
@@ -58,7 +91,7 @@ class EnseignantController extends Controller
     public function edit(Enseignant $enseignant): View
     {
         $enseignant->setAttribute('code_enseignant', $enseignant->matricule);
-        $enseignant->setAttribute('photo_url', $enseignant->photo_path);
+        $enseignant->setAttribute('photo_url', $enseignant->photo_path ? Storage::url($enseignant->photo_path) : null);
 
         return view('teachers.edit', array_merge(
             ['enseignant' => $enseignant],
@@ -70,7 +103,13 @@ class EnseignantController extends Controller
     {
         $data = $this->validateEnseignant($request, $enseignant);
 
+        $photoPath = $this->storePhoto($request, $enseignant->photo_path);
+        if ($photoPath) {
+            $data['photo_path'] = $photoPath;
+        }
+
         $enseignant->update($this->mapEnseignantData($data, $enseignant));
+        $this->storeDocuments($request, $enseignant);
 
         return redirect()
             ->route('teachers.show', $enseignant)
@@ -84,6 +123,15 @@ class EnseignantController extends Controller
         return redirect()
             ->route('teachers.index')
             ->with('status', "L'enseignant a été supprimé.");
+    }
+
+    public function archive(Enseignant $enseignant): RedirectResponse
+    {
+        $enseignant->update(['statut' => 'PARTI']);
+
+        return redirect()
+            ->route('teachers.index')
+            ->with('status', "L'enseignant a été archivé.");
     }
 
     public function storeDocument(Request $request, Enseignant $enseignant): RedirectResponse
@@ -158,12 +206,14 @@ class EnseignantController extends Controller
             'telephone_1' => ['required', 'string', 'max:30'],
             'telephone_2' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
-            'photo_url' => ['nullable', 'string', 'max:2048'],
+            'photo' => ['nullable', 'image', 'max:2048'],
             'specialite' => ['required', 'string', 'max:255'],
             'type_enseignant' => ['required', Rule::in(Enseignant::TYPES)],
             'date_debut_service' => ['required', 'date'],
             'date_fin_service' => ['nullable', 'date', 'after_or_equal:date_debut_service'],
             'statut' => ['required', Rule::in(Enseignant::STATUTS)],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['file', 'mimes:pdf,jpeg,jpg,png,doc,docx', 'max:10240'],
         ]);
 
         return $validator->validate();
@@ -180,11 +230,44 @@ class EnseignantController extends Controller
             'telephone_2' => $data['telephone_2'] ?? null,
             'email' => $data['email'] ?? null,
             'specialite' => $data['specialite'],
-            'photo_path' => $data['photo_url'] ?? null,
+            'photo_path' => $data['photo_path'] ?? $enseignant?->photo_path,
             'type_enseignant' => $data['type_enseignant'],
             'date_debut_service' => $data['date_debut_service'],
             'date_fin_service' => $data['date_fin_service'] ?? null,
             'statut' => $data['statut'],
         ];
+    }
+
+    private function storePhoto(Request $request, ?string $currentPath = null): ?string
+    {
+        if (!$request->hasFile('photo')) {
+            return $currentPath;
+        }
+
+        if ($currentPath) {
+            Storage::disk('public')->delete($currentPath);
+        }
+
+        return $request->file('photo')->store('photos/enseignants', 'public');
+    }
+
+    private function storeDocuments(Request $request, Enseignant $enseignant): void
+    {
+        $documents = $request->file('documents', []);
+        if (!$documents) {
+            return;
+        }
+
+        foreach ($documents as $document) {
+            $path = $document->store('documents/enseignants', 'public');
+
+            $enseignant->documents()->create([
+                'type_document' => 'AUTRE',
+                'libelle' => pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
+                'fichier_url' => $path,
+                'mime_type' => $document->getClientMimeType(),
+                'taille' => $document->getSize(),
+            ]);
+        }
     }
 }

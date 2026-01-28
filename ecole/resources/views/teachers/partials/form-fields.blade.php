@@ -27,8 +27,11 @@
             </select>
         </div>
         <div class="form-field">
-            <label for="photo_url">Photo (URL)</label>
-            <input type="text" id="photo_url" name="photo_url" value="{{ old('photo_url', $enseignant->photo_url ?? '') }}">
+            <label for="photo">Photo</label>
+            <input type="file" id="photo" name="photo" accept="image/*" data-photo-input>
+            <div class="photo-preview {{ $enseignant?->photo_url ? '' : 'is-hidden' }}" data-photo-preview-wrapper>
+                <img src="{{ $enseignant?->photo_url ?? '' }}" alt="Aperçu de la photo" data-photo-preview>
+            </div>
         </div>
     </div>
 </div>
@@ -89,6 +92,18 @@
                     <option value="{{ $statut }}" @selected(old('statut', $enseignant->statut ?? '') === $statut)>{{ $statut }}</option>
                 @endforeach
             </select>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h2>Documents</h2>
+    <div class="form-grid">
+        <div class="form-field">
+            <label for="documents">Documents (PDF, image, Word)</label>
+            <input type="file" id="documents" name="documents[]" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" multiple data-documents-input>
+            <div class="file-list" data-documents-list></div>
+            <p class="helper-text">Vous pouvez sélectionner plusieurs fichiers.</p>
         </div>
     </div>
 </div>
