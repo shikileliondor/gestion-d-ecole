@@ -2,48 +2,56 @@
 
 namespace App\Services;
 
-use App\Models\AcademicYear;
+use App\Models\Eleve;
+use App\Models\Enseignant;
 use App\Models\MatriculeSequence;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use RuntimeException;
 
 class MatriculeService
 {
-    private const PREFIXES = [
-        'student' => 'ELV',
-        'enseignant' => 'ENS',
-        'staff' => 'PER',
+    private const ENTITY_MAP = [
+        'eleve' => Eleve::class,
+        'enseignant' => Enseignant::class,
+        'staff' => User::class,
+        'patrimoine' => null,
     ];
 
-    public function generateForStudent(int $schoolId): string
+    public function generateForStudent(?string $enrollmentDate = null): string
     {
-        return $this->generateMatricule('student', $schoolId);
+        $year = $this->resolveYear($enrollmentDate);
+
+        return $this->generateMatricule('eleve', $year);
     }
 
-    public function generateForEnseignant(int $schoolId): string
+    public function generateForEnseignant(): string
     {
-        return $this->generateMatricule('enseignant', $schoolId);
+        return $this->generateMatricule('enseignant', $this->resolveYear());
     }
 
-    public function generateForStaff(int $schoolId): string
+    public function generateForStaff(): string
     {
-        return $this->generateMatricule('staff', $schoolId);
+        return $this->generateMatricule('staff', $this->resolveYear());
     }
 
-    private function generateMatricule(string $entityType, int $schoolId): string
+    public function generateForPatrimoine(): string
     {
-        $prefix = self::PREFIXES[$entityType] ?? null;
-        if (! $prefix) {
+        return $this->generateMatricule('patrimoine', $this->resolveYear());
+    }
+
+    private function generateMatricule(string $entityType, string $year): string
+    {
+        if (! array_key_exists($entityType, self::ENTITY_MAP)) {
             throw new RuntimeException('Type de matricule non pris en charge.');
         }
 
-        $academicYearCode = $this->getActiveAcademicYearCode($schoolId);
-
-        return DB::transaction(function () use ($entityType, $academicYearCode, $prefix) {
+        return DB::transaction(function () use ($entityType, $year) {
             $sequence = MatriculeSequence::query()
                 ->where('entity_type', $entityType)
-                ->where('academic_year_code', $academicYearCode)
+                ->where('year', $year)
                 ->lockForUpdate()
                 ->first();
 
@@ -51,13 +59,13 @@ class MatriculeService
                 try {
                     $sequence = MatriculeSequence::create([
                         'entity_type' => $entityType,
-                        'academic_year_code' => $academicYearCode,
+                        'year' => $year,
                         'last_sequence' => 0,
                     ]);
                 } catch (QueryException) {
                     $sequence = MatriculeSequence::query()
                         ->where('entity_type', $entityType)
-                        ->where('academic_year_code', $academicYearCode)
+                        ->where('year', $year)
                         ->lockForUpdate()
                         ->first();
                 }
@@ -67,29 +75,31 @@ class MatriculeService
                 throw new RuntimeException('Impossible de générer un matricule.');
             }
 
-            $nextSequence = $sequence->last_sequence + 1;
-            $sequence->update(['last_sequence' => $nextSequence]);
+            do {
+                $nextSequence = $sequence->last_sequence + 1;
+                $sequence->update(['last_sequence' => $nextSequence]);
+                $candidate = sprintf('%s-%05d', $year, $nextSequence);
+            } while ($this->matriculeExists($entityType, $candidate));
 
-            return sprintf('%s-%s-%06d', $prefix, $academicYearCode, $nextSequence);
+            return $candidate;
         });
     }
 
-    private function getActiveAcademicYearCode(int $schoolId): string
+    private function resolveYear(?string $date = null): string
     {
-        $academicYear = AcademicYear::query()
-            ->where('school_id', $schoolId)
-            ->where(function ($query) {
-                $query->where('is_current', true)
-                    ->orWhere('status', 'active');
-            })
-            ->orderByDesc('is_current')
-            ->orderByDesc('status')
-            ->first();
+        $carbon = $date ? Carbon::parse($date) : Carbon::now();
 
-        if (! $academicYear) {
-            throw new RuntimeException("Aucune année scolaire active n'est définie.");
+        return $carbon->format('Y');
+    }
+
+    private function matriculeExists(string $entityType, string $candidate): bool
+    {
+        $modelClass = self::ENTITY_MAP[$entityType] ?? null;
+
+        if (! $modelClass) {
+            return false;
         }
 
-        return $academicYear->name;
+        return $modelClass::query()->where('matricule', $candidate)->exists();
     }
 }

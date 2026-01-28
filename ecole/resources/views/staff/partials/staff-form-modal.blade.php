@@ -37,8 +37,8 @@
             <div class="staff-form__panel is-active" data-form-panel="identity" role="tabpanel">
                 <div class="form-grid">
                     <div class="form-field">
-                        <label for="code_personnel">Code personnel *</label>
-                        <input type="text" id="code_personnel" name="code_personnel" value="{{ old('code_personnel') }}" required>
+                        <label for="code_personnel">Code personnel (auto-généré)</label>
+                        <input type="text" id="code_personnel" name="code_personnel" value="{{ old('code_personnel') }}" readonly>
                     </div>
                     <div class="form-field">
                         <label for="nom">Nom *</label>
