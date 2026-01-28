@@ -105,6 +105,7 @@
         'staff' => $staff,
         'isOpen' => $assignSubjectErrors->any(),
     ])
+    @include('classes.partials.subjects-modal')
     @include('classes.partials.timetable-modal')
     @include('classes.partials.timetable-preview-modal')
 

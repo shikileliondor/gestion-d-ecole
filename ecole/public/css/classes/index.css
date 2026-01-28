@@ -510,6 +510,44 @@
     border: 1px solid #d1d5db;
 }
 
+.subjects-table__wrapper {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px 0;
+    background: #fff;
+    overflow: hidden;
+}
+
+.subjects-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.subjects-table thead th {
+    text-align: left;
+    padding: 12px 20px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+.subjects-table tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dark);
+}
+
+.subjects-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.subjects-table tbody td.is-muted {
+    color: var(--text-muted);
+}
+
 .timetable-toolbar {
     display: flex;
     flex-wrap: wrap;

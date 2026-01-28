@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionInput = modal.querySelector('[data-action-input]');
         const classLabelInput = modal.querySelector('[data-class-input]');
         const subjectSummary = modal.querySelector('[data-subject-summary]');
+        const subjectsTable = modal.querySelector('[data-subjects-table]');
         const timetableLayout = modal.querySelector('[data-timetable-layout]');
         const timetablePreviewGrid = modal.querySelector('[data-timetable-preview-grid]');
 
@@ -244,6 +245,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.appendChild(teachers);
                     item.appendChild(color);
                     subjectSummary.appendChild(item);
+                });
+            }
+        }
+
+        if (subjectsTable) {
+            const subjects = trigger?.dataset?.classSubjects
+                ? JSON.parse(trigger.dataset.classSubjects)
+                : [];
+            const emptyMessage = modal.querySelector('[data-subjects-empty]');
+
+            subjectsTable.innerHTML = '';
+
+            if (!subjects.length) {
+                if (emptyMessage) {
+                    emptyMessage.hidden = false;
+                }
+            } else {
+                if (emptyMessage) {
+                    emptyMessage.hidden = true;
+                }
+                subjects.forEach((subject) => {
+                    const row = document.createElement('tr');
+
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = subject.name || 'Matière';
+
+                    const teacherCell = document.createElement('td');
+                    if (Array.isArray(subject.teachers) && subject.teachers.length) {
+                        teacherCell.textContent = subject.teachers.join(', ');
+                    } else {
+                        teacherCell.textContent = 'Enseignant à définir';
+                        teacherCell.classList.add('is-muted');
+                    }
+
+                    const coefficientCell = document.createElement('td');
+                    coefficientCell.textContent = subject.coefficient || subject.coefficient === 0 ? subject.coefficient : '—';
+
+                    row.appendChild(nameCell);
+                    row.appendChild(teacherCell);
+                    row.appendChild(coefficientCell);
+                    subjectsTable.appendChild(row);
                 });
             }
         }
