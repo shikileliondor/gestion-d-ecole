@@ -121,7 +121,9 @@ class SchoolClassController extends Controller
             $programmeCounts,
             $assignmentsByClass,
             $programmesByClass,
-            $coefficientsByLevel
+            $coefficientsByLevel,
+            $enseignantsById,
+            $matieresById
         ) {
             $classe->setAttribute('name', $classe->nom);
             $classe->setAttribute('level', optional($levels->get($classe->niveau_id))->code);

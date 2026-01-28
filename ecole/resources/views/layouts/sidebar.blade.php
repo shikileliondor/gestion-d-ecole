@@ -31,11 +31,6 @@
                     'active' => 'students.enrollments',
                 ],
                 [
-                    'label' => 'Classes',
-                    'route' => 'classes.index',
-                    'active' => 'classes.index',
-                ],
-                [
                     'label' => 'Paiements',
                     'route' => 'accounting.income.index',
                     'active' => 'accounting.income.index',
@@ -69,6 +64,11 @@
                             'label' => 'Matières',
                             'route' => 'pedagogy.subjects.index',
                             'active' => 'pedagogy.subjects.index',
+                        ],
+                        [
+                            'label' => 'Classes',
+                            'route' => 'classes.index',
+                            'active' => 'classes.index',
                         ],
                         [
                             'label' => 'Programme & Coefficients',
