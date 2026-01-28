@@ -74,7 +74,33 @@
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M19 2H9a2 2 0 0 0-2 2v15a1 1 0 0 0 1.45.9L12 18.12l3.55 1.78A1 1 0 0 0 17 19V4a2 2 0 0 0-2-2Zm0 15.5-2.55-1.28a1 1 0 0 0-.9 0L13 17.5V4h6v13.5Z"/>
             </svg>
-            Matière
+            Voir matières
+        </button>
+        <button
+            class="pill-button"
+            type="button"
+            data-modal-open="assign-subject"
+            data-action="{{ route('classes.subjects.assign', $class) }}"
+            data-class-name="{{ $class->name }}"
+            data-class-subjects='@json($subjectAssignmentsData)'
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 0 1 0-2h5V6a1 1 0 0 1 1-1Z"/>
+            </svg>
+            Ajouter matières & enseignants
+        </button>
+        <button
+            class="pill-button"
+            type="button"
+            data-modal-open="timetable"
+            data-class-name="{{ $class->name }}"
+            data-class-id="{{ $class->id }}"
+            data-class-subjects='@json($timetableData)'
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 2a1 1 0 0 1 1 1v1h6V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v5a1 1 0 1 1-2 0V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h5a1 1 0 1 1 0 2H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm10 12a1 1 0 0 1 1 1v2h2a1 1 0 1 1 0 2h-2v2a1 1 0 1 1-2 0v-2h-2a1 1 0 1 1 0-2h2v-2a1 1 0 0 1 1-1Z"/>
+            </svg>
+            Créer l'emploi du temps
         </button>
         <button
             class="pill-button"
@@ -87,7 +113,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm0 6v2h2V8H7Zm4 0v2h2V8h-2Zm4 0v2h2V8h-2ZM7 12v2h2v-2H7Zm4 0v2h2v-2h-2Zm4 0v2h2v-2h-2Z"/>
             </svg>
-            Voir planning
+            Voir planning matières
         </button>
     </div>
 </div>
