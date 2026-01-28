@@ -298,10 +298,21 @@ class SchoolClassController extends Controller
     public function assignSubject(Request $request, Classe $class): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('assignSubjectForm', [
-            'subject_id' => ['required', 'exists:matieres,id'],
+            'subject_ids' => ['nullable', 'array'],
+            'subject_ids.*' => ['integer', 'exists:matieres,id'],
+            'subject_id' => ['nullable', 'exists:matieres,id'],
             'teacher_ids' => ['nullable', 'array'],
             'teacher_ids.*' => ['integer', 'exists:enseignants,id'],
         ]);
+
+        $subjectIds = collect($data['subject_ids'] ?? []);
+        if ($subjectIds->isEmpty() && !empty($data['subject_id'])) {
+            $subjectIds = collect([$data['subject_id']]);
+        }
+        $subjectIds = $subjectIds->unique()->values();
+        if ($subjectIds->isEmpty()) {
+            return back()->withErrors(['subject_ids' => 'Veuillez sélectionner au moins une matière.'], 'assignSubjectForm');
+        }
 
         $teacherIds = collect($data['teacher_ids'] ?? [])->unique()->values();
 
@@ -309,22 +320,24 @@ class SchoolClassController extends Controller
             return back()->withErrors(['teacher_ids' => 'Veuillez sélectionner au moins un enseignant.'], 'assignSubjectForm');
         }
 
-        foreach ($teacherIds as $teacherId) {
-            AffectationEnseignant::query()->firstOrCreate([
+        foreach ($subjectIds as $subjectId) {
+            foreach ($teacherIds as $teacherId) {
+                AffectationEnseignant::query()->firstOrCreate([
+                    'annee_scolaire_id' => $class->annee_scolaire_id,
+                    'enseignant_id' => $teacherId,
+                    'classe_id' => $class->id,
+                    'matiere_id' => $subjectId,
+                ]);
+            }
+
+            ProgrammeClasse::query()->firstOrCreate([
                 'annee_scolaire_id' => $class->annee_scolaire_id,
-                'enseignant_id' => $teacherId,
                 'classe_id' => $class->id,
-                'matiere_id' => $data['subject_id'],
+                'matiere_id' => $subjectId,
+            ], [
+                'actif' => true,
             ]);
         }
-
-        ProgrammeClasse::query()->firstOrCreate([
-            'annee_scolaire_id' => $class->annee_scolaire_id,
-            'classe_id' => $class->id,
-            'matiere_id' => $data['subject_id'],
-        ], [
-            'actif' => true,
-        ]);
 
         if ($request->expectsJson()) {
             $classe = $this->hydrateClassCard($class->refresh());

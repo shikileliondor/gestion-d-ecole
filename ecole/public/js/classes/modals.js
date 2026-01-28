@@ -305,11 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isPause = slotType.value === 'pause';
                 subjectSelect.disabled = isPause;
                 teacherSelect.disabled = isPause;
-                slotForm.elements.room.disabled = isPause;
                 if (isPause) {
                     subjectSelect.value = '';
                     teacherSelect.value = '';
-                    slotForm.elements.room.value = '';
                 }
             };
 
@@ -456,10 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (slot.teacherName) {
                                     metaParts.push(slot.teacherName);
                                 }
-                                if (slot.room) {
-                                    metaParts.push(slot.room);
-                                }
-                                meta.textContent = metaParts.join(' • ') || 'Enseignant et salle à préciser';
+                                meta.textContent = metaParts.join(' • ') || 'Enseignant à préciser';
                             }
 
                             card.appendChild(title);
@@ -539,10 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (slot.teacherName) {
                                     metaParts.push(slot.teacherName);
                                 }
-                                if (slot.room) {
-                                    metaParts.push(slot.room);
-                                }
-                                meta.textContent = metaParts.join(' • ') || 'Enseignant et salle à préciser';
+                                meta.textContent = metaParts.join(' • ') || 'Enseignant à préciser';
                             }
 
                             const actions = document.createElement('div');
@@ -559,7 +551,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 slotForm.elements.type.value = slot.type || 'course';
                                 slotForm.elements.subject.value = slot.subjectId || '';
                                 slotForm.elements.teacher.value = slot.teacherId || '';
-                                slotForm.elements.room.value = slot.room || '';
                                 slotIdInput.value = slot.id;
                                 submitButton.textContent = 'Mettre à jour';
                                 slotForm.dataset.mode = 'edit';
@@ -657,7 +648,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     subjectName: subjectData?.name || '',
                     teacherId: teacherValue || null,
                     teacherName: teacherData?.name || '',
-                    room: slotForm.elements.room.value,
                     color: subjectData?.color || '',
                 };
             };
@@ -825,10 +815,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (slot.teacherName) {
                                     metaParts.push(slot.teacherName);
                                 }
-                                if (slot.room) {
-                                    metaParts.push(slot.room);
-                                }
-                                meta.textContent = metaParts.join(' • ') || 'Enseignant et salle à préciser';
+                                meta.textContent = metaParts.join(' • ') || 'Enseignant à préciser';
                             }
 
                             card.appendChild(title);
