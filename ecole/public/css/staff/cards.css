@@ -34,6 +34,10 @@
     border-radius: 16px;
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
     margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .search-box {
@@ -43,6 +47,7 @@
     background: #f3f6fb;
     border-radius: 12px;
     padding: 10px 14px;
+    flex: 1 1 260px;
 }
 
 .search-box input {
@@ -62,6 +67,43 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
+}
+
+.staff-tabs {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.staff-tab {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.staff-tab.is-active {
+    background: #4f46e5;
+    color: #fff;
+    box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2);
+}
+
+.staff-tab:hover {
+    transform: translateY(-1px);
+}
+
+.staff-panel {
+    display: none;
+}
+
+.staff-panel.is-active {
+    display: block;
 }
 
 .staff-card {
@@ -169,6 +211,12 @@
 .secondary-button {
     background: #eef2ff;
     color: #4338ca;
+}
+
+.secondary-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
 }
 
 .primary-button:hover,

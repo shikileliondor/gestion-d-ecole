@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('[data-teacher-search]');
     const cards = document.querySelectorAll('[data-teacher-card]');
+    const tabButtons = document.querySelectorAll('[data-teacher-tab]');
+    const panels = document.querySelectorAll('[data-teacher-panel]');
 
     if (!searchInput) {
         return;
@@ -20,4 +22,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     searchInput.addEventListener('input', filterRows);
+
+    const setActivePanel = (panelName) => {
+        panels.forEach((panel) => {
+            panel.classList.toggle('is-active', panel.dataset.teacherPanel === panelName);
+        });
+        tabButtons.forEach((button) => {
+            const isActive = button.dataset.teacherTab === panelName;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+    };
+
+    tabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            if (button.dataset.teacherTab) {
+                setActivePanel(button.dataset.teacherTab);
+                filterRows();
+            }
+        });
+    });
 });
