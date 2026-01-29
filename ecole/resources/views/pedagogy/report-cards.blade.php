@@ -61,6 +61,13 @@
                                 </a>
                             @endif
                             @if ($selectedClassId && $selectedPeriodId)
+                                <form method="POST" action="{{ route('pedagogy.report-cards.email', ['class' => $selectedClassId, 'period' => $selectedPeriodId]) }}" data-async-form>
+                                    @csrf
+                                    <input type="hidden" name="academic_year_id" value="{{ $selectedAcademicYearId }}">
+                                    <button type="submit" class="secondary-button">Envoyer par email</button>
+                                </form>
+                            @endif
+                            @if ($selectedClassId && $selectedPeriodId)
                                 <form method="POST" action="{{ route('pedagogy.report-cards.lock') }}" data-async-form data-lock-toggle>
                                     @csrf
                                     <input type="hidden" name="academic_year_id" value="{{ $selectedAcademicYearId }}">
@@ -100,6 +107,41 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div class="mt-6 space-y-4">
+                            @foreach ($reportData as $index => $entry)
+                                <div class="rounded-lg border border-slate-200 p-4">
+                                    <div class="flex flex-wrap items-center justify-between gap-4">
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-slate-700">
+                                                {{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}
+                                            </h4>
+                                            <p class="text-xs text-slate-400">Rang : {{ $index + 1 }} • Moyenne générale : {{ $entry['average'] ?? '—' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 overflow-x-auto">
+                                        <table class="min-w-full text-left text-sm">
+                                            <thead>
+                                                <tr class="border-b border-slate-200 text-xs uppercase text-slate-400">
+                                                    <th class="px-4 py-2">Matière</th>
+                                                    <th class="px-4 py-2">Coefficient</th>
+                                                    <th class="px-4 py-2">Moyenne</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($entry['subjects'] as $subject)
+                                                    <tr class="border-b border-slate-100">
+                                                        <td class="px-4 py-2 text-sm text-slate-700">{{ $subject['subject'] }}</td>
+                                                        <td class="px-4 py-2 text-sm text-slate-500">{{ $subject['coefficient'] ?? '—' }}</td>
+                                                        <td class="px-4 py-2 text-sm font-semibold text-slate-800">{{ $subject['average'] ?? '—' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

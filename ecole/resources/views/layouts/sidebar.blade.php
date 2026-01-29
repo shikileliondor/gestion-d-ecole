@@ -91,6 +91,21 @@
                             'active' => 'pedagogy.report-cards.index',
                         ],
                         [
+                            'label' => 'Classements',
+                            'route' => 'pedagogy.leaderboard.index',
+                            'active' => 'pedagogy.leaderboard.index',
+                        ],
+                        [
+                            'label' => 'Tableau de bord résultats',
+                            'route' => 'pedagogy.results-dashboard.index',
+                            'active' => 'pedagogy.results-dashboard.index',
+                        ],
+                        [
+                            'label' => 'Bulletins élèves',
+                            'route' => 'pedagogy.student-report-cards.index',
+                            'active' => 'pedagogy.student-report-cards.index',
+                        ],
+                        [
                             'label' => 'Relevés de notes',
                             'route' => 'pedagogy.transcripts.index',
                             'active' => 'pedagogy.transcripts.index',
