@@ -14,11 +14,14 @@ class Note extends Model
     protected $fillable = [
         'evaluation_id',
         'inscription_id',
+        'periode_id',
         'valeur',
         'statut',
+        'date_saisie',
     ];
 
     protected $casts = [
         'valeur' => 'decimal:2',
+        'date_saisie' => 'date',
     ];
 }

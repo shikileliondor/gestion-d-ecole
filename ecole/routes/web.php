@@ -188,10 +188,17 @@ Route::middleware('auth')->group(function () {
             ->name('report-cards.lock');
         Route::get('/report-cards/{class}/{period}/pdf', [PedagogyController::class, 'reportCardsPdf'])
             ->name('report-cards.pdf');
+        Route::post('/report-cards/{class}/{period}/email', [PedagogyController::class, 'reportCardsEmail'])
+            ->name('report-cards.email');
 
         Route::get('/transcripts', [PedagogyController::class, 'transcripts'])->name('transcripts.index');
         Route::get('/transcripts/{student}/pdf', [PedagogyController::class, 'transcriptPdf'])
             ->name('transcripts.pdf');
+
+        Route::get('/leaderboard', [PedagogyController::class, 'leaderboard'])->name('leaderboard.index');
+        Route::get('/results-dashboard', [PedagogyController::class, 'resultsDashboard'])->name('results-dashboard.index');
+        Route::get('/student-report-cards', [PedagogyController::class, 'studentReportCards'])
+            ->name('student-report-cards.index');
     });
 });
 

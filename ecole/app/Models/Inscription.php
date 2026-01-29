@@ -28,4 +28,9 @@ class Inscription extends Model
     {
         return $this->belongsTo(Classe::class);
     }
+
+    public function eleve(): BelongsTo
+    {
+        return $this->belongsTo(Eleve::class);
+    }
 }

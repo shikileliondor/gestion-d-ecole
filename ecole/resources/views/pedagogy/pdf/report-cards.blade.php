@@ -31,5 +31,28 @@
             @endforeach
         </tbody>
     </table>
+
+    @foreach ($reportData as $index => $entry)
+        <h2 style="font-size: 14px; margin-top: 18px;">{{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}</h2>
+        <p>Rang : {{ $index + 1 }} | Moyenne générale : {{ $entry['average'] ?? '—' }}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Matière</th>
+                    <th>Coefficient</th>
+                    <th>Moyenne</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($entry['subjects'] as $subject)
+                    <tr>
+                        <td>{{ $subject['subject'] }}</td>
+                        <td>{{ $subject['coefficient'] ?? '—' }}</td>
+                        <td>{{ $subject['average'] ?? '—' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endforeach
 </body>
 </html>

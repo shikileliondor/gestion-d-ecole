@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-800">Saisie des notes</h2>
-                <p class="text-sm text-gray-500">Saisissez les notes par évaluation avec contrôle du barème.</p>
+                <p class="text-sm text-gray-500">Saisissez les notes par évaluation avec contrôle du barème et calculs automatiques.</p>
             </div>
         </div>
     </x-slot>
@@ -59,7 +59,7 @@
                 <div class="border-b border-slate-200 px-5 py-4">
                     <h3 class="text-base font-semibold text-slate-800">Tableau de saisie</h3>
                     @if ($selectedEvaluation)
-                        <p class="text-sm text-slate-500">Barème : {{ $selectedEvaluation->note_sur }} • Statut : {{ $selectedEvaluation->statut }}</p>
+                        <p class="text-sm text-slate-500">Barème : {{ $selectedEvaluation->note_sur }} • Statut : {{ $selectedEvaluation->statut }} • Saisie en masse activée.</p>
                     @endif
                 </div>
                 <div class="px-5 py-4">
@@ -80,21 +80,25 @@
                             <div class="overflow-x-auto">
                                 <table class="min-w-full text-left text-sm">
                                     <thead>
-                                        <tr class="border-b border-slate-200 text-xs uppercase text-slate-400">
-                                            <th class="px-4 py-3">Élève</th>
-                                            <th class="px-4 py-3">Note</th>
-                                            <th class="px-4 py-3">Statut</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($students as $inscription)
-                                            @php
-                                                $note = $notes->get($inscription->id);
-                                                $student = $inscription->eleve;
-                                            @endphp
-                                            <tr class="border-b border-slate-100">
-                                                <td class="px-4 py-3 text-sm font-semibold text-slate-800">
-                                                    {{ $student?->nom }} {{ $student?->prenoms }}
+                                    <tr class="border-b border-slate-200 text-xs uppercase text-slate-400">
+                                        <th class="px-4 py-3">Élève</th>
+                                        <th class="px-4 py-3">Note</th>
+                                        <th class="px-4 py-3">Statut</th>
+                                        <th class="px-4 py-3">Moyenne matière</th>
+                                        <th class="px-4 py-3">Moyenne générale</th>
+                                        <th class="px-4 py-3">Date saisie</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($students as $inscription)
+                                        @php
+                                            $note = $notes->get($inscription->id);
+                                            $student = $inscription->eleve;
+                                            $insight = $studentInsights->get($inscription->id);
+                                        @endphp
+                                        <tr class="border-b border-slate-100">
+                                            <td class="px-4 py-3 text-sm font-semibold text-slate-800">
+                                                {{ $student?->nom }} {{ $student?->prenoms }}
                                                 </td>
                                                 <td class="px-4 py-3">
                                                     <input
@@ -114,6 +118,15 @@
                                                         <option value="EXC" @selected($note?->statut === 'EXC')>EXC</option>
                                                         <option value="DISP" @selected($note?->statut === 'DISP')>DISP</option>
                                                     </select>
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">
+                                                    {{ $insight['subject_average'] ?? '—' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">
+                                                    {{ $insight['general_average'] ?? '—' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-xs text-slate-400">
+                                                    {{ $note?->date_saisie?->format('d/m/Y') ?? '—' }}
                                                 </td>
                                             </tr>
                                         @endforeach

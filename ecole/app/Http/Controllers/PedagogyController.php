@@ -6,6 +6,7 @@ use App\Models\AffectationEnseignant;
 use App\Models\AnneeScolaire;
 use App\Models\Classe;
 use App\Models\Eleve;
+use App\Models\EleveContact;
 use App\Models\Enseignant;
 use App\Models\Evaluation;
 use App\Models\Inscription;
@@ -22,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class PedagogyController extends Controller
@@ -445,6 +447,7 @@ class PedagogyController extends Controller
 
         $students = collect();
         $notes = collect();
+        $studentInsights = collect();
 
         if ($selectedEvaluation) {
             $students = Inscription::query()
@@ -461,6 +464,8 @@ class PedagogyController extends Controller
                 ->where('evaluation_id', $selectedEvaluation->id)
                 ->get()
                 ->keyBy('inscription_id');
+
+            $studentInsights = $this->buildGradeInsights($selectedEvaluation, $students);
         }
 
         return view('pedagogy.grades', [
@@ -474,6 +479,7 @@ class PedagogyController extends Controller
             'selectedEvaluation' => $selectedEvaluation,
             'students' => $students,
             'notes' => $notes,
+            'studentInsights' => $studentInsights,
         ]);
     }
 
@@ -503,6 +509,8 @@ class PedagogyController extends Controller
             'notes.*.statut' => ['nullable', 'in:ABS,EXC,DISP'],
         ]);
 
+        $entryDate = now()->toDateString();
+
         foreach ($data['notes'] as $inscriptionId => $entry) {
             $noteValue = $entry['valeur'] ?? null;
             $status = $entry['statut'] ?? null;
@@ -523,6 +531,8 @@ class PedagogyController extends Controller
             ], [
                 'valeur' => $noteValue ?? 0,
                 'statut' => $status,
+                'periode_id' => $evaluation->periode_id,
+                'date_saisie' => $entryDate,
             ]);
         }
 
@@ -611,6 +621,63 @@ class PedagogyController extends Controller
         return $pdf->download("bulletins-{$class->nom}-{$period->libelle}.pdf");
     }
 
+    public function reportCardsEmail(Request $request, Classe $class, Periode $period): JsonResponse|RedirectResponse
+    {
+        $data = $request->validate([
+            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
+        ]);
+
+        $reportData = $this->buildReportCardData($data['academic_year_id'], $class->id, $period->id);
+
+        $sent = 0;
+        $missing = 0;
+
+        foreach ($reportData as $index => $entry) {
+            $student = $entry['student'];
+            if (! $student) {
+                $missing++;
+                continue;
+            }
+
+            $contact = EleveContact::query()->where('eleve_id', $student->id)->first();
+            $email = $contact?->email;
+
+            if (! $email) {
+                $missing++;
+                continue;
+            }
+
+            $pdf = Pdf::loadView('pedagogy.pdf.report-card-student', [
+                'class' => $class,
+                'period' => $period,
+                'entry' => $entry,
+                'rank' => $index + 1,
+            ]);
+
+            Mail::send([], [], function ($message) use ($email, $student, $class, $period, $pdf) {
+                $message->to($email)
+                    ->subject("Bulletin {$student->nom} {$student->prenoms} - {$class->nom} ({$period->libelle})")
+                    ->setBody('Veuillez trouver ci-joint le bulletin de notes.', 'text/plain')
+                    ->attachData($pdf->output(), "bulletin-{$student->nom}-{$student->prenoms}.pdf");
+            });
+
+            $sent++;
+        }
+
+        $message = "Bulletins envoyés : {$sent}.";
+        if ($missing > 0) {
+            $message .= " {$missing} élève(s) sans email configuré.";
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('status', $message);
+    }
+
     public function transcripts(Request $request): View
     {
         $academicYears = $this->academicYears();
@@ -651,6 +718,155 @@ class PedagogyController extends Controller
         ]);
 
         return $pdf->download("releve-{$student->nom}-{$student->prenoms}.pdf");
+    }
+
+    public function studentReportCards(Request $request): View
+    {
+        $academicYears = $this->academicYears();
+        $periods = $this->periods();
+        $students = Eleve::query()->orderBy('nom')->orderBy('prenoms')->get();
+
+        $selectedAcademicYearId = (int) ($request->input('academic_year_id') ?? ($academicYears->first()?->id ?? 0));
+        $selectedStudentId = (int) ($request->input('student_id') ?? 0);
+        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+
+        $reportData = collect();
+
+        if ($selectedStudentId && $selectedPeriodId) {
+            $reportData = $this->buildStudentReportCardData($selectedAcademicYearId, $selectedStudentId, $selectedPeriodId);
+        }
+
+        return view('pedagogy.student-report-cards', [
+            'academicYears' => $academicYears,
+            'periods' => $periods,
+            'students' => $students,
+            'selectedAcademicYearId' => $selectedAcademicYearId,
+            'selectedStudentId' => $selectedStudentId,
+            'selectedPeriodId' => $selectedPeriodId,
+            'reportData' => $reportData,
+        ]);
+    }
+
+    public function leaderboard(Request $request): View
+    {
+        $academicYears = $this->academicYears();
+        $classes = $this->classes();
+        $periods = $this->periods();
+        $subjects = $this->subjectsList();
+
+        $selectedAcademicYearId = (int) ($request->input('academic_year_id') ?? ($academicYears->first()?->id ?? 0));
+        $selectedClassId = (int) ($request->input('class_id') ?? 0);
+        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
+
+        $data = collect();
+        $rankingMode = $selectedSubjectId ? 'subject' : 'general';
+
+        if ($selectedClassId && $selectedPeriodId) {
+            $data = $selectedSubjectId
+                ? $this->buildSubjectRankingData($selectedAcademicYearId, $selectedClassId, $selectedPeriodId, $selectedSubjectId)
+                : $this->buildReportCardData($selectedAcademicYearId, $selectedClassId, $selectedPeriodId);
+        }
+
+        return view('pedagogy.leaderboard', [
+            'academicYears' => $academicYears,
+            'classes' => $classes,
+            'periods' => $periods,
+            'subjects' => $subjects,
+            'selectedAcademicYearId' => $selectedAcademicYearId,
+            'selectedClassId' => $selectedClassId,
+            'selectedPeriodId' => $selectedPeriodId,
+            'selectedSubjectId' => $selectedSubjectId,
+            'rankingMode' => $rankingMode,
+            'rankingData' => $data,
+        ]);
+    }
+
+    public function resultsDashboard(Request $request): View
+    {
+        $academicYears = $this->academicYears();
+        $classes = $this->classes();
+        $periods = $this->periods();
+        $subjects = $this->subjectsList();
+
+        $selectedAcademicYearId = (int) ($request->input('academic_year_id') ?? ($academicYears->first()?->id ?? 0));
+        $selectedClassId = (int) ($request->input('class_id') ?? 0);
+        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
+        $search = $request->string('q')->trim()->toString();
+
+        $studentsQuery = Inscription::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->when($selectedClassId, fn ($query, $classId) => $query->where('classe_id', $classId));
+
+        if ($search !== '') {
+            $studentsQuery->where(function ($query) use ($search) {
+                $query->whereHas('eleve', function ($builder) use ($search) {
+                    $builder->where('nom', 'like', "%{$search}%")
+                        ->orWhere('prenoms', 'like', "%{$search}%")
+                        ->orWhere('matricule', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $students = $studentsQuery
+            ->get()
+            ->map(function (Inscription $inscription) {
+                $inscription->setRelation('eleve', Eleve::query()->find($inscription->eleve_id));
+                return $inscription;
+            });
+
+        $periodIdForScores = $selectedPeriodId ?: ($periods->first()?->id ?? 0);
+        $evaluationQuery = Evaluation::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->when($selectedClassId, fn ($query, $classId) => $query->where('classe_id', $classId))
+            ->when($periodIdForScores, fn ($query, $periodId) => $query->where('periode_id', $periodId))
+            ->when($selectedSubjectId, fn ($query, $subjectId) => $query->where('matiere_id', $subjectId))
+            ->where('statut', '!=', 'BROUILLON');
+
+        $evaluations = $evaluationQuery->get();
+        $notes = Note::query()
+            ->whereIn('evaluation_id', $evaluations->pluck('id'))
+            ->get();
+
+        $scorecards = $selectedClassId && $periodIdForScores
+            ? $this->buildStudentScorecards(
+                $students,
+                $evaluations,
+                $notes,
+                $selectedAcademicYearId,
+                $selectedClassId,
+                $selectedSubjectId ?: null
+            )
+            : collect();
+
+        $dashboardStats = [
+            'student_count' => $students->count(),
+            'evaluation_count' => $evaluations->count(),
+            'average' => $scorecards->count() ? round($scorecards->avg('average'), 2) : null,
+        ];
+
+        $subjectAverages = $this->buildSubjectAverages(
+            $selectedAcademicYearId,
+            $selectedClassId,
+            $periodIdForScores,
+            $selectedSubjectId ?: null
+        );
+
+        return view('pedagogy.results-dashboard', [
+            'academicYears' => $academicYears,
+            'classes' => $classes,
+            'periods' => $periods,
+            'subjects' => $subjects,
+            'selectedAcademicYearId' => $selectedAcademicYearId,
+            'selectedClassId' => $selectedClassId,
+            'selectedPeriodId' => $selectedPeriodId,
+            'selectedSubjectId' => $selectedSubjectId,
+            'search' => $search,
+            'scorecards' => $scorecards,
+            'dashboardStats' => $dashboardStats,
+            'subjectAverages' => $subjectAverages,
+        ]);
     }
 
     private function academicYears()
@@ -995,5 +1211,222 @@ class PedagogyController extends Controller
         }
 
         return collect($data);
+    }
+
+    private function buildGradeInsights(Evaluation $evaluation, $students)
+    {
+        $evaluations = Evaluation::query()
+            ->where('annee_scolaire_id', $evaluation->annee_scolaire_id)
+            ->where('classe_id', $evaluation->classe_id)
+            ->where('periode_id', $evaluation->periode_id)
+            ->where('statut', '!=', 'BROUILLON')
+            ->get();
+
+        $notes = Note::query()
+            ->whereIn('evaluation_id', $evaluations->pluck('id'))
+            ->whereNull('statut')
+            ->get();
+
+        $programmeRows = ProgrammeClasse::query()
+            ->where('annee_scolaire_id', $evaluation->annee_scolaire_id)
+            ->where('classe_id', $evaluation->classe_id)
+            ->get();
+
+        return $students->mapWithKeys(function (Inscription $inscription) use ($evaluation, $notes, $evaluations, $programmeRows) {
+            $subjectEvaluations = $evaluations->where('matiere_id', $evaluation->matiere_id);
+            $subjectNotes = $notes->whereIn('evaluation_id', $subjectEvaluations->pluck('id'))
+                ->where('inscription_id', $inscription->id);
+
+            $subjectAverage = $subjectNotes->count() ? round($subjectNotes->avg('valeur'), 2) : null;
+
+            $totalPoints = 0;
+            $totalSubjects = 0;
+
+            foreach ($programmeRows as $programme) {
+                $programmeEvaluations = $evaluations->where('matiere_id', $programme->matiere_id);
+                $programmeNotes = $notes->whereIn('evaluation_id', $programmeEvaluations->pluck('id'))
+                    ->where('inscription_id', $inscription->id);
+
+                if ($programmeNotes->count() > 0) {
+                    $totalPoints += $programmeNotes->avg('valeur');
+                    $totalSubjects += 1;
+                }
+            }
+
+            $generalAverage = $totalSubjects > 0 ? round($totalPoints / $totalSubjects, 2) : null;
+
+            return [
+                $inscription->id => [
+                    'subject_average' => $subjectAverage,
+                    'general_average' => $generalAverage,
+                ],
+            ];
+        });
+    }
+
+    private function buildStudentReportCardData(int $academicYearId, int $studentId, int $periodId)
+    {
+        $inscriptions = Inscription::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('eleve_id', $studentId)
+            ->get();
+
+        $results = [];
+
+        foreach ($inscriptions as $inscription) {
+            $classe = Classe::query()->find($inscription->classe_id);
+            if (! $classe) {
+                continue;
+            }
+
+            $reportCards = $this->buildReportCardData($academicYearId, $classe->id, $periodId);
+            $index = $reportCards->search(function ($entry) use ($studentId) {
+                return $entry['student']?->id === $studentId;
+            });
+
+            if ($index === false) {
+                continue;
+            }
+
+            $entry = $reportCards->get($index);
+
+            $results[] = [
+                'class' => $classe,
+                'rank' => $index + 1,
+                'average' => $entry['average'] ?? null,
+                'subjects' => $entry['subjects'] ?? [],
+            ];
+        }
+
+        return collect($results);
+    }
+
+    private function buildSubjectRankingData(int $academicYearId, int $classId, int $periodId, int $subjectId)
+    {
+        $evaluations = Evaluation::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('classe_id', $classId)
+            ->where('periode_id', $periodId)
+            ->where('matiere_id', $subjectId)
+            ->where('statut', '!=', 'BROUILLON')
+            ->get();
+
+        $notes = Note::query()
+            ->whereIn('evaluation_id', $evaluations->pluck('id'))
+            ->whereNull('statut')
+            ->get();
+
+        $students = Inscription::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('classe_id', $classId)
+            ->get()
+            ->map(function (Inscription $inscription) {
+                $inscription->setRelation('eleve', Eleve::query()->find($inscription->eleve_id));
+                return $inscription;
+            });
+
+        $subject = Matiere::query()->find($subjectId);
+
+        $ranking = $students->map(function (Inscription $inscription) use ($notes, $evaluations, $subject) {
+            $studentNotes = $notes->where('inscription_id', $inscription->id);
+            $average = $studentNotes->count() ? round($studentNotes->avg('valeur'), 2) : null;
+
+            return [
+                'student' => $inscription->eleve,
+                'average' => $average,
+                'subject' => $subject?->nom ?? 'Matière',
+            ];
+        });
+
+        return $ranking->sortByDesc(fn ($entry) => $entry['average'] ?? -1)->values();
+    }
+
+    private function buildStudentScorecards($students, $evaluations, $notes, int $academicYearId, int $classId, ?int $subjectId = null)
+    {
+        $programmeRows = ProgrammeClasse::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('classe_id', $classId)
+            ->when($subjectId, fn ($query, $id) => $query->where('matiere_id', $id))
+            ->get();
+
+        $subjects = Matiere::query()
+            ->whereIn('id', $programmeRows->pluck('matiere_id'))
+            ->get()
+            ->keyBy('id');
+
+        return $students->map(function (Inscription $inscription) use ($programmeRows, $subjects, $evaluations, $notes) {
+            $subjectScores = [];
+            $totalPoints = 0;
+            $totalSubjects = 0;
+
+            foreach ($programmeRows as $programme) {
+                $subjectEvaluations = $evaluations->where('matiere_id', $programme->matiere_id);
+                $subjectNotes = $notes->whereIn('evaluation_id', $subjectEvaluations->pluck('id'))
+                    ->where('inscription_id', $inscription->id)
+                    ->whereNull('statut');
+
+                $average = $subjectNotes->count() ? round($subjectNotes->avg('valeur'), 2) : null;
+
+                if ($average !== null) {
+                    $totalPoints += $average;
+                    $totalSubjects += 1;
+                }
+
+                $subjectScores[] = [
+                    'subject' => $subjects->get($programme->matiere_id)?->nom ?? 'Matière',
+                    'average' => $average,
+                ];
+            }
+
+            $generalAverage = $totalSubjects > 0 ? round($totalPoints / $totalSubjects, 2) : null;
+
+            return [
+                'student' => $inscription->eleve,
+                'subjects' => $subjectScores,
+                'average' => $generalAverage,
+            ];
+        });
+    }
+
+    private function buildSubjectAverages(int $academicYearId, int $classId, int $periodId, ?int $subjectId = null)
+    {
+        if (! $classId || ! $periodId) {
+            return collect();
+        }
+
+        $programmeRows = ProgrammeClasse::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('classe_id', $classId)
+            ->when($subjectId, fn ($query, $id) => $query->where('matiere_id', $id))
+            ->get();
+
+        $subjects = Matiere::query()
+            ->whereIn('id', $programmeRows->pluck('matiere_id'))
+            ->get()
+            ->keyBy('id');
+
+        $evaluations = Evaluation::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('classe_id', $classId)
+            ->where('periode_id', $periodId)
+            ->when($subjectId, fn ($query, $id) => $query->where('matiere_id', $id))
+            ->where('statut', '!=', 'BROUILLON')
+            ->get();
+
+        $notes = Note::query()
+            ->whereIn('evaluation_id', $evaluations->pluck('id'))
+            ->whereNull('statut')
+            ->get();
+
+        return $programmeRows->map(function (ProgrammeClasse $programme) use ($subjects, $evaluations, $notes) {
+            $subjectEvaluations = $evaluations->where('matiere_id', $programme->matiere_id);
+            $subjectNotes = $notes->whereIn('evaluation_id', $subjectEvaluations->pluck('id'));
+            $average = $subjectNotes->count() ? round($subjectNotes->avg('valeur'), 2) : null;
+
+            return [
+                'subject' => $subjects->get($programme->matiere_id)?->nom ?? 'Matière',
+                'average' => $average,
+            ];
+        });
     }
 }
