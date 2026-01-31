@@ -86,7 +86,12 @@ class StudentController extends Controller
                 $annee->setAttribute('name', $annee->libelle);
             });
 
-        return view('students.create', compact('classes', 'academicYears'));
+        $activeAcademicYear = $this->activeAcademicYear();
+        if ($activeAcademicYear) {
+            $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
+        }
+
+        return view('students.create', compact('classes', 'academicYears', 'activeAcademicYear'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -106,7 +111,7 @@ class StudentController extends Controller
             'enrollment_date' => ['nullable', 'date'],
             'status' => ['nullable', 'in:active,suspended,transferred,graduated,inactive'],
             'class_id' => ['required', 'exists:classes,id'],
-            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
+            'academic_year_id' => ['nullable', 'exists:annees_scolaires,id'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
@@ -149,7 +154,15 @@ class StudentController extends Controller
 
         $data = $validator->validate();
 
-        DB::transaction(function () use ($data) {
+        $academicYearId = $this->resolveAcademicYearId($data['academic_year_id'] ?? null);
+
+        if (! $academicYearId) {
+            return back()->withErrors([
+                'academic_year_id' => "Aucune année scolaire active n'est disponible.",
+            ]);
+        }
+
+        DB::transaction(function () use ($data, $academicYearId) {
             $matricule = app(MatriculeService::class)->generateForStudent($data['enrollment_date'] ?? null);
             $prenoms = trim($data['first_name'] . ' ' . ($data['middle_name'] ?? ''));
 
@@ -164,7 +177,7 @@ class StudentController extends Controller
             ]);
 
             Inscription::create([
-                'annee_scolaire_id' => $data['academic_year_id'],
+                'annee_scolaire_id' => $academicYearId,
                 'eleve_id' => $eleve->id,
                 'classe_id' => $data['class_id'],
                 'date_inscription' => $data['enrollment_date'] ?? now()->toDateString(),

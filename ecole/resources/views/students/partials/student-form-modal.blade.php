@@ -135,14 +135,23 @@
                             </div>
                             <div class="form-field">
                                 <label for="academic_year_id">Année scolaire *</label>
-                                <select id="academic_year_id" name="academic_year_id" required>
-                                    <option value="">Sélectionner une année</option>
-                                    @foreach ($academicYears as $academicYear)
-                                        <option value="{{ $academicYear->id }}" @selected(old('academic_year_id') == $academicYear->id)>
-                                            {{ $academicYear->name }}
+                                @if (! empty($activeAcademicYear))
+                                    <select id="academic_year_id" name="academic_year_id" disabled>
+                                        <option value="{{ $activeAcademicYear->id }}" selected>
+                                            {{ $activeAcademicYear->name ?? $activeAcademicYear->libelle }}
                                         </option>
-                                    @endforeach
-                                </select>
+                                    </select>
+                                    <input type="hidden" name="academic_year_id" value="{{ $activeAcademicYear->id }}">
+                                @else
+                                    <select id="academic_year_id" name="academic_year_id" required>
+                                        <option value="">Sélectionner une année</option>
+                                        @foreach ($academicYears as $academicYear)
+                                            <option value="{{ $academicYear->id }}" @selected(old('academic_year_id') == $academicYear->id)>
+                                                {{ $academicYear->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
                             </div>
                             <div class="form-field">
                                 <label for="enrollment_date">Date d'inscription</label>
