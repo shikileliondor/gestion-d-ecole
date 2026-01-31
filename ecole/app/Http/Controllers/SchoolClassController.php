@@ -33,7 +33,7 @@ class SchoolClassController extends Controller
             ->get()
             ->each(fn (AnneeScolaire $annee) => $annee->setAttribute('name', $annee->libelle));
 
-        $selectedAcademicYearId = $request->input('academic_year_id');
+        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id'));
         $selectedLevelId = $request->input('level_id');
         $selectedSerieId = $request->input('serie_id');
 

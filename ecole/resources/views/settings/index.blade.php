@@ -159,6 +159,7 @@
                         <div class="mt-8 grid gap-6 lg:grid-cols-2">
                             <form method="post" action="{{ route('settings.periods.store') }}" class="rounded-xl border border-gray-200 bg-gray-50 p-4">
                                 @csrf
+                                <input type="hidden" name="academic_year_id" value="{{ $selectedAcademicYear?->id }}">
                                 <div class="flex items-start justify-between">
                                     <div>
                                         <h4 class="text-base font-semibold text-gray-800">Périodes scolaires</h4>
@@ -171,6 +172,43 @@
                                         <option value="TRIMESTRE" @selected(old('period_type', $activePeriodType) === 'TRIMESTRE')>Trimestres (1, 2, 3)</option>
                                         <option value="SEMESTRE" @selected(old('period_type', $activePeriodType) === 'SEMESTRE')>Semestres (1, 2)</option>
                                     </select>
+                                </div>
+                                @php
+                                    $periodsByOrder = $periods->keyBy('ordre');
+                                @endphp
+                                <div class="mt-4 space-y-4 text-sm text-gray-700">
+                                    <label class="block text-xs font-semibold text-gray-500">Calendrier des périodes</label>
+                                    @foreach ($periodTemplates as $template)
+                                        @php
+                                            $period = $periodsByOrder->get($template['ordre']);
+                                        @endphp
+                                        <div class="grid gap-3 md:grid-cols-3">
+                                            <div class="md:col-span-1">
+                                                <p class="text-sm font-semibold text-gray-700">{{ $template['libelle'] }}</p>
+                                                <input type="hidden" name="periods[{{ $template['ordre'] }}][ordre]" value="{{ $template['ordre'] }}">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-500">Début</label>
+                                                <input
+                                                    type="date"
+                                                    name="periods[{{ $template['ordre'] }}][start_date]"
+                                                    value="{{ old("periods.{$template['ordre']}.start_date", $period?->date_debut?->toDateString()) }}"
+                                                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                                    required
+                                                >
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-500">Fin</label>
+                                                <input
+                                                    type="date"
+                                                    name="periods[{{ $template['ordre'] }}][end_date]"
+                                                    value="{{ old("periods.{$template['ordre']}.end_date", $period?->date_fin?->toDateString()) }}"
+                                                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                                    required
+                                                >
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                                 <button class="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
                                     Enregistrer les périodes
@@ -189,7 +227,12 @@
                                         <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2">
                                             <div>
                                                 <p class="font-medium text-gray-800">{{ $period->libelle }}</p>
-                                                <p class="text-xs text-gray-500">{{ ucfirst(strtolower($period->type)) }}</p>
+                                                <p class="text-xs text-gray-500">
+                                                    {{ ucfirst(strtolower($period->type)) }}
+                                                    @if ($period->date_debut && $period->date_fin)
+                                                        • {{ $period->date_debut->format('d/m/Y') }} → {{ $period->date_fin->format('d/m/Y') }}
+                                                    @endif
+                                                </p>
                                             </div>
                                             <span class="text-xs font-semibold {{ $period->actif ? 'text-emerald-600' : 'text-gray-400' }}">
                                                 {{ $period->actif ? 'Actif' : 'Désactivé' }}

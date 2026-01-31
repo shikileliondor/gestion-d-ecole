@@ -17,6 +17,7 @@
     @include('students.partials.student-form-modal', [
         'classes' => $classes,
         'academicYears' => $academicYears,
+        'activeAcademicYear' => $activeAcademicYear,
         'isOpen' => true,
     ])
 

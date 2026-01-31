@@ -31,7 +31,7 @@ class SettingsController extends Controller
             ->each(fn (AnneeScolaire $annee) => $this->hydrateAcademicYear($annee));
 
         $selectedAcademicYear = $academicYears
-            ->firstWhere('id', $request->integer('academic_year_id'))
+            ->firstWhere('id', $this->resolveAcademicYearId($request->integer('academic_year_id')))
             ?? $academicYears->first();
 
         $terms = collect();
@@ -71,7 +71,10 @@ class SettingsController extends Controller
         $periods = Periode::query()
             ->orderBy('ordre')
             ->get();
-        $activePeriodType = $periods->firstWhere('actif', true)?->type;
+        $periodsByAcademicYear = $selectedAcademicYear
+            ? $periods->where('annee_scolaire_id', $selectedAcademicYear->id)
+            : collect();
+        $activePeriodType = $periodsByAcademicYear->firstWhere('actif', true)?->type;
 
         if ($selectedAcademicYear) {
             $fees = $this->buildFees($selectedAcademicYear->id);
@@ -99,8 +102,9 @@ class SettingsController extends Controller
             'paymentModes' => $paymentModes,
             'schoolSettings' => $schoolSettings,
             'documents' => $this->buildDocuments($schoolSettings),
-            'periods' => $periods,
+            'periods' => $periodsByAcademicYear,
             'activePeriodType' => $activePeriodType,
+            'periodTemplates' => $this->periodTemplates($activePeriodType ?? 'TRIMESTRE'),
             'coefficientAcademicYearId' => $coefficientAcademicYearId,
             'officialCoefficients' => $officialCoefficients,
         ]);
@@ -189,27 +193,64 @@ class SettingsController extends Controller
     public function storePeriods(Request $request): RedirectResponse
     {
         $data = $request->validate([
+            'academic_year_id' => ['nullable', 'exists:annees_scolaires,id'],
             'period_type' => ['required', 'in:TRIMESTRE,SEMESTRE'],
+            'periods' => ['required', 'array'],
+            'periods.*.start_date' => ['required', 'date'],
+            'periods.*.end_date' => ['required', 'date'],
         ]);
 
+        $academicYearId = $this->resolveAcademicYearId($data['academic_year_id'] ?? null);
+        $academicYear = $academicYearId
+            ? AnneeScolaire::query()->find($academicYearId)
+            : null;
+
+        if (! $academicYear) {
+            return back()->withErrors([
+                'period_type' => "Aucune année scolaire active n'est disponible.",
+            ]);
+        }
+
         $type = $data['period_type'];
-        $templates = $type === 'TRIMESTRE'
-            ? [
-                ['ordre' => 1, 'libelle' => 'Trimestre 1'],
-                ['ordre' => 2, 'libelle' => 'Trimestre 2'],
-                ['ordre' => 3, 'libelle' => 'Trimestre 3'],
-            ]
-            : [
-                ['ordre' => 1, 'libelle' => 'Semestre 1'],
-                ['ordre' => 2, 'libelle' => 'Semestre 2'],
-            ];
+        $templates = $this->periodTemplates($type);
+        $periodPayloads = collect($data['periods'])
+            ->keyBy('ordre');
+
+        $validator = Validator::make([], []);
+        $validator->after(function ($validator) use ($templates, $periodPayloads, $academicYear) {
+            foreach ($templates as $template) {
+                $payload = $periodPayloads->get($template['ordre'], []);
+                $startDate = data_get($payload, 'start_date');
+                $endDate = data_get($payload, 'end_date');
+
+                if ($startDate && $endDate && $endDate < $startDate) {
+                    $validator->errors()->add("periods.{$template['ordre']}.end_date", 'La date de fin doit être postérieure à la date de début.');
+                }
+
+                if ($startDate && ($startDate < $academicYear->date_debut || $startDate > $academicYear->date_fin)) {
+                    $validator->errors()->add("periods.{$template['ordre']}.start_date", "La date doit se situer dans l'année scolaire.");
+                }
+
+                if ($endDate && ($endDate < $academicYear->date_debut || $endDate > $academicYear->date_fin)) {
+                    $validator->errors()->add("periods.{$template['ordre']}.end_date", "La date doit se situer dans l'année scolaire.");
+                }
+            }
+        });
+
+        $validator->validate();
 
         $activeIds = [];
 
         foreach ($templates as $template) {
+            $payload = $periodPayloads->get($template['ordre'], []);
             $period = Periode::query()->updateOrCreate(
-                ['type' => $type, 'ordre' => $template['ordre']],
-                ['libelle' => $template['libelle'], 'actif' => true],
+                ['type' => $type, 'ordre' => $template['ordre'], 'annee_scolaire_id' => $academicYear->id],
+                [
+                    'libelle' => $template['libelle'],
+                    'actif' => true,
+                    'date_debut' => $payload['start_date'] ?? null,
+                    'date_fin' => $payload['end_date'] ?? null,
+                ],
             );
 
             $activeIds[] = $period->id;
@@ -217,10 +258,12 @@ class SettingsController extends Controller
 
         Periode::query()
             ->where('type', $type)
+            ->where('annee_scolaire_id', $academicYear->id)
             ->whereNotIn('id', $activeIds)
             ->update(['actif' => false]);
 
         Periode::query()
+            ->where('annee_scolaire_id', $academicYear->id)
             ->where('type', '!=', $type)
             ->update(['actif' => false]);
 
@@ -699,6 +742,20 @@ class SettingsController extends Controller
             str_contains($value, 'annu') => 'ANNUEL',
             default => 'UNIQUE',
         };
+    }
+
+    private function periodTemplates(string $type): array
+    {
+        return $type === 'TRIMESTRE'
+            ? [
+                ['ordre' => 1, 'libelle' => 'Trimestre 1'],
+                ['ordre' => 2, 'libelle' => 'Trimestre 2'],
+                ['ordre' => 3, 'libelle' => 'Trimestre 3'],
+            ]
+            : [
+                ['ordre' => 1, 'libelle' => 'Semestre 1'],
+                ['ordre' => 2, 'libelle' => 'Semestre 2'],
+            ];
     }
 
     private function buildDocuments(?ParametreEcole $settings): Collection
