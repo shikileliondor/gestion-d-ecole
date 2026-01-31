@@ -53,6 +53,72 @@
             ],
         ],
         [
+            'id' => 'notes-resultats',
+            'label' => 'Notes & Résultats',
+            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5l7.5 4.125L12 12.75 4.5 8.625 12 4.5z" /><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 8.625V15.75L12 19.5l7.5-3.75V8.625" />',
+            'children' => [
+                [
+                    'label' => 'Tableau de bord',
+                    'route' => 'pedagogy.results-dashboard.index',
+                    'active' => 'pedagogy.results-dashboard.index',
+                ],
+                [
+                    'label' => 'Vue graphique globale des résultats',
+                    'route' => 'pedagogy.results-analytics.index',
+                    'active' => 'pedagogy.results-analytics.index',
+                ],
+                [
+                    'label' => 'Évaluations',
+                    'children' => [
+                        [
+                            'label' => 'Nouvelle évaluation',
+                            'url' => route('pedagogy.evaluations.index', ['create' => 1]),
+                        ],
+                        [
+                            'label' => 'Historique des évaluations',
+                            'route' => 'pedagogy.evaluations.index',
+                            'active' => 'pedagogy.evaluations.index',
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Saisie des notes',
+                    'route' => 'pedagogy.grades.index',
+                    'active' => 'pedagogy.grades.index',
+                ],
+                [
+                    'label' => 'Résultats',
+                    'children' => [
+                        [
+                            'label' => 'Classements',
+                            'route' => 'pedagogy.leaderboard.index',
+                            'active' => 'pedagogy.leaderboard.index',
+                        ],
+                        [
+                            'label' => 'Calcul des moyennes',
+                            'route' => 'pedagogy.report-cards.index',
+                            'active' => 'pedagogy.report-cards.index',
+                        ],
+                    ],
+                ],
+                [
+                    'label' => 'Documents',
+                    'children' => [
+                        [
+                            'label' => 'Bulletins',
+                            'route' => 'pedagogy.student-report-cards.index',
+                            'active' => 'pedagogy.student-report-cards.index',
+                        ],
+                        [
+                            'label' => 'Relevés de notes',
+                            'route' => 'pedagogy.transcripts.index',
+                            'active' => 'pedagogy.transcripts.index',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+        [
             'id' => 'pedagogie',
             'label' => 'Pédagogie',
             'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5l7.5 4.125L12 12.75 4.5 8.625 12 4.5z" /><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 8.625V15.75L12 19.5l7.5-3.75V8.625" />',
@@ -69,46 +135,6 @@
                             'label' => 'Classes',
                             'route' => 'classes.index',
                             'active' => 'classes.index',
-                        ],
-                    ],
-                ],
-                [
-                    'label' => 'Notes & Bulletins',
-                    'children' => [
-                        [
-                            'label' => 'Évaluations',
-                            'route' => 'pedagogy.evaluations.index',
-                            'active' => 'pedagogy.evaluations.index',
-                        ],
-                        [
-                            'label' => 'Saisie des notes',
-                            'route' => 'pedagogy.grades.index',
-                            'active' => 'pedagogy.grades.index',
-                        ],
-                        [
-                            'label' => 'Bulletins / Classements',
-                            'route' => 'pedagogy.report-cards.index',
-                            'active' => 'pedagogy.report-cards.index',
-                        ],
-                        [
-                            'label' => 'Classements',
-                            'route' => 'pedagogy.leaderboard.index',
-                            'active' => 'pedagogy.leaderboard.index',
-                        ],
-                        [
-                            'label' => 'Tableau de bord résultats',
-                            'route' => 'pedagogy.results-dashboard.index',
-                            'active' => 'pedagogy.results-dashboard.index',
-                        ],
-                        [
-                            'label' => 'Bulletins élèves',
-                            'route' => 'pedagogy.student-report-cards.index',
-                            'active' => 'pedagogy.student-report-cards.index',
-                        ],
-                        [
-                            'label' => 'Relevés de notes',
-                            'route' => 'pedagogy.transcripts.index',
-                            'active' => 'pedagogy.transcripts.index',
                         ],
                     ],
                 ],

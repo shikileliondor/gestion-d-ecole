@@ -4,8 +4,8 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h2 class="text-xl font-semibold text-gray-800">Bulletins / Classements</h2>
-                <p class="text-sm text-gray-500">Générez les bulletins par classe et période avec coefficients officiels.</p>
+                <h2 class="text-xl font-semibold text-gray-800">Calcul des moyennes &amp; classements</h2>
+                <p class="text-sm text-gray-500">Calculez les moyennes basées sur les évaluations validées et verrouillez la période.</p>
             </div>
         </div>
     </x-slot>

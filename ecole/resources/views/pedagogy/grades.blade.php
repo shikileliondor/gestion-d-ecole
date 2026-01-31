@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-800">Saisie des notes</h2>
-                <p class="text-sm text-gray-500">Saisissez les notes par évaluation avec contrôle du barème et calculs automatiques.</p>
+                <p class="text-sm text-gray-500">Saisie guidée par évaluation, avec blocage automatique après validation.</p>
             </div>
         </div>
     </x-slot>
@@ -59,7 +59,7 @@
                 <div class="border-b border-slate-200 px-5 py-4">
                     <h3 class="text-base font-semibold text-slate-800">Tableau de saisie</h3>
                     @if ($selectedEvaluation)
-                        <p class="text-sm text-slate-500">Barème : {{ $selectedEvaluation->note_sur }} • Statut : {{ $selectedEvaluation->statut }} • Saisie en masse activée.</p>
+                        <p class="text-sm text-slate-500">Barème : {{ $selectedEvaluation->note_sur }} • Statut : {{ $selectedEvaluation->statut }} • Modifications autorisées tant que l’évaluation est ouverte.</p>
                     @endif
                 </div>
                 <div class="px-5 py-4">
@@ -67,7 +67,7 @@
                     <div class="alert error mb-4" data-feedback-error hidden></div>
 
                     @if (! $selectedEvaluation)
-                        <div class="text-sm text-slate-500">Sélectionnez une évaluation pour afficher les élèves.</div>
+                        <div class="text-sm text-slate-500">Sélectionnez une évaluation pour charger automatiquement les élèves.</div>
                     @elseif ($selectedEvaluation->statut === 'CLOTUREE')
                         <div class="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
                             Cette évaluation est clôturée. La saisie est bloquée.

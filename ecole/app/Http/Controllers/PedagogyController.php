@@ -843,6 +843,62 @@ class PedagogyController extends Controller
             'average' => $scorecards->count() ? round($scorecards->avg('average'), 2) : null,
         ];
 
+        $activePeriodId = $selectedPeriodId ?: ($periods->first()?->id ?? 0);
+        $evaluationCounts = Evaluation::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->when($activePeriodId, fn ($query, $periodId) => $query->where('periode_id', $periodId))
+            ->where('statut', '!=', 'BROUILLON')
+            ->select('classe_id', DB::raw('count(*) as total'))
+            ->groupBy('classe_id')
+            ->pluck('total', 'classe_id');
+
+        $classAverages = $classes->map(function (Classe $classe) use ($selectedAcademicYearId, $activePeriodId, $evaluationCounts) {
+            $average = null;
+
+            if ($activePeriodId) {
+                $reportData = $this->buildReportCardData($selectedAcademicYearId, $classe->id, $activePeriodId);
+                $average = $reportData->count() ? round($reportData->avg('average'), 2) : null;
+            }
+
+            return [
+                'id' => $classe->id,
+                'name' => $classe->name,
+                'average' => $average,
+                'evaluation_count' => $evaluationCounts->get($classe->id, 0),
+            ];
+        });
+
+        $averageTrend = collect();
+        if ($selectedClassId) {
+            $averageTrend = $periods->map(function (Periode $period) use ($selectedAcademicYearId, $selectedClassId) {
+                $reportData = $this->buildReportCardData($selectedAcademicYearId, $selectedClassId, $period->id);
+
+                return [
+                    'label' => $period->libelle,
+                    'average' => $reportData->count() ? round($reportData->avg('average'), 2) : null,
+                ];
+            });
+        }
+
+        $topStudents = $scorecards
+            ->filter(fn ($entry) => $entry['average'] !== null)
+            ->sortByDesc('average')
+            ->take(5)
+            ->values();
+
+        $alerts = [];
+        if ($selectedClassId && $activePeriodId) {
+            $lowAverageCount = $scorecards->where('average', '<', 10)->count();
+            $evaluationCount = $evaluationCounts->get($selectedClassId, 0);
+
+            if ($evaluationCount === 0) {
+                $alerts[] = 'Aucune évaluation validée pour la période active.';
+            }
+            if ($lowAverageCount > 0) {
+                $alerts[] = "{$lowAverageCount} élève(s) sous la moyenne.";
+            }
+        }
+
         $subjectAverages = $this->buildSubjectAverages(
             $selectedAcademicYearId,
             $selectedClassId,
@@ -862,7 +918,80 @@ class PedagogyController extends Controller
             'search' => $search,
             'scorecards' => $scorecards,
             'dashboardStats' => $dashboardStats,
+            'classAverages' => $classAverages,
+            'averageTrend' => $averageTrend,
+            'topStudents' => $topStudents,
+            'alerts' => $alerts,
             'subjectAverages' => $subjectAverages,
+        ]);
+    }
+
+    public function resultsAnalytics(Request $request): View
+    {
+        $academicYears = $this->academicYears();
+        $classes = $this->classes();
+        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $periods = $this->periods($selectedAcademicYearId);
+        $selectedClassId = (int) ($request->input('class_id') ?? 0);
+        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $activePeriodId = $selectedPeriodId ?: ($periods->first()?->id ?? 0);
+
+        $evaluationCounts = Evaluation::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->when($activePeriodId, fn ($query, $periodId) => $query->where('periode_id', $periodId))
+            ->where('statut', '!=', 'BROUILLON')
+            ->select('classe_id', DB::raw('count(*) as total'))
+            ->groupBy('classe_id')
+            ->pluck('total', 'classe_id');
+
+        $classAverages = $classes->map(function (Classe $classe) use ($selectedAcademicYearId, $activePeriodId, $evaluationCounts) {
+            $average = null;
+
+            if ($activePeriodId) {
+                $reportData = $this->buildReportCardData($selectedAcademicYearId, $classe->id, $activePeriodId);
+                $average = $reportData->count() ? round($reportData->avg('average'), 2) : null;
+            }
+
+            return [
+                'id' => $classe->id,
+                'name' => $classe->name,
+                'average' => $average,
+                'evaluation_count' => $evaluationCounts->get($classe->id, 0),
+            ];
+        });
+
+        $trendSeries = collect();
+        $topStudents = collect();
+        if ($selectedClassId) {
+            $trendSeries = $periods->map(function (Periode $period) use ($selectedAcademicYearId, $selectedClassId) {
+                $reportData = $this->buildReportCardData($selectedAcademicYearId, $selectedClassId, $period->id);
+
+                return [
+                    'label' => $period->libelle,
+                    'average' => $reportData->count() ? round($reportData->avg('average'), 2) : null,
+                ];
+            });
+
+            if ($activePeriodId) {
+                $reportData = $this->buildReportCardData($selectedAcademicYearId, $selectedClassId, $activePeriodId);
+                $topStudents = $reportData
+                    ->filter(fn ($entry) => $entry['average'] !== null)
+                    ->sortByDesc('average')
+                    ->take(6)
+                    ->values();
+            }
+        }
+
+        return view('pedagogy.results-analytics', [
+            'academicYears' => $academicYears,
+            'classes' => $classes,
+            'periods' => $periods,
+            'selectedAcademicYearId' => $selectedAcademicYearId,
+            'selectedClassId' => $selectedClassId,
+            'selectedPeriodId' => $selectedPeriodId,
+            'classAverages' => $classAverages,
+            'trendSeries' => $trendSeries,
+            'topStudents' => $topStudents,
         ]);
     }
 

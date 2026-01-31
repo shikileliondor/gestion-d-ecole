@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold text-gray-800">Évaluations</h2>
-                <p class="text-sm text-gray-500">Créez, publiez et clôturez les évaluations.</p>
+                <p class="text-sm text-gray-500">Créez des évaluations multiples par classe et suivez l’historique.</p>
             </div>
             <button class="primary-button" type="button" data-modal-open="evaluation-create">+ Nouvelle évaluation</button>
         </div>
@@ -56,6 +56,10 @@
                 </form>
             </div>
 
+            <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-sm">
+                Les évaluations peuvent être modifiées tant qu’elles ne sont pas clôturées. Les notes restent bloquées après validation.
+            </div>
+
             <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 px-5 py-4">
                     <h3 class="text-base font-semibold text-slate-800">Liste des évaluations</h3>
@@ -78,68 +82,85 @@
             <div class="modal__header">
                 <div>
                     <h2>Créer une évaluation</h2>
-                    <p>Les matières proposées doivent être dans le programme de la classe.</p>
+                    <p>Étapes guidées pour définir le contexte et les paramètres.</p>
                 </div>
                 <button class="icon-button" type="button" data-modal-close aria-label="Fermer">✕</button>
             </div>
             <form class="modal__form" method="POST" action="{{ route('pedagogy.evaluations.store') }}" data-async-form data-async-target="[data-evaluations-list]">
                 @csrf
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label>Année scolaire</label>
-                        <select name="academic_year_id" required>
-                            @foreach ($academicYears as $year)
-                                <option value="{{ $year->id }}" @selected($filters['academic_year_id'] === $year->id)>{{ $year->libelle }}</option>
-                            @endforeach
-                        </select>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-700">Étape 1 — Contexte automatique</h3>
+                        <p class="mt-1 text-xs text-slate-500">L’année scolaire et le trimestre actif proviennent des paramètres.</p>
+                        <div class="form-grid mt-4">
+                            <div class="form-field">
+                                <label>Année scolaire</label>
+                                <select name="academic_year_id" required>
+                                    @foreach ($academicYears as $year)
+                                        <option value="{{ $year->id }}" @selected($filters['academic_year_id'] === $year->id)>{{ $year->libelle }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Trimestre actif</label>
+                                <select name="period_id" required>
+                                    @foreach ($periods as $period)
+                                        <option value="{{ $period->id }}" @selected($filters['period_id'] === $period->id)>{{ $period->libelle }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Classe</label>
+                                <select name="class_id" required>
+                                    <option value="">Sélectionner</option>
+                                    @foreach ($classes as $class)
+                                        <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Type d’évaluation</label>
+                                <select name="type" required>
+                                    <option value="DEVOIR">Devoir</option>
+                                    <option value="INTERRO">Interrogation</option>
+                                    <option value="COMPOSITION">Examen</option>
+                                    <option value="ORAL">Oral</option>
+                                    <option value="PRATIQUE">Pratique</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-field">
-                        <label>Classe</label>
-                        <select name="class_id" required>
-                            <option value="">Sélectionner</option>
-                            @foreach ($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>Matière</label>
-                        <select name="subject_id" required>
-                            <option value="">Sélectionner</option>
-                            @foreach ($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>Période</label>
-                        <select name="period_id" required>
-                            @foreach ($periods as $period)
-                                <option value="{{ $period->id }}">{{ $period->libelle }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>Type</label>
-                        <select name="type" required>
-                            <option value="INTERRO">Interrogation</option>
-                            <option value="DEVOIR">Devoir</option>
-                            <option value="COMPOSITION">Composition</option>
-                            <option value="ORAL">Oral</option>
-                            <option value="PRATIQUE">Pratique</option>
-                        </select>
-                    </div>
-                    <div class="form-field">
-                        <label>Date</label>
-                        <input type="date" name="date" required>
-                    </div>
-                    <div class="form-field">
-                        <label>Titre</label>
-                        <input type="text" name="title" placeholder="Ex : Devoir 1">
-                    </div>
-                    <div class="form-field">
-                        <label>Barème</label>
-                        <input type="number" name="scale" min="1" step="0.5" required>
+
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-700">Étape 2 — Paramètres</h3>
+                        <p class="mt-1 text-xs text-slate-500">Créez l’évaluation sans notes. La saisie s’effectue ensuite.</p>
+                        <div class="form-grid mt-4">
+                            <div class="form-field">
+                                <label>Matière</label>
+                                <select name="subject_id" required>
+                                    <option value="">Sélectionner</option>
+                                    @foreach ($subjects as $subject)
+                                        <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Date</label>
+                                <input type="date" name="date" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Barème</label>
+                                <input type="number" name="scale" min="1" step="0.5" placeholder="/20" required>
+                            </div>
+                            <div class="form-field">
+                                <label>Coefficient</label>
+                                <input type="text" value="Automatique" readonly>
+                            </div>
+                            <div class="form-field">
+                                <label>Titre (facultatif)</label>
+                                <input type="text" name="title" placeholder="Ex : Devoir 1">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal__actions">
@@ -206,5 +227,14 @@
     <script src="{{ asset('js/classes/modals.js') }}" defer></script>
     <script src="{{ asset('js/pedagogy/async-actions.js') }}" defer></script>
     <script src="{{ asset('js/pedagogy/evaluations.js') }}" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const createParam = new URLSearchParams(window.location.search).get('create');
+            if (createParam === '1') {
+                const trigger = document.querySelector('[data-modal-open="evaluation-create"]');
+                trigger?.click();
+            }
+        });
+    </script>
     <div data-evaluation-edit-route="{{ route('pedagogy.evaluations.update', ['evaluation' => '__ID__']) }}"></div>
 </x-app-layout>
