@@ -28,7 +28,7 @@
                 [
                     'label' => 'Inscriptions',
                     'route' => 'students.enrollments',
-                    'active' => 'students.enrollments',
+                    'active' => 'students.enrollments*',
                 ],
                 [
                     'label' => 'Réinscriptions',

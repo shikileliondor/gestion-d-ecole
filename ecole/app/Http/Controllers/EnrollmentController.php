@@ -17,6 +17,11 @@ use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
+    public function hub(): View
+    {
+        return view('students.enrollments-hub');
+    }
+
     public function create(): View
     {
         $activeAcademicYear = $this->activeAcademicYear();

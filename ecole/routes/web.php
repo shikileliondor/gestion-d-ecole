@@ -33,8 +33,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/{id}', [StudentController::class, 'show'])
         ->whereNumber('id')
         ->name('students.show');
-    Route::get('/students/enrollments', [EnrollmentController::class, 'create'])
+    Route::get('/students/enrollments', [EnrollmentController::class, 'hub'])
         ->name('students.enrollments');
+    Route::get('/students/enrollments/create', [EnrollmentController::class, 'create'])
+        ->name('students.enrollments.create');
     Route::post('/students/enrollments', [EnrollmentController::class, 'store'])
         ->name('students.enrollments.store');
     Route::get('/students/re-enrollments', [EnrollmentController::class, 'reEnrollments'])
