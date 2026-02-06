@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierEleveController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\PedagogyController;
 use App\Http\Controllers\ProfileController;
@@ -32,10 +33,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/{id}', [StudentController::class, 'show'])
         ->whereNumber('id')
         ->name('students.show');
-    Route::get('/students/enrollments', fn () => view('students.enrollments'))
+    Route::get('/students/enrollments', [EnrollmentController::class, 'create'])
         ->name('students.enrollments');
-    Route::get('/students/re-enrollments', fn () => view('students.re-enrollments'))
+    Route::post('/students/enrollments', [EnrollmentController::class, 'store'])
+        ->name('students.enrollments.store');
+    Route::get('/students/re-enrollments', [EnrollmentController::class, 'reEnrollments'])
         ->name('students.re-enrollments');
+    Route::post('/students/re-enrollments', [EnrollmentController::class, 'storeReEnrollment'])
+        ->name('students.re-enrollments.store');
 
     Route::get('/classes', [SchoolClassController::class, 'index'])->name('classes.index');
     Route::post('/classes', [SchoolClassController::class, 'store'])->name('classes.store');
