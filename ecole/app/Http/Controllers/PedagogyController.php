@@ -1252,6 +1252,7 @@ class PedagogyController extends Controller
                 'student' => $inscription->eleve,
                 'subjects' => $subjectAverages,
                 'average' => $generalAverage,
+                'appreciation' => $this->defaultAppreciation($generalAverage),
             ];
         });
 
@@ -1335,6 +1336,7 @@ class PedagogyController extends Controller
                 'class' => $classe,
                 'subjects' => $subjectRows,
                 'average' => $generalAverage,
+                'appreciation' => $this->defaultAppreciation($generalAverage),
             ];
         }
 
@@ -1422,11 +1424,29 @@ class PedagogyController extends Controller
                 'class' => $classe,
                 'rank' => $index + 1,
                 'average' => $entry['average'] ?? null,
+                'appreciation' => $entry['appreciation'] ?? null,
                 'subjects' => $entry['subjects'] ?? [],
             ];
         }
 
         return collect($results);
+    }
+
+    private function defaultAppreciation(?float $average): ?string
+    {
+        if ($average === null) {
+            return null;
+        }
+
+        return match (true) {
+            $average >= 18 => 'Excellent',
+            $average >= 16 => 'Très bien',
+            $average >= 14 => 'Bien',
+            $average >= 12 => 'Assez bien',
+            $average >= 10 => 'Passable',
+            $average >= 8 => 'Faible',
+            default => 'Insuffisant',
+        };
     }
 
     private function buildSubjectRankingData(int $academicYearId, int $classId, int $periodId, int $subjectId)
