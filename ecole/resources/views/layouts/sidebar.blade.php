@@ -77,83 +77,28 @@
                     'children' => [
                         [
                             'label' => 'Tableau de bord',
-                            'children' => [
-                                [
-                                    'label' => 'Vue synthèse',
-                                    'route' => 'pedagogy.dashboard.index',
-                                    'active' => 'pedagogy.dashboard.index',
-                                ],
-                                [
-                                    'label' => '+ Nouvelle évaluation',
-                                    'route' => 'pedagogy.evaluations.index',
-                                    'active' => 'pedagogy.evaluations.index',
-                                ],
-                            ],
+                            'route' => 'pedagogy.dashboard.index',
+                            'active' => 'pedagogy.dashboard.index',
                         ],
                         [
                             'label' => 'Évaluations',
-                            'children' => [
-                                [
-                                    'label' => 'Liste',
-                                    'route' => 'pedagogy.evaluations.index',
-                                    'active' => 'pedagogy.evaluations.index',
-                                ],
-                                [
-                                    'label' => 'Gestion',
-                                    'route' => 'pedagogy.evaluations.index',
-                                    'active' => 'pedagogy.evaluations.index',
-                                ],
-                            ],
+                            'route' => 'pedagogy.evaluations.index',
+                            'active' => 'pedagogy.evaluations.index',
                         ],
                         [
                             'label' => 'Saisie',
-                            'children' => [
-                                [
-                                    'label' => 'Sélection',
-                                    'route' => 'pedagogy.grades.index',
-                                    'active' => 'pedagogy.grades.index',
-                                ],
-                                [
-                                    'label' => 'Par élève',
-                                    'route' => 'pedagogy.grades.index',
-                                    'active' => 'pedagogy.grades.index',
-                                ],
-                            ],
+                            'route' => 'pedagogy.grades.index',
+                            'active' => 'pedagogy.grades.index',
                         ],
                         [
                             'label' => 'Résultats',
-                            'children' => [
-                                [
-                                    'label' => 'Classements',
-                                    'route' => 'pedagogy.leaderboard.index',
-                                    'active' => 'pedagogy.leaderboard.index',
-                                ],
-                                [
-                                    'label' => 'Analyses',
-                                    'route' => 'pedagogy.results-dashboard.index',
-                                    'active' => 'pedagogy.results-dashboard.index',
-                                ],
-                            ],
+                            'route' => 'pedagogy.results-dashboard.index',
+                            'active' => 'pedagogy.results-dashboard.index',
                         ],
                         [
                             'label' => 'Documents',
-                            'children' => [
-                                [
-                                    'label' => 'Bulletins classe',
-                                    'route' => 'pedagogy.report-cards.index',
-                                    'active' => 'pedagogy.report-cards.index',
-                                ],
-                                [
-                                    'label' => 'Bulletins élèves',
-                                    'route' => 'pedagogy.student-report-cards.index',
-                                    'active' => 'pedagogy.student-report-cards.index',
-                                ],
-                                [
-                                    'label' => 'Relevés de notes',
-                                    'route' => 'pedagogy.transcripts.index',
-                                    'active' => 'pedagogy.transcripts.index',
-                                ],
-                            ],
+                            'route' => 'pedagogy.report-cards.index',
+                            'active' => 'pedagogy.report-cards.index',
                         ],
                     ],
                 ],
