@@ -148,16 +148,18 @@ class SchoolClassController extends Controller
                 $classe->setRelation('academicYear', $academicYear);
             }
 
+            $coeffKey = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id;
+            $officialCoefficients = $coefficientsByLevel->get($coeffKey, collect())->keyBy('matiere_id');
+
             $assignments = $this->mapProgrammeAssignments(
                 $programmesByClass->get($classe->id, collect()),
                 $assignmentsByClass->get($classe->id, collect()),
+                $officialCoefficients,
                 $enseignantsById,
                 $matieresById
             );
             $classe->setRelation('subjectAssignments', $assignments);
 
-            $coeffKey = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id;
-            $officialCoefficients = $coefficientsByLevel->get($coeffKey, collect())->keyBy('matiere_id');
             $programmeMatieres = $programmesByClass->get($classe->id, collect());
 
             $programmeComplete = $programmeMatieres->isNotEmpty()
@@ -497,18 +499,20 @@ class SchoolClassController extends Controller
     private function mapProgrammeAssignments(
         Collection $programmes,
         Collection $assignments,
+        Collection $coefficientsBySubject,
         Collection $enseignantsById,
         Collection $matieresById
     ): Collection {
         $assignmentsBySubject = $assignments->groupBy('matiere_id');
 
-        return $programmes->map(function (ProgrammeClasse $programme) use ($assignmentsBySubject, $enseignantsById, $matieresById) {
+        return $programmes->map(function (ProgrammeClasse $programme) use ($assignmentsBySubject, $coefficientsBySubject, $enseignantsById, $matieresById) {
             $subject = $matieresById->get($programme->matiere_id);
             $assignmentsForSubject = $assignmentsBySubject->get($programme->matiere_id, collect());
             $teacherCollection = $assignmentsForSubject
                 ->map(fn (AffectationEnseignant $assignment) => $enseignantsById->get($assignment->enseignant_id))
                 ->filter();
             $teacher = $teacherCollection->first();
+            $coefficient = optional($coefficientsBySubject->get($programme->matiere_id))->coefficient;
 
             $subjectData = $subject ? (object) [
                 'id' => $subject->id,
@@ -531,7 +535,7 @@ class SchoolClassController extends Controller
                     'last_name' => $enseignant->nom,
                     'first_name' => $enseignant->prenoms,
                 ]),
-                'coefficient' => 1,
+                'coefficient' => $coefficient !== null ? (float) $coefficient : null,
                 'color' => null,
             ];
         });
@@ -562,7 +566,17 @@ class SchoolClassController extends Controller
         $matieresById = Matiere::query()->orderBy('nom')->get()->keyBy('id');
         $assignments = AffectationEnseignant::query()->where('classe_id', $classe->id)->get();
         $programmes = ProgrammeClasse::query()->where('classe_id', $classe->id)->get();
-        $classe->setRelation('subjectAssignments', $this->mapProgrammeAssignments($programmes, $assignments, $enseignantsById, $matieresById));
+        $coefficients = ProgrammeMatiere::query()
+            ->where('annee_scolaire_id', $classe->annee_scolaire_id)
+            ->where('niveau_id', $classe->niveau_id)
+            ->when(
+                $classe->serie_id,
+                fn ($query) => $query->where('serie_id', $classe->serie_id),
+                fn ($query) => $query->whereNull('serie_id')
+            )
+            ->get()
+            ->keyBy('matiere_id');
+        $classe->setRelation('subjectAssignments', $this->mapProgrammeAssignments($programmes, $assignments, $coefficients, $enseignantsById, $matieresById));
 
         return $classe;
     }
