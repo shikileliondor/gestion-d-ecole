@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DossierEleveController;
 use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\PedagogyController;
 use App\Http\Controllers\ProfileController;
@@ -94,6 +95,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/official-coefficients/copy', [SettingsController::class, 'copyOfficialCoefficients'])
         ->name('settings.coefficients.copy');
     Route::post('/settings/documents', [SettingsController::class, 'updateDocuments'])->name('settings.documents.update');
+
+    Route::get('/tools/dossiers-eleves', [DossierEleveController::class, 'index'])
+        ->name('tools.student-files.index');
 
     Route::prefix('accounting')->name('accounting.')->group(function () {
         Route::get('/dashboard', fn () => view('accounting.dashboard'))->name('dashboard');
