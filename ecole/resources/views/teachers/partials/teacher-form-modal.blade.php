@@ -43,6 +43,12 @@
             </div>
 
             <div class="staff-form__panel is-active" data-form-panel="identity" role="tabpanel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Identité</h3>
+                        <p>Renseignez les informations principales de l'enseignant.</p>
+                    </div>
+                </div>
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="code_enseignant">Code enseignant (auto-généré)</label>
@@ -76,6 +82,12 @@
             </div>
 
             <div class="staff-form__panel" data-form-panel="contact" role="tabpanel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Contacts</h3>
+                        <p>Coordonnées pour joindre rapidement l'enseignant.</p>
+                    </div>
+                </div>
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="telephone_1">Téléphone principal *</label>
@@ -93,15 +105,32 @@
             </div>
 
             <div class="staff-form__panel" data-form-panel="pedagogy" role="tabpanel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Pédagogie</h3>
+                        <p>Choisissez la matière principale ou la spécialité de l'enseignant.</p>
+                    </div>
+                </div>
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="specialite">Spécialité *</label>
-                        <input type="text" id="specialite" name="specialite" value="{{ old('specialite') }}" required>
+                        <select id="specialite" name="specialite" required>
+                            <option value="">Sélectionner</option>
+                            @foreach ($matieres as $matiere)
+                                <option value="{{ $matiere->nom }}" @selected(old('specialite') === $matiere->nom)>{{ $matiere->nom }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
 
             <div class="staff-form__panel" data-form-panel="hr" role="tabpanel">
+                <div class="panel-header">
+                    <div>
+                        <h3>Ressources humaines</h3>
+                        <p>Statut contractuel et période d'activité.</p>
+                    </div>
+                </div>
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="type_enseignant">Type enseignant *</label>
@@ -133,14 +162,31 @@
             </div>
 
             <div class="staff-form__panel" data-form-panel="documents" role="tabpanel">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="documents">Documents (PDF, image, Word)</label>
-                        <input type="file" id="documents" name="documents[]" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" multiple data-documents-input>
-                        <div class="file-list" data-documents-list></div>
-                        <p class="helper-text">Vous pouvez sélectionner plusieurs fichiers.</p>
+                <div class="panel-header panel-header--stacked">
+                    <div>
+                        <h3>Documents</h3>
+                        <p>Ajoutez plusieurs documents en leur donnant un libellé clair.</p>
+                    </div>
+                    <button class="secondary-button" type="button" data-add-document>+ Ajouter un document</button>
+                </div>
+                <div class="documents-stack" data-documents-stack>
+                    <div class="document-row" data-document-row>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label>Libellé</label>
+                                <input type="text" name="documents_labels[]" placeholder="Contrat, diplôme, CV..." value="{{ old('documents_labels.0') }}">
+                            </div>
+                            <div class="form-field">
+                                <label>Fichier</label>
+                                <input type="file" name="documents[]" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="secondary-button is-light" type="button" data-remove-document>Retirer</button>
+                        </div>
                     </div>
                 </div>
+                <p class="helper-text">Formats acceptés : PDF, Word, image. Vous pouvez ajouter plusieurs documents.</p>
             </div>
 
             <div class="form-actions">
