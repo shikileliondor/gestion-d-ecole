@@ -95,6 +95,7 @@
                                         <th class="px-4 py-3">Rang</th>
                                         <th class="px-4 py-3">Élève</th>
                                         <th class="px-4 py-3">Moyenne générale</th>
+                                        <th class="px-4 py-3">Appréciation</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -103,6 +104,7 @@
                                             <td class="px-4 py-3 font-semibold text-slate-800">{{ $index + 1 }}</td>
                                             <td class="px-4 py-3 text-sm text-slate-700">{{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}</td>
                                             <td class="px-4 py-3 text-sm font-semibold text-slate-800">{{ $entry['average'] ?? '—' }}</td>
+                                            <td class="px-4 py-3 text-sm text-slate-600">{{ $entry['appreciation'] ?? '—' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -117,7 +119,9 @@
                                             <h4 class="text-sm font-semibold text-slate-700">
                                                 {{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}
                                             </h4>
-                                            <p class="text-xs text-slate-400">Rang : {{ $index + 1 }} • Moyenne générale : {{ $entry['average'] ?? '—' }}</p>
+                                            <p class="text-xs text-slate-400">
+                                                Rang : {{ $index + 1 }} • Moyenne générale : {{ $entry['average'] ?? '—' }} • Appréciation : {{ $entry['appreciation'] ?? '—' }}
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="mt-4 overflow-x-auto">

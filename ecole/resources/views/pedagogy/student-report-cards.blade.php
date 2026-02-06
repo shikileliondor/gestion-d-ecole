@@ -55,7 +55,9 @@
                         @foreach ($reportData as $entry)
                             <div class="mb-6 rounded-lg border border-slate-200 p-4">
                                 <h4 class="text-sm font-semibold text-slate-700">Classe : {{ $entry['class']->nom }}</h4>
-                                <p class="text-xs text-slate-400">Rang : {{ $entry['rank'] }} • Moyenne générale : {{ $entry['average'] ?? '—' }}</p>
+                                <p class="text-xs text-slate-400">
+                                    Rang : {{ $entry['rank'] }} • Moyenne générale : {{ $entry['average'] ?? '—' }} • Appréciation : {{ $entry['appreciation'] ?? '—' }}
+                                </p>
                                 <div class="mt-4 overflow-x-auto">
                                     <table class="min-w-full text-left text-sm">
                                         <thead>

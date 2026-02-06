@@ -19,6 +19,7 @@
                 <th>Rang</th>
                 <th>Élève</th>
                 <th>Moyenne générale</th>
+                <th>Appréciation</th>
             </tr>
         </thead>
         <tbody>
@@ -27,6 +28,7 @@
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}</td>
                     <td>{{ $entry['average'] ?? '—' }}</td>
+                    <td>{{ $entry['appreciation'] ?? '—' }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -34,7 +36,7 @@
 
     @foreach ($reportData as $index => $entry)
         <h2 style="font-size: 14px; margin-top: 18px;">{{ $entry['student']?->nom }} {{ $entry['student']?->prenoms }}</h2>
-        <p>Rang : {{ $index + 1 }} | Moyenne générale : {{ $entry['average'] ?? '—' }}</p>
+        <p>Rang : {{ $index + 1 }} | Moyenne générale : {{ $entry['average'] ?? '—' }} | Appréciation : {{ $entry['appreciation'] ?? '—' }}</p>
         <table>
             <thead>
                 <tr>
