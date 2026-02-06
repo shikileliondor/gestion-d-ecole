@@ -149,8 +149,17 @@ class SchoolClassController extends Controller
                 $classe->setRelation('academicYear', $academicYear);
             }
 
-            $coeffKey = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id;
-            $officialCoefficients = $coefficientsByLevel->get($coeffKey, collect())->keyBy('matiere_id');
+            $coeffKeyDefault = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-';
+            $coeffKeySpecific = $classe->serie_id
+                ? $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id
+                : null;
+            $coefficientsForClass = $coefficientsByLevel->get($coeffKeyDefault, collect());
+            if ($coeffKeySpecific) {
+                $coefficientsForClass = $coefficientsForClass->concat(
+                    $coefficientsByLevel->get($coeffKeySpecific, collect())
+                );
+            }
+            $officialCoefficients = $this->selectCoefficientsForSerie($coefficientsForClass, $classe->serie_id);
 
             $assignments = $this->mapProgrammeAssignments(
                 $programmesByClass->get($classe->id, collect()),
@@ -505,13 +514,33 @@ class SchoolClassController extends Controller
             ->where('niveau_id', $classe->niveau_id)
             ->when(
                 $classe->serie_id,
-                fn ($query) => $query->where('serie_id', $classe->serie_id),
+                fn ($query) => $query->where(function ($subQuery) use ($classe) {
+                    $subQuery->where('serie_id', $classe->serie_id)
+                        ->orWhereNull('serie_id');
+                }),
                 fn ($query) => $query->whereNull('serie_id')
             )
-            ->get()
-            ->keyBy('matiere_id');
+            ->get();
+        $coefficients = $this->selectCoefficientsForSerie($coefficients, $classe->serie_id);
         $classe->setRelation('subjectAssignments', $this->mapProgrammeAssignments($programmes, $assignments, $coefficients, $enseignantsById, $matieresById));
 
         return $classe;
+    }
+
+    private function selectCoefficientsForSerie(Collection $coefficients, ?int $serieId): Collection
+    {
+        return $coefficients
+            ->groupBy('matiere_id')
+            ->map(function (Collection $items) use ($serieId) {
+                if ($serieId) {
+                    return $items->firstWhere('serie_id', $serieId)
+                        ?? $items->firstWhere('serie_id', null)
+                        ?? $items->first();
+                }
+
+                return $items->firstWhere('serie_id', null)
+                    ?? $items->first();
+            })
+            ->filter();
     }
 }
