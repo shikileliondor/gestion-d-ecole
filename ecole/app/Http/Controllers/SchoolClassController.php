@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 
@@ -209,8 +210,8 @@ class SchoolClassController extends Controller
         $data = $request->validateWithBag('classForm', [
             'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
             'name' => ['required', 'string', 'max:255'],
-            'level' => ['required', 'string', 'max:50'],
-            'series' => ['nullable', 'string', 'max:50'],
+            'level' => ['required', 'string', 'max:50', Rule::exists('niveaux', 'code')],
+            'series' => ['nullable', 'string', 'max:50', Rule::exists('series', 'code')],
             'capacity' => ['nullable', 'integer', 'min:1'],
             'status' => ['nullable', 'in:active,inactive'],
         ]);
@@ -267,32 +268,13 @@ class SchoolClassController extends Controller
 
     public function storeSubject(Request $request, MatiereService $service): JsonResponse|RedirectResponse
     {
-        $data = $request->validateWithBag('subjectForm', [
-            'code' => ['required', 'string', 'max:50', 'unique:matieres,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'status' => ['nullable', 'in:active,inactive'],
-        ]);
-
-        $subject = $service->create([
-            'code' => $data['code'],
-            'nom' => $data['name'],
-            'actif' => ($data['status'] ?? 'active') === 'active',
-        ]);
+        $message = 'Les matières se configurent uniquement dans Paramètres.';
 
         if ($request->expectsJson()) {
-            $subject->setAttribute('name', $subject->nom);
-            $subject->setAttribute('level', $subject->niveau_id ? optional(Niveau::query()->find($subject->niveau_id))->code : null);
-            $subject->setAttribute('series', $subject->serie_id ? optional(Serie::query()->find($subject->serie_id))->code : null);
-
-            $optionHtml = view('classes.partials.subject-option', ['subject' => $subject])->render();
-
-            return response()->json([
-                'message' => 'La matière a été créée avec succès.',
-                'subject_option_html' => $optionHtml,
-            ]);
+            return response()->json(['message' => $message], 403);
         }
 
-        return back()->with('status', 'La matière a été créée avec succès.');
+        return back()->withErrors(['subject' => $message], 'subjectForm');
     }
 
     public function assignSubject(Request $request, Classe $class): JsonResponse|RedirectResponse
@@ -398,36 +380,13 @@ class SchoolClassController extends Controller
 
     public function storeSeries(Request $request): JsonResponse|RedirectResponse
     {
-        $data = $request->validate([
-            'series_list' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $series = collect(explode(',', $data['series_list'] ?? ''))
-            ->map(fn ($value) => trim($value))
-            ->filter()
-            ->unique()
-            ->values();
-
-        foreach ($series as $code) {
-            Serie::query()->firstOrCreate(
-                ['code' => $code],
-                ['libelle' => null, 'actif' => true]
-            );
-        }
+        $message = 'Les séries se configurent uniquement dans Paramètres.';
 
         if ($request->expectsJson()) {
-            $seriesOptions = Serie::query()
-                ->orderBy('code')
-                ->pluck('code');
-            $seriesOptionsHtml = view('classes.partials.series-options', ['seriesOptions' => $seriesOptions])->render();
-
-            return response()->json([
-                'message' => 'Les séries ont été mises à jour.',
-                'series_options_html' => $seriesOptionsHtml,
-            ]);
+            return response()->json(['message' => $message], 403);
         }
 
-        return back()->with('status', 'Les séries ont été mises à jour.');
+        return back()->withErrors(['series' => $message], 'classForm');
     }
 
     private function resolveNiveauId(?string $level): int
@@ -435,30 +394,12 @@ class SchoolClassController extends Controller
         $level = $level ? trim($level) : null;
 
         if (! $level) {
-            $niveau = Niveau::query()->first();
-            if ($niveau) {
-                return $niveau->id;
-            }
-
-            return Niveau::create([
-                'code' => 'N/A',
-                'ordre' => 1,
-                'actif' => true,
-            ])->id;
+            return (int) Niveau::query()->value('id');
         }
 
-        $niveau = Niveau::query()->where('code', $level)->first();
-        if ($niveau) {
-            return $niveau->id;
-        }
-
-        $nextOrder = (int) Niveau::query()->max('ordre');
-
-        return Niveau::create([
-            'code' => $level,
-            'ordre' => $nextOrder + 1,
-            'actif' => true,
-        ])->id;
+        return (int) Niveau::query()
+            ->where('code', $level)
+            ->value('id');
     }
 
     private function resolveSerieId(?string $series): ?int
@@ -469,16 +410,9 @@ class SchoolClassController extends Controller
             return null;
         }
 
-        $serie = Serie::query()->where('code', $series)->first();
-        if ($serie) {
-            return $serie->id;
-        }
-
-        return Serie::create([
-            'code' => $series,
-            'libelle' => null,
-            'actif' => true,
-        ])->id;
+        return Serie::query()
+            ->where('code', $series)
+            ->value('id');
     }
 
     private function mapAssignmentStatus(?string $status): string
