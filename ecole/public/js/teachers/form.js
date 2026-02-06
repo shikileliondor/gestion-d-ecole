@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoInput = document.querySelector('[data-photo-input]');
     const photoPreviewWrapper = document.querySelector('[data-photo-preview-wrapper]');
     const photoPreview = document.querySelector('[data-photo-preview]');
-    const documentsInput = document.querySelector('[data-documents-input]');
-    const documentsList = document.querySelector('[data-documents-list]');
+    const documentsStack = document.querySelector('[data-documents-stack]');
+    const addDocumentButton = document.querySelector('[data-add-document]');
 
     const updatePhotoPreview = (file) => {
         if (!photoPreviewWrapper || !photoPreview) {
@@ -22,27 +22,64 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     };
 
-    const updateDocumentsList = (files) => {
-        if (!documentsList) {
+    const attachRemoveHandler = (row) => {
+        const removeButton = row.querySelector('[data-remove-document]');
+        if (!removeButton) {
             return;
         }
-        documentsList.innerHTML = '';
-        if (!files || files.length === 0) {
-            return;
-        }
-        Array.from(files).forEach((file) => {
-            const item = document.createElement('div');
-            item.className = 'file-list__item';
-            item.textContent = file.name;
-            documentsList.appendChild(item);
+        removeButton.addEventListener('click', () => {
+            if (!documentsStack) {
+                return;
+            }
+            const rows = documentsStack.querySelectorAll('[data-document-row]');
+            if (rows.length <= 1) {
+                row.querySelectorAll('input').forEach((input) => {
+                    input.value = '';
+                });
+                return;
+            }
+            row.remove();
         });
+    };
+
+    const createDocumentRow = () => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'document-row';
+        wrapper.dataset.documentRow = 'true';
+        wrapper.innerHTML = `
+            <div class="form-grid">
+                <div class="form-field">
+                    <label>Libellé</label>
+                    <input type="text" name="documents_labels[]" placeholder="Contrat, diplôme, CV...">
+                </div>
+                <div class="form-field">
+                    <label>Fichier</label>
+                    <input type="file" name="documents[]" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                </div>
+            </div>
+            <div class="document-actions">
+                <button class="secondary-button is-light" type="button" data-remove-document>Retirer</button>
+            </div>
+        `;
+        return wrapper;
     };
 
     photoInput?.addEventListener('change', (event) => {
         updatePhotoPreview(event.target.files?.[0]);
     });
 
-    documentsInput?.addEventListener('change', (event) => {
-        updateDocumentsList(event.target.files);
+    documentsStack?.querySelectorAll('[data-document-row]').forEach((row) => {
+        attachRemoveHandler(row);
+    });
+
+    addDocumentButton?.addEventListener('click', () => {
+        if (!documentsStack) {
+            return;
+        }
+        const newRow = createDocumentRow();
+        documentsStack.appendChild(newRow);
+        attachRemoveHandler(newRow);
+        const input = newRow.querySelector('input[type="text"]');
+        input?.focus();
     });
 });

@@ -271,21 +271,26 @@
     border-bottom: 1px solid var(--border);
     padding-bottom: 12px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .tab-button {
     border: none;
-    background: #f3f4f6;
-    color: var(--text-dark);
-    padding: 10px 16px;
+    background: #f8fafc;
+    color: var(--text-muted);
+    padding: 8px 16px;
     border-radius: 999px;
     font-size: 14px;
     cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
 
 .tab-button.is-active {
     background: rgba(29, 78, 216, 0.12);
     color: var(--primary-dark);
+    border-color: rgba(29, 78, 216, 0.2);
+    box-shadow: 0 6px 16px rgba(29, 78, 216, 0.12);
 }
 
 .staff-modal__panel,
@@ -450,6 +455,11 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 10px;
+    gap: 8px;
+}
+
+.secondary-button.is-light {
+    background: #f9fafb;
 }
 
 .helper-text {
@@ -515,6 +525,31 @@
 .form-alert ul {
     margin: 0;
     padding-left: 18px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.panel-header h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--text-dark);
+}
+
+.panel-header p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.panel-header--stacked {
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 @media (max-width: 768px) {

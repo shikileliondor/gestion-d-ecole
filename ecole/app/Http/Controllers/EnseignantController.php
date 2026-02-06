@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enseignant;
 use App\Models\EnseignantDocument;
+use App\Models\Matiere;
 use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,9 @@ class EnseignantController extends Controller
                 $enseignant->setAttribute('photo_url', $enseignant->photo_path ? Storage::url($enseignant->photo_path) : null);
             });
 
-        return view('teachers.index', compact('enseignants'));
+        $matieres = Matiere::query()->orderBy('nom')->get();
+
+        return view('teachers.index', compact('enseignants', 'matieres'));
     }
 
     public function create(): View
@@ -214,6 +217,8 @@ class EnseignantController extends Controller
             'statut' => ['required', Rule::in(Enseignant::STATUTS)],
             'documents' => ['nullable', 'array'],
             'documents.*' => ['file', 'mimes:pdf,jpeg,jpg,png,doc,docx', 'max:10240'],
+            'documents_labels' => ['nullable', 'array'],
+            'documents_labels.*' => ['nullable', 'string', 'max:255'],
         ]);
 
         return $validator->validate();
@@ -254,16 +259,19 @@ class EnseignantController extends Controller
     private function storeDocuments(Request $request, Enseignant $enseignant): void
     {
         $documents = $request->file('documents', []);
+        $labels = $request->input('documents_labels', []);
         if (!$documents) {
             return;
         }
 
-        foreach ($documents as $document) {
+        foreach ($documents as $index => $document) {
             $path = $document->store('documents/enseignants', 'public');
+            $label = $labels[$index] ?? null;
+            $libelle = $label ? trim($label) : pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME);
 
             $enseignant->documents()->create([
                 'type_document' => 'AUTRE',
-                'libelle' => pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
+                'libelle' => $libelle ?: pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
                 'fichier_url' => $path,
                 'mime_type' => $document->getClientMimeType(),
                 'taille' => $document->getSize(),
