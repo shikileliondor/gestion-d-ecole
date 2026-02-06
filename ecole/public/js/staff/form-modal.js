@@ -73,6 +73,20 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(file);
     };
 
+    const formatFileSize = (size) => {
+        if (!size && size !== 0) {
+            return '';
+        }
+        const units = ['o', 'Ko', 'Mo', 'Go'];
+        let index = 0;
+        let value = size;
+        while (value >= 1024 && index < units.length - 1) {
+            value /= 1024;
+            index += 1;
+        }
+        return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+    };
+
     const updateDocumentsList = (files) => {
         if (!documentsList) {
             return;
@@ -81,10 +95,36 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!files || files.length === 0) {
             return;
         }
-        Array.from(files).forEach((file) => {
+        Array.from(files).forEach((file, index) => {
             const item = document.createElement('div');
             item.className = 'file-list__item';
-            item.textContent = file.name;
+            const details = document.createElement('div');
+            details.className = 'file-list__details';
+            const name = document.createElement('p');
+            name.className = 'file-list__name';
+            name.textContent = file.name;
+            const meta = document.createElement('p');
+            meta.className = 'file-list__meta';
+            meta.textContent = formatFileSize(file.size);
+            details.appendChild(name);
+            details.appendChild(meta);
+
+            const labelWrapper = document.createElement('div');
+            labelWrapper.className = 'file-list__label';
+            const label = document.createElement('label');
+            const inputId = `documents-label-${index}`;
+            label.setAttribute('for', inputId);
+            label.textContent = 'Libellé du document';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'documents_labels[]';
+            input.id = inputId;
+            input.placeholder = 'Ex : Contrat de travail, Diplôme';
+            labelWrapper.appendChild(label);
+            labelWrapper.appendChild(input);
+
+            item.appendChild(details);
+            item.appendChild(labelWrapper);
             documentsList.appendChild(item);
         });
     };

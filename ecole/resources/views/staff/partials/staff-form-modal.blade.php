@@ -37,6 +37,7 @@
             <div class="staff-form__tabs" role="tablist">
                 <button class="tab-button is-active" type="button" data-form-tab="identity" role="tab" aria-selected="true">Identité</button>
                 <button class="tab-button" type="button" data-form-tab="contact" role="tab" aria-selected="false">Contacts</button>
+                <button class="tab-button" type="button" data-form-tab="hr" role="tab" aria-selected="false">RH</button>
                 <button class="tab-button" type="button" data-form-tab="documents" role="tab" aria-selected="false">Documents</button>
             </div>
 
@@ -73,11 +74,56 @@
                 </div>
             </div>
 
+            <div class="staff-form__panel" data-form-panel="hr" role="tabpanel">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="poste">Poste occupé</label>
+                        <input type="text" id="poste" name="poste" value="{{ old('poste') }}" placeholder="Ex : Responsable administratif">
+                    </div>
+                    <div class="form-field">
+                        <label for="categorie_personnel">Catégorie du personnel</label>
+                        <input type="text" id="categorie_personnel" name="categorie_personnel" value="{{ old('categorie_personnel') }}" placeholder="Ex : Administratif, Technique">
+                    </div>
+                    <div class="form-field">
+                        <label for="type_contrat">Type de contrat</label>
+                        <select id="type_contrat" name="type_contrat">
+                            <option value="">Sélectionner</option>
+                            <option value="CDI" @selected(old('type_contrat') === 'CDI')>CDI</option>
+                            <option value="CDD" @selected(old('type_contrat') === 'CDD')>CDD</option>
+                            <option value="Stage" @selected(old('type_contrat') === 'Stage')>Stage</option>
+                            <option value="Consultant" @selected(old('type_contrat') === 'Consultant')>Consultant</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="date_entree">Date d'entrée</label>
+                        <input type="date" id="date_entree" name="date_entree" value="{{ old('date_entree') }}">
+                    </div>
+                    <div class="form-field">
+                        <label for="date_fin_contrat">Date fin de contrat</label>
+                        <input type="date" id="date_fin_contrat" name="date_fin_contrat" value="{{ old('date_fin_contrat') }}">
+                    </div>
+                    <div class="form-field">
+                        <label for="statut_rh">Statut RH</label>
+                        <select id="statut_rh" name="statut_rh">
+                            <option value="">Sélectionner</option>
+                            <option value="ACTIF" @selected(old('statut_rh') === 'ACTIF')>Actif</option>
+                            <option value="SUSPENDU" @selected(old('statut_rh') === 'SUSPENDU')>Suspendu</option>
+                            <option value="FIN_DE_CONTRAT" @selected(old('statut_rh') === 'FIN_DE_CONTRAT')>Fin de contrat</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="numero_cnps">Numéro CNPS</label>
+                        <input type="text" id="numero_cnps" name="numero_cnps" value="{{ old('numero_cnps') }}" placeholder="Ex : 123456789">
+                    </div>
+                </div>
+            </div>
+
             <div class="staff-form__panel" data-form-panel="documents" role="tabpanel">
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="documents">Documents RH (PDF, image, Word)</label>
                         <input type="file" id="documents" name="documents[]" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" multiple data-documents-input>
+                        <p class="helper-text">Ajoutez un libellé pour chaque document afin de mieux les retrouver.</p>
                         <div class="file-list" data-documents-list></div>
                         <p class="helper-text">Vous pouvez sélectionner plusieurs fichiers.</p>
                     </div>
