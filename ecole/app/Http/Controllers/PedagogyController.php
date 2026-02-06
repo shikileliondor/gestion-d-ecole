@@ -52,25 +52,13 @@ class PedagogyController extends Controller
 
     public function updateSubjectStatus(Request $request, Matiere $subject): JsonResponse|RedirectResponse
     {
-        $data = $request->validate([
-            'status' => ['required', 'in:active,inactive'],
-        ]);
-
-        $subject->update([
-            'actif' => $data['status'] === 'active',
-        ]);
+        $message = 'Le statut des matières se gère uniquement dans Paramètres.';
 
         if ($request->expectsJson()) {
-            $rowHtml = view('pedagogy.partials.subject-row', ['subject' => $subject])->render();
-
-            return response()->json([
-                'message' => 'Le statut de la matière a été mis à jour.',
-                'subject_id' => $subject->id,
-                'row_html' => $rowHtml,
-            ]);
+            return response()->json(['message' => $message], 403);
         }
 
-        return back()->with('status', 'Le statut de la matière a été mis à jour.');
+        return back()->withErrors(['status' => $message]);
     }
 
     public function programme(Request $request): View

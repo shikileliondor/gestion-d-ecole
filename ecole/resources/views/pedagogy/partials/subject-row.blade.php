@@ -7,13 +7,8 @@
         </span>
     </td>
     <td class="px-4 py-3 text-right">
-        <form method="POST" action="{{ route('pedagogy.subjects.status', $subject) }}" data-async-form>
-            @csrf
-            @method('PATCH')
-            <input type="hidden" name="status" value="{{ $subject->actif ? 'inactive' : 'active' }}">
-            <button type="submit" class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                {{ $subject->actif ? 'Désactiver' : 'Activer' }}
-            </button>
-        </form>
+        <a href="{{ route('settings.index') }}" class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            Gérer dans Paramètres
+        </a>
     </td>
 </tr>
