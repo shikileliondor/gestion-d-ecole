@@ -20,8 +20,15 @@
             </button>
         </header>
 
-        <form class="staff-form" method="POST" action="{{ route('staff.store') }}" enctype="multipart/form-data">
+        <form
+            class="staff-form"
+            method="POST"
+            action="{{ route('staff.store') }}"
+            data-default-action="{{ route('staff.store') }}"
+            enctype="multipart/form-data"
+        >
             @csrf
+            <input type="hidden" name="_method" value="PUT" data-form-method disabled>
 
             @if ($errors->any())
                 <div class="form-alert">

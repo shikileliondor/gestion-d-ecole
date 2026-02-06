@@ -109,6 +109,7 @@
                             >
                                 Fiche
                             </button>
+                            <a class="secondary-button" href="{{ route('teachers.edit', $enseignant) }}">Modifier</a>
                             <form method="POST" action="{{ route('teachers.archive', $enseignant) }}">
                                 @csrf
                                 @method('PUT')
@@ -183,6 +184,7 @@
                             >
                                 Fiche
                             </button>
+                            <a class="secondary-button" href="{{ route('teachers.edit', $enseignant) }}">Modifier</a>
                             <button class="secondary-button" type="button" disabled>Archivé</button>
                         </div>
                     </article>
