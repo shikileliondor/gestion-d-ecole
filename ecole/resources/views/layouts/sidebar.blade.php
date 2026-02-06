@@ -26,9 +26,14 @@
                     'active' => 'students.index',
                 ],
                 [
-                    'label' => 'Inscriptions / Réinscriptions',
+                    'label' => 'Inscriptions',
                     'route' => 'students.enrollments',
                     'active' => 'students.enrollments',
+                ],
+                [
+                    'label' => 'Réinscriptions',
+                    'route' => 'students.re-enrollments',
+                    'active' => 'students.re-enrollments',
                 ],
                 [
                     'label' => 'Paiements',
