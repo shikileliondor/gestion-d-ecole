@@ -276,12 +276,13 @@ class PedagogyController extends Controller
         $subjects = $this->subjectsList();
         $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
 
         $filters = [
             'academic_year_id' => $selectedAcademicYearId,
             'class_id' => (int) ($request->input('class_id') ?? 0),
             'subject_id' => (int) ($request->input('subject_id') ?? 0),
-            'period_id' => (int) ($request->input('period_id') ?? 0),
+            'period_id' => $selectedPeriodId,
         ];
 
         $evaluations = $this->evaluationQuery($filters)->get();
@@ -434,7 +435,7 @@ class PedagogyController extends Controller
         $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
         $selectedEvaluationId = (int) ($request->input('evaluation_id') ?? 0);
 
         $evaluations = $this->evaluationQuery([
@@ -552,7 +553,7 @@ class PedagogyController extends Controller
         $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
 
         $reportData = collect();
         $lockStatus = null;
@@ -685,7 +686,7 @@ class PedagogyController extends Controller
         $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $selectedStudentId = (int) ($request->input('student_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
 
         $reportData = collect();
 
@@ -707,7 +708,7 @@ class PedagogyController extends Controller
     public function transcriptPdf(Request $request, Eleve $student)
     {
         $academicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
-        $periodId = (int) ($request->input('period_id') ?? 0);
+        $periodId = $this->resolvePeriodId($this->periods($academicYearId), $request->integer('period_id'));
 
         $reportData = $this->buildTranscriptData($academicYearId, $student->id, $periodId);
 
@@ -727,7 +728,7 @@ class PedagogyController extends Controller
         $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $selectedStudentId = (int) ($request->input('student_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
 
         $reportData = collect();
 
@@ -754,7 +755,7 @@ class PedagogyController extends Controller
         $periods = $this->periods($selectedAcademicYearId);
         $subjects = $this->subjectsList();
         $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
         $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
 
         $data = collect();
@@ -788,7 +789,7 @@ class PedagogyController extends Controller
         $periods = $this->periods($selectedAcademicYearId);
         $subjects = $this->subjectsList();
         $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
         $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
         $search = $request->string('q')->trim()->toString();
 
@@ -813,7 +814,7 @@ class PedagogyController extends Controller
                 return $inscription;
             });
 
-        $periodIdForScores = $selectedPeriodId ?: ($periods->first()?->id ?? 0);
+        $periodIdForScores = $selectedPeriodId;
         $evaluationQuery = Evaluation::query()
             ->where('annee_scolaire_id', $selectedAcademicYearId)
             ->when($selectedClassId, fn ($query, $classId) => $query->where('classe_id', $classId))
@@ -875,13 +876,7 @@ class PedagogyController extends Controller
         $periods = $this->periods($selectedAcademicYearId);
         $activePeriodType = $periods->firstWhere('actif', true)?->type;
         $periodOptions = $activePeriodType ? $periods->where('type', $activePeriodType)->values() : $periods;
-        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
-
-        if (! $selectedPeriodId) {
-            $selectedPeriodId = $periodOptions->firstWhere('actif', true)?->id
-                ?? $periodOptions->first()?->id
-                ?? 0;
-        }
+        $selectedPeriodId = $this->resolvePeriodId($periodOptions, $request->integer('period_id'));
 
         $selectedPeriod = $selectedPeriodId ? $periodOptions->firstWhere('id', $selectedPeriodId) : null;
 
@@ -1048,6 +1043,17 @@ class PedagogyController extends Controller
             ->when($academicYearId, fn ($query, $yearId) => $query->where('annee_scolaire_id', $yearId))
             ->orderBy('ordre')
             ->get();
+    }
+
+    private function resolvePeriodId($periods, ?int $requestedId = null): int
+    {
+        if ($requestedId) {
+            return $requestedId;
+        }
+
+        return $periods->firstWhere('actif', true)?->id
+            ?? $periods->first()?->id
+            ?? 0;
     }
 
     private function teacherLoads(int $academicYearId)
