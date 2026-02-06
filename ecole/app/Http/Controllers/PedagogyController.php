@@ -866,6 +866,140 @@ class PedagogyController extends Controller
         ]);
     }
 
+    public function dashboard(Request $request): View
+    {
+        $academicYears = $this->academicYears();
+        $classes = $this->classes();
+        $subjects = $this->subjectsList();
+        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $periods = $this->periods($selectedAcademicYearId);
+        $activePeriodType = $periods->firstWhere('actif', true)?->type;
+        $periodOptions = $activePeriodType ? $periods->where('type', $activePeriodType)->values() : $periods;
+        $selectedPeriodId = (int) ($request->input('period_id') ?? 0);
+
+        if (! $selectedPeriodId) {
+            $selectedPeriodId = $periodOptions->firstWhere('actif', true)?->id
+                ?? $periodOptions->first()?->id
+                ?? 0;
+        }
+
+        $selectedPeriod = $selectedPeriodId ? $periodOptions->firstWhere('id', $selectedPeriodId) : null;
+
+        $evaluations = Evaluation::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->when($selectedPeriodId, fn ($query, $periodId) => $query->where('periode_id', $periodId))
+            ->orderByDesc('date_evaluation')
+            ->get();
+
+        $classesById = $classes->keyBy('id');
+        $subjectsById = $subjects->keyBy('id');
+        $periodsById = $periods->keyBy('id');
+
+        $studentsByClass = Inscription::query()
+            ->where('annee_scolaire_id', $selectedAcademicYearId)
+            ->select('classe_id', DB::raw('count(*) as total'))
+            ->groupBy('classe_id')
+            ->pluck('total', 'classe_id');
+
+        $notesByEvaluation = Note::query()
+            ->whereIn('evaluation_id', $evaluations->pluck('id'))
+            ->select('evaluation_id', DB::raw('count(*) as total'))
+            ->groupBy('evaluation_id')
+            ->pluck('total', 'evaluation_id');
+
+        $pendingEvaluations = $evaluations
+            ->filter(fn (Evaluation $evaluation) => ! in_array($evaluation->statut, ['CLOTUREE', 'BROUILLON'], true))
+            ->map(function (Evaluation $evaluation) use ($classesById, $subjectsById, $periodsById, $studentsByClass, $notesByEvaluation) {
+                $studentsCount = (int) ($studentsByClass[$evaluation->classe_id] ?? 0);
+                $notesCount = (int) ($notesByEvaluation[$evaluation->id] ?? 0);
+                $missingCount = max($studentsCount - $notesCount, 0);
+
+                return [
+                    'evaluation' => $evaluation,
+                    'class' => $classesById->get($evaluation->classe_id),
+                    'subject' => $subjectsById->get($evaluation->matiere_id),
+                    'period' => $periodsById->get($evaluation->periode_id),
+                    'students_count' => $studentsCount,
+                    'missing_count' => $missingCount,
+                ];
+            })
+            ->filter(fn (array $entry) => $entry['missing_count'] > 0)
+            ->values();
+
+        $classesConcerned = $evaluations
+            ->groupBy('classe_id')
+            ->map(function ($items, $classId) use ($classesById, $pendingEvaluations) {
+                $pendingCount = $pendingEvaluations
+                    ->filter(fn (array $entry) => $entry['evaluation']->classe_id === (int) $classId)
+                    ->count();
+
+                return [
+                    'class' => $classesById->get($classId),
+                    'evaluation_count' => $items->count(),
+                    'pending_count' => $pendingCount,
+                ];
+            })
+            ->values();
+
+        $latestEvaluations = $evaluations->take(6)->map(function (Evaluation $evaluation) use ($classesById, $subjectsById, $periodsById) {
+            return [
+                'evaluation' => $evaluation,
+                'class' => $classesById->get($evaluation->classe_id),
+                'subject' => $subjectsById->get($evaluation->matiere_id),
+                'period' => $periodsById->get($evaluation->periode_id),
+            ];
+        });
+
+        $alertThresholdDays = 10;
+        $alerts = collect();
+
+        if ($selectedPeriod?->date_fin) {
+            $daysLeft = now()->diffInDays($selectedPeriod->date_fin, false);
+
+            if ($daysLeft >= 0 && $daysLeft <= $alertThresholdDays) {
+                $alerts->push([
+                    'title' => 'Période bientôt clôturée',
+                    'message' => "Il reste {$daysLeft} jour(s) avant la fin de la période {$selectedPeriod->libelle}.",
+                ]);
+            }
+
+            if ($daysLeft < 0) {
+                $alerts->push([
+                    'title' => 'Période terminée',
+                    'message' => "La période {$selectedPeriod->libelle} est terminée. Pensez à verrouiller les notes.",
+                ]);
+            }
+        }
+
+        if ($pendingEvaluations->isNotEmpty()) {
+            $alerts->push([
+                'title' => 'Saisies en attente',
+                'message' => "{$pendingEvaluations->count()} évaluation(s) ont encore des notes manquantes.",
+            ]);
+        }
+
+        $dashboardStats = [
+            'evaluations_count' => $evaluations->count(),
+            'pending_count' => $pendingEvaluations->count(),
+            'classes_count' => $classesConcerned->count(),
+            'alerts_count' => $alerts->count(),
+        ];
+
+        return view('pedagogy.dashboard', [
+            'academicYears' => $academicYears,
+            'periods' => $periodOptions,
+            'activePeriodType' => $activePeriodType,
+            'selectedAcademicYearId' => $selectedAcademicYearId,
+            'selectedPeriodId' => $selectedPeriodId,
+            'selectedPeriod' => $selectedPeriod,
+            'dashboardStats' => $dashboardStats,
+            'latestEvaluations' => $latestEvaluations,
+            'pendingEvaluations' => $pendingEvaluations,
+            'classesConcerned' => $classesConcerned,
+            'alerts' => $alerts,
+        ]);
+    }
+
     private function academicYears()
     {
         return AnneeScolaire::query()

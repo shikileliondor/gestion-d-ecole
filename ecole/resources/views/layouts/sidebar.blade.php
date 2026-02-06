@@ -80,8 +80,8 @@
                             'children' => [
                                 [
                                     'label' => 'Vue synthèse',
-                                    'route' => 'pedagogy.results-dashboard.index',
-                                    'active' => 'pedagogy.results-dashboard.index',
+                                    'route' => 'pedagogy.dashboard.index',
+                                    'active' => 'pedagogy.dashboard.index',
                                 ],
                                 [
                                     'label' => '+ Nouvelle évaluation',

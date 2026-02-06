@@ -198,6 +198,7 @@ Route::middleware('auth')->group(function () {
             ->name('transcripts.pdf');
 
         Route::get('/leaderboard', [PedagogyController::class, 'leaderboard'])->name('leaderboard.index');
+        Route::get('/dashboard', [PedagogyController::class, 'dashboard'])->name('dashboard.index');
         Route::get('/results-dashboard', [PedagogyController::class, 'resultsDashboard'])->name('results-dashboard.index');
         Route::get('/student-report-cards', [PedagogyController::class, 'studentReportCards'])
             ->name('student-report-cards.index');
