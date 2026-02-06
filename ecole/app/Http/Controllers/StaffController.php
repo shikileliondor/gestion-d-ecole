@@ -108,6 +108,50 @@ class StaffController extends Controller
         ]);
     }
 
+    public function update(Request $request, User $staff): RedirectResponse
+    {
+        $data = Validator::make($request->all(), [
+            'code_personnel' => ['nullable', 'string', 'max:50'],
+            'nom' => ['required', 'string', 'max:255'],
+            'prenoms' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $staff->id],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'documents' => ['nullable', 'array'],
+            'documents.*' => ['file', 'mimes:pdf,jpeg,jpg,png,doc,docx', 'max:10240'],
+        ])->validate();
+
+        $fullName = trim($data['prenoms'] . ' ' . $data['nom']);
+
+        $photoPath = $staff->photo_path;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('photos/staff', 'public');
+        }
+
+        $staff->update([
+            'name' => $fullName,
+            'email' => $data['email'],
+            'photo_path' => $photoPath,
+        ]);
+
+        if (!empty($data['documents'])) {
+            foreach ($data['documents'] as $document) {
+                $path = $document->store('documents/staff', 'public');
+                StaffDocument::create([
+                    'user_id' => $staff->id,
+                    'libelle' => pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
+                    'file_path' => $path,
+                    'original_name' => $document->getClientOriginalName(),
+                    'mime_type' => $document->getClientMimeType(),
+                    'size_bytes' => $document->getSize(),
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('staff.index')
+            ->with('status', 'La fiche du personnel a été mise à jour.');
+    }
+
     private function renderStaffList(): View
     {
         $staffMembers = User::query()

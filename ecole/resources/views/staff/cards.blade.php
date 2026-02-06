@@ -115,6 +115,18 @@
                         >
                             Fiche
                         </button>
+                        <button
+                            class="secondary-button"
+                            type="button"
+                            data-form-modal-open
+                            data-form-mode="edit"
+                            data-form-title="Modifier le personnel"
+                            data-form-eyebrow="Mise à jour"
+                            data-staff-url="{{ route('staff.show', $staff) }}"
+                            data-form-action="{{ route('staff.update', $staff) }}"
+                        >
+                            Modifier
+                        </button>
                     </div>
                 </article>
             @endforeach

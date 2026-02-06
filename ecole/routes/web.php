@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
+    Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
 
     Route::get('/teachers', [EnseignantController::class, 'index'])->name('teachers.index');
     Route::get('/teachers/create', [EnseignantController::class, 'create'])->name('teachers.create');

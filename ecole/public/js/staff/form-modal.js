@@ -6,11 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const panels = modal?.querySelectorAll('[data-form-panel]') || [];
     const formTitle = modal?.querySelector('[data-form-title]');
     const formEyebrow = modal?.querySelector('[data-form-eyebrow]');
+    const form = modal?.querySelector('form');
+    const methodInput = modal?.querySelector('[data-form-method]');
     const photoInput = modal?.querySelector('[data-photo-input]');
     const photoPreviewWrapper = modal?.querySelector('[data-photo-preview-wrapper]');
     const photoPreview = modal?.querySelector('[data-photo-preview]');
     const documentsInput = modal?.querySelector('[data-documents-input]');
     const documentsList = modal?.querySelector('[data-documents-list]');
+    const codeInput = modal?.querySelector('#code_personnel');
+    const lastNameInput = modal?.querySelector('#nom');
+    const firstNameInput = modal?.querySelector('#prenoms');
+    const emailInput = modal?.querySelector('#email');
 
     if (!modal) {
         return;
@@ -41,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         activateTab('identity');
+        const mode = button?.dataset.formMode || 'create';
+        const defaultAction = form?.dataset.defaultAction;
         if (button) {
             if (formTitle && button.dataset.formTitle) {
                 formTitle.textContent = button.dataset.formTitle;
@@ -49,6 +57,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 formEyebrow.textContent = button.dataset.formEyebrow;
             }
         }
+
+        if (form) {
+            form.action = mode === 'edit' ? button?.dataset.formAction || defaultAction : defaultAction;
+        }
+        if (methodInput) {
+            methodInput.disabled = mode !== 'edit';
+            methodInput.value = 'PUT';
+        }
+        if (mode !== 'edit') {
+            if (codeInput) codeInput.value = '';
+            if (lastNameInput) lastNameInput.value = '';
+            if (firstNameInput) firstNameInput.value = '';
+            if (emailInput) emailInput.value = '';
+            if (documentsInput) documentsInput.value = '';
+            updateDocumentsList([]);
+            updatePhotoPreview(null);
+            return;
+        }
+
+        const staffUrl = button?.dataset.staffUrl;
+        if (!staffUrl) {
+            return;
+        }
+
+        fetch(staffUrl, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement');
+                }
+                return response.json();
+            })
+            .then((data) => {
+                const staff = data.staff || {};
+                if (codeInput) codeInput.value = staff.staff_number || '';
+                if (lastNameInput) lastNameInput.value = staff.last_name || '';
+                if (firstNameInput) firstNameInput.value = staff.first_name || '';
+                if (emailInput) emailInput.value = staff.email || '';
+                if (documentsInput) documentsInput.value = '';
+                updateDocumentsList([]);
+                if (staff.photo_url && photoPreviewWrapper && photoPreview) {
+                    photoPreview.src = staff.photo_url;
+                    photoPreviewWrapper.classList.remove('is-hidden');
+                } else {
+                    updatePhotoPreview(null);
+                }
+            })
+            .catch(() => {
+                updatePhotoPreview(null);
+            });
     };
 
     const closeModal = () => {
