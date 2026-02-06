@@ -31,6 +31,8 @@ class StaffController extends Controller
             'photo' => ['nullable', 'image', 'max:2048'],
             'documents' => ['nullable', 'array'],
             'documents.*' => ['file', 'mimes:pdf,jpeg,jpg,png,doc,docx', 'max:10240'],
+            'documents_labels' => ['nullable', 'array'],
+            'documents_labels.*' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
         $fullName = trim($data['prenoms'] . ' ' . $data['nom']);
@@ -50,11 +52,13 @@ class StaffController extends Controller
         ]);
 
         if (!empty($data['documents'])) {
-            foreach ($data['documents'] as $document) {
+            $labels = $request->input('documents_labels', []);
+            foreach ($data['documents'] as $index => $document) {
                 $path = $document->store('documents/staff', 'public');
+                $label = trim((string) ($labels[$index] ?? ''));
                 StaffDocument::create([
                     'user_id' => $user->id,
-                    'libelle' => pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
+                    'libelle' => $label !== '' ? $label : pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
                     'file_path' => $path,
                     'original_name' => $document->getClientOriginalName(),
                     'mime_type' => $document->getClientMimeType(),
