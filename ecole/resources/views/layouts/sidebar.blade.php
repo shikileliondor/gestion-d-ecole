@@ -35,21 +35,6 @@
                     'route' => 'accounting.income.index',
                     'active' => 'accounting.income.index',
                 ],
-                [
-                    'label' => 'Impayés',
-                    'url' => '#',
-                    'todo' => true,
-                ],
-                [
-                    'label' => 'Remises / Bourses',
-                    'url' => '#',
-                    'todo' => true,
-                ],
-                [
-                    'label' => 'Échéanciers',
-                    'url' => '#',
-                    'todo' => true,
-                ],
             ],
         ],
         [
@@ -214,14 +199,14 @@
         });
 @endphp
 
-<aside class="{{ $classes ?? '' }} bg-slate-900 text-slate-100">
-    <div class="flex h-full flex-col border-r border-slate-800 px-6 py-8">
-        <a href="{{ route('dashboard') }}" class="space-y-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 shadow-lg">
+<aside class="{{ $classes ?? '' }} border-r border-slate-800/70 bg-slate-950/95 text-slate-100 backdrop-blur">
+    <div class="flex h-full flex-col px-6 py-8">
+        <a href="{{ route('dashboard') }}" class="space-y-1 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 shadow-lg shadow-blue-500/20">
             <div class="text-lg font-semibold text-white">Schermo ERP</div>
             <div class="text-xs text-blue-100/80">Gestion Scolaire</div>
         </a>
 
-        <nav class="mt-10 flex-1 space-y-2" x-data="{ openSections: {{ $sectionStates->toJson() }} }">
+        <nav class="mt-8 flex-1 space-y-3" x-data="{ openSections: {{ $sectionStates->toJson() }} }">
             @foreach ($menu as $section)
                 @php
                     $hasChildren = isset($section['children']);
@@ -234,7 +219,7 @@
                     <div class="space-y-1">
                         <button
                             type="button"
-                            class="{{ $sectionStates[$section['id']] ? 'text-white' : 'text-slate-300' }} flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                            class="{{ $sectionStates[$section['id']] ? 'text-white' : 'text-slate-300' }} flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-xs font-semibold uppercase tracking-wide transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
                             @click="openSections['{{ $section['id'] }}'] = !openSections['{{ $section['id'] }}']"
                             :aria-expanded="openSections['{{ $section['id'] }}'].toString()"
                             aria-controls="{{ $sectionId }}"
@@ -250,7 +235,7 @@
                             </svg>
                         </button>
 
-                        <div id="{{ $sectionId }}" x-show="openSections['{{ $section['id'] }}']" x-transition class="space-y-2 pl-8">
+                        <div id="{{ $sectionId }}" x-show="openSections['{{ $section['id'] }}']" x-transition class="space-y-2 pl-7">
                             @foreach ($section['children'] as $childIndex => $child)
                                 @php
                                     $childHasChildren = isset($child['children']);
@@ -284,7 +269,7 @@
                                                 @endphp
                                                 <a
                                                     href="{{ $grandHref }}"
-                                                    class="{{ $grandActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                                                    class="{{ $grandActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
                                                     @if ($grandActive) aria-current="page" @endif
                                                 >
                                                     <span>{{ $grandchild['label'] }}</span>
@@ -295,7 +280,7 @@
                                 @else
                                     <a
                                         href="{{ $childHref }}"
-                                        class="{{ $childActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                                        class="{{ $childActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
                                         @if ($childActive) aria-current="page" @endif
                                     >
                                         <span>{{ $child['label'] }}</span>
@@ -307,7 +292,7 @@
                 @else
                     <a
                         href="{{ $sectionHref }}"
-                        class="{{ $sectionActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                        class="{{ $sectionActive ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-white/10 hover:text-white' }} flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
                         @if ($sectionActive) aria-current="page" @endif
                     >
                         <svg class="h-5 w-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
