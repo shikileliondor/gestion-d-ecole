@@ -73,42 +73,87 @@
                     ],
                 ],
                 [
-                    'label' => 'Notes & Bulletins',
+                    'label' => 'Notes & bulletins',
                     'children' => [
                         [
+                            'label' => 'Tableau de bord',
+                            'children' => [
+                                [
+                                    'label' => 'Vue synthèse',
+                                    'route' => 'pedagogy.results-dashboard.index',
+                                    'active' => 'pedagogy.results-dashboard.index',
+                                ],
+                                [
+                                    'label' => '+ Nouvelle évaluation',
+                                    'route' => 'pedagogy.evaluations.index',
+                                    'active' => 'pedagogy.evaluations.index',
+                                ],
+                            ],
+                        ],
+                        [
                             'label' => 'Évaluations',
-                            'route' => 'pedagogy.evaluations.index',
-                            'active' => 'pedagogy.evaluations.index',
+                            'children' => [
+                                [
+                                    'label' => 'Liste',
+                                    'route' => 'pedagogy.evaluations.index',
+                                    'active' => 'pedagogy.evaluations.index',
+                                ],
+                                [
+                                    'label' => 'Gestion',
+                                    'route' => 'pedagogy.evaluations.index',
+                                    'active' => 'pedagogy.evaluations.index',
+                                ],
+                            ],
                         ],
                         [
-                            'label' => 'Saisie des notes',
-                            'route' => 'pedagogy.grades.index',
-                            'active' => 'pedagogy.grades.index',
+                            'label' => 'Saisie',
+                            'children' => [
+                                [
+                                    'label' => 'Sélection',
+                                    'route' => 'pedagogy.grades.index',
+                                    'active' => 'pedagogy.grades.index',
+                                ],
+                                [
+                                    'label' => 'Par élève',
+                                    'route' => 'pedagogy.grades.index',
+                                    'active' => 'pedagogy.grades.index',
+                                ],
+                            ],
                         ],
                         [
-                            'label' => 'Bulletins / Classements',
-                            'route' => 'pedagogy.report-cards.index',
-                            'active' => 'pedagogy.report-cards.index',
+                            'label' => 'Résultats',
+                            'children' => [
+                                [
+                                    'label' => 'Classements',
+                                    'route' => 'pedagogy.leaderboard.index',
+                                    'active' => 'pedagogy.leaderboard.index',
+                                ],
+                                [
+                                    'label' => 'Analyses',
+                                    'route' => 'pedagogy.results-dashboard.index',
+                                    'active' => 'pedagogy.results-dashboard.index',
+                                ],
+                            ],
                         ],
                         [
-                            'label' => 'Classements',
-                            'route' => 'pedagogy.leaderboard.index',
-                            'active' => 'pedagogy.leaderboard.index',
-                        ],
-                        [
-                            'label' => 'Tableau de bord résultats',
-                            'route' => 'pedagogy.results-dashboard.index',
-                            'active' => 'pedagogy.results-dashboard.index',
-                        ],
-                        [
-                            'label' => 'Bulletins élèves',
-                            'route' => 'pedagogy.student-report-cards.index',
-                            'active' => 'pedagogy.student-report-cards.index',
-                        ],
-                        [
-                            'label' => 'Relevés de notes',
-                            'route' => 'pedagogy.transcripts.index',
-                            'active' => 'pedagogy.transcripts.index',
+                            'label' => 'Documents',
+                            'children' => [
+                                [
+                                    'label' => 'Bulletins classe',
+                                    'route' => 'pedagogy.report-cards.index',
+                                    'active' => 'pedagogy.report-cards.index',
+                                ],
+                                [
+                                    'label' => 'Bulletins élèves',
+                                    'route' => 'pedagogy.student-report-cards.index',
+                                    'active' => 'pedagogy.student-report-cards.index',
+                                ],
+                                [
+                                    'label' => 'Relevés de notes',
+                                    'route' => 'pedagogy.transcripts.index',
+                                    'active' => 'pedagogy.transcripts.index',
+                                ],
+                            ],
                         ],
                     ],
                 ],
