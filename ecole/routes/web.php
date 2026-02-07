@@ -33,6 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/students/{id}', [StudentController::class, 'show'])
         ->whereNumber('id')
         ->name('students.show');
+    Route::get('/students/{id}/registration-pdf', [StudentController::class, 'registrationPdf'])
+        ->whereNumber('id')
+        ->name('students.registration.pdf');
     Route::get('/students/enrollments', [EnrollmentController::class, 'hub'])
         ->name('students.enrollments');
     Route::get('/students/enrollments/create', [EnrollmentController::class, 'create'])

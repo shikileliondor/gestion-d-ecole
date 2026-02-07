@@ -13,16 +13,21 @@ class Eleve extends Model
 
     protected $fillable = [
         'matricule',
+        'matricule_national',
         'nom',
         'prenoms',
         'sexe',
         'date_naissance',
         'lieu_naissance',
         'nationalite',
+        'etablissement_origine',
+        'date_arrivee',
+        'classe_precedente',
         'photo_path',
     ];
 
     protected $casts = [
         'date_naissance' => 'date',
+        'date_arrivee' => 'date',
     ];
 }

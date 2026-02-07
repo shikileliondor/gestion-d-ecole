@@ -19,12 +19,16 @@ class UpdateEleveRequest extends FormRequest
 
         return [
             'matricule' => ['sometimes', 'string', 'max:32', Rule::unique('eleves', 'matricule')->ignore($eleveId)],
+            'matricule_national' => ['sometimes', 'nullable', 'string', 'max:50'],
             'nom' => ['sometimes', 'string', 'max:100'],
             'prenoms' => ['sometimes', 'string', 'max:150'],
             'sexe' => ['sometimes', 'nullable', 'in:M,F,AUTRE'],
             'date_naissance' => ['sometimes', 'nullable', 'date', 'before_or_equal:today'],
             'lieu_naissance' => ['sometimes', 'nullable', 'string', 'max:120'],
             'nationalite' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'etablissement_origine' => ['sometimes', 'nullable', 'string', 'max:150'],
+            'date_arrivee' => ['sometimes', 'nullable', 'date'],
+            'classe_precedente' => ['sometimes', 'nullable', 'string', 'max:100'],
             'photo_path' => ['sometimes', 'nullable', 'string', 'max:2048'],
         ];
     }
