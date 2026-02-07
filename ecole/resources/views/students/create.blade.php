@@ -18,6 +18,7 @@
         'classes' => $classes,
         'academicYears' => $academicYears,
         'activeAcademicYear' => $activeAcademicYear,
+        'levels' => $levels,
         'isOpen' => true,
     ])
 

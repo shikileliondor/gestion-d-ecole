@@ -7,8 +7,8 @@ use App\Models\Classe;
 use App\Models\Eleve;
 use App\Models\EleveContact;
 use App\Models\EleveTuteur;
-use App\Models\EleveUrgence;
 use App\Models\Inscription;
+use App\Models\Niveau;
 use App\Services\MatriculeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +68,16 @@ class StudentController extends Controller
                 $annee->setAttribute('name', $annee->libelle);
             });
 
-        return view('students.index', compact('students', 'classes', 'academicYears'));
+        $activeAcademicYear = $this->activeAcademicYear();
+        if ($activeAcademicYear) {
+            $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
+        }
+
+        $levels = Niveau::query()
+            ->orderBy('ordre')
+            ->get();
+
+        return view('students.index', compact('students', 'classes', 'academicYears', 'activeAcademicYear', 'levels'));
     }
 
     public function create(): View
@@ -92,7 +101,11 @@ class StudentController extends Controller
             $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
         }
 
-        return view('students.create', compact('classes', 'academicYears', 'activeAcademicYear'));
+        $levels = Niveau::query()
+            ->orderBy('ordre')
+            ->get();
+
+        return view('students.create', compact('classes', 'academicYears', 'activeAcademicYear', 'levels'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -113,33 +126,56 @@ class StudentController extends Controller
             'photo' => ['nullable', 'image', 'max:2048'],
             'enrollment_date' => ['nullable', 'date'],
             'status' => ['nullable', 'in:active,suspended,transferred,graduated,inactive'],
+            'level_id' => ['required', 'exists:niveaux,id'],
             'class_id' => ['required', 'exists:classes,id'],
             'academic_year_id' => ['nullable', 'exists:annees_scolaires,id'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
-            'previous_school' => ['nullable', 'string', 'max:150'],
-            'arrival_date' => ['nullable', 'date'],
-            'previous_class' => ['nullable', 'string', 'max:100'],
-            'emergency_contact_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
-            'father_name' => ['nullable', 'string', 'max:255'],
-            'father_phone' => ['nullable', 'string', 'max:30'],
-            'father_address' => ['nullable', 'string', 'max:255'],
-            'father_occupation' => ['nullable', 'string', 'max:255'],
-            'mother_name' => ['nullable', 'string', 'max:255'],
-            'mother_phone' => ['nullable', 'string', 'max:30'],
-            'mother_address' => ['nullable', 'string', 'max:255'],
-            'mother_occupation' => ['nullable', 'string', 'max:255'],
-            'guardian_name' => ['nullable', 'string', 'max:255'],
-            'guardian_relationship' => ['nullable', 'string', 'max:50'],
-            'guardian_phone' => ['nullable', 'string', 'max:30'],
-            'guardian_address' => ['nullable', 'string', 'max:255'],
-            'guardian_occupation' => ['nullable', 'string', 'max:255'],
+            'parent_first_name' => ['nullable', 'string', 'max:255'],
+            'parent_last_name' => ['nullable', 'string', 'max:255'],
+            'parent_relationship' => ['nullable', 'string', 'max:50'],
+            'parent_phone' => ['nullable', 'string', 'max:30'],
+            'parent_email' => ['nullable', 'email', 'max:255'],
+            'parent_address' => ['nullable', 'string', 'max:255'],
+            'parent_occupation' => ['nullable', 'string', 'max:255'],
         ]);
 
         $validator->after(function ($validator) use ($request) {
-            $this->validateContactBlock($validator, $request, 'father', 'Le père');
-            $this->validateContactBlock($validator, $request, 'mother', 'La mère');
-            $this->validateContactBlock($validator, $request, 'guardian', 'Le correspondant');
+            $parentFields = [
+                $request->input('parent_first_name'),
+                $request->input('parent_last_name'),
+                $request->input('parent_relationship'),
+                $request->input('parent_phone'),
+                $request->input('parent_email'),
+                $request->input('parent_address'),
+                $request->input('parent_occupation'),
+            ];
+
+            $hasParentData = collect($parentFields)->filter(fn ($value) => filled($value))->isNotEmpty();
+
+            if ($hasParentData) {
+                if (! $request->filled('parent_first_name')) {
+                    $validator->errors()->add('parent_first_name', 'Le prénom du tuteur est requis.');
+                }
+
+                if (! $request->filled('parent_last_name')) {
+                    $validator->errors()->add('parent_last_name', 'Le nom du tuteur est requis.');
+                }
+
+                if (! $request->filled('parent_phone')) {
+                    $validator->errors()->add('parent_phone', 'Le téléphone du tuteur est requis.');
+                }
+            }
+
+            if ($request->filled('level_id') && $request->filled('class_id')) {
+                $matchesLevel = Classe::query()
+                    ->where('id', $request->input('class_id'))
+                    ->where('niveau_id', $request->input('level_id'))
+                    ->exists();
+
+                if (! $matchesLevel) {
+                    $validator->errors()->add('class_id', 'La classe sélectionnée ne correspond pas au niveau choisi.');
+                }
+            }
         });
 
         $data = $validator->validate();
@@ -197,21 +233,15 @@ class StudentController extends Controller
                 ]);
             }
 
-            if (filled($data['emergency_contact_name'] ?? null) && filled($data['emergency_contact_phone'] ?? null)) {
-                EleveUrgence::create([
-                    'eleve_id' => $eleve->id,
-                    'nom_complet' => $data['emergency_contact_name'],
-                    'lien' => 'AUTRE',
-                    'telephone' => $data['emergency_contact_phone'],
-                ]);
-            }
-
-            $this->createTutor($eleve->id, 'PERE', [
-                'name' => $data['father_name'] ?? null,
-                'phone' => $data['father_phone'] ?? null,
-                'address' => $data['father_address'] ?? null,
-                'occupation' => $data['father_occupation'] ?? null,
-            ]);
+            $hasParentData = collect([
+                $data['parent_first_name'] ?? null,
+                $data['parent_last_name'] ?? null,
+                $data['parent_relationship'] ?? null,
+                $data['parent_phone'] ?? null,
+                $data['parent_email'] ?? null,
+                $data['parent_address'] ?? null,
+                $data['parent_occupation'] ?? null,
+            ])->filter(fn ($value) => filled($value))->isNotEmpty();
 
             $this->createTutor($eleve->id, 'MERE', [
                 'name' => $data['mother_name'] ?? null,

@@ -27,9 +27,6 @@
             <button class="student-modal__tab" type="button" data-form-tab="school" role="tab" aria-selected="false">
                 Scolarité
             </button>
-            <button class="student-modal__tab" type="button" data-form-tab="health" role="tab" aria-selected="false">
-                Santé & urgence
-            </button>
             <button class="student-modal__tab" type="button" data-form-tab="parent" role="tab" aria-selected="false">
                 Parent/Tuteur
             </button>
@@ -134,11 +131,24 @@
                         <h2>Scolarité</h2>
                         <div class="form-grid">
                             <div class="form-field">
+                                <label for="level_id">Niveau *</label>
+                                <select id="level_id" name="level_id" required>
+                                    <option value="">Sélectionner un niveau</option>
+                                    @foreach ($levels as $level)
+                                        <option value="{{ $level->id }}" @selected(old('level_id') == $level->id)>
+                                            {{ $level->code }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-field">
                                 <label for="class_id">Classe *</label>
                                 <select id="class_id" name="class_id" required>
                                     <option value="">Sélectionner une classe</option>
                                     @foreach ($classes as $class)
-                                        <option value="{{ $class->id }}" @selected(old('class_id') == $class->id)>{{ $class->name }}</option>
+                                        <option value="{{ $class->id }}" data-level-id="{{ $class->niveau_id }}" @selected(old('class_id') == $class->id)>
+                                            {{ $class->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -185,22 +195,6 @@
                                     <option value="transferred" @selected(old('class_status') === 'transferred')>Transféré</option>
                                     <option value="completed" @selected(old('class_status') === 'completed')>Terminé</option>
                                 </select>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-                <div class="student-modal__panel" data-form-panel="health" role="tabpanel">
-                    <section class="form-section">
-                        <h2>Informations médicales & urgence</h2>
-                        <div class="form-grid">
-                            <div class="form-field">
-                                <label for="emergency_contact_name">Contact d'urgence</label>
-                                <input id="emergency_contact_name" name="emergency_contact_name" type="text" value="{{ old('emergency_contact_name') }}">
-                            </div>
-                            <div class="form-field">
-                                <label for="emergency_contact_phone">Téléphone d'urgence</label>
-                                <input id="emergency_contact_phone" name="emergency_contact_phone" type="text" value="{{ old('emergency_contact_phone') }}">
                             </div>
                         </div>
                     </section>
