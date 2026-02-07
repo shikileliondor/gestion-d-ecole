@@ -3,6 +3,9 @@
     <div class="student-modal__content" role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
         <div class="student-modal__header">
             <h2 id="student-modal-title">Fiche élève</h2>
+            <a class="secondary-button" href="#" target="_blank" rel="noreferrer" data-field="registration_pdf">
+                Fiche d'inscription PDF
+            </a>
             <button class="student-modal__close" type="button" data-student-modal-close aria-label="Fermer">
                 ×
             </button>

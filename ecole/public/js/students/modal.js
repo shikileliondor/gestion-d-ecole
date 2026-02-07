@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         parent_phone: modal.querySelector('[data-field="parent_phone"]'),
         address: modal.querySelector('[data-field="address"]'),
         email: modal.querySelector('[data-field="email"]'),
+        registration_pdf: modal.querySelector('[data-field="registration_pdf"]'),
     };
 
     const listFields = {
@@ -102,6 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setText(infoFields.parent_phone, '—');
         setText(infoFields.address, '—');
         setText(infoFields.email, '—');
+        if (infoFields.registration_pdf) {
+            infoFields.registration_pdf.setAttribute('href', '#');
+        }
 
         setList(listFields.grades, [], () => '', 'Aucune note disponible.');
         setList(listFields.payments, [], () => '', 'Aucun paiement enregistré.');
@@ -139,6 +143,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setText(infoFields.parent_phone, parent.phone);
                 setText(infoFields.address, student.address || student.city || student.country);
                 setText(infoFields.email, student.email);
+                if (infoFields.registration_pdf) {
+                    infoFields.registration_pdf.setAttribute('href', student.registration_pdf_url || '#');
+                }
 
                 setList(
                     listFields.grades,
@@ -213,6 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setText(infoFields.parent_phone, '—');
                 setText(infoFields.address, '—');
                 setText(infoFields.email, '—');
+                if (infoFields.registration_pdf) {
+                    infoFields.registration_pdf.setAttribute('href', '#');
+                }
 
                 setList(listFields.grades, [], () => '', 'Aucune note disponible.');
                 setList(listFields.payments, [], () => '', 'Aucun paiement enregistré.');

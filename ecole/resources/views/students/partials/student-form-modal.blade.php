@@ -47,7 +47,7 @@
                 </div>
             @endif
 
-            <form class="student-form" method="POST" action="{{ route('students.store') }}">
+            <form class="student-form" method="POST" action="{{ route('students.store') }}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="student-modal__panel is-active" data-form-panel="identity" role="tabpanel">
@@ -58,6 +58,11 @@
                                 <label>Matricule</label>
                                 <p class="form-static" data-admission-preview>Généré automatiquement</p>
                                 <p class="form-helper">Année d'inscription + lettres.</p>
+                            </div>
+                            <div class="form-field">
+                                <label for="matricule_national">Matricule national</label>
+                                <input id="matricule_national" name="matricule_national" type="text" value="{{ old('matricule_national') }}">
+                                <p class="form-helper">Optionnel, à renseigner plus tard si nécessaire.</p>
                             </div>
                             <div class="form-field">
                                 <label for="last_name">Nom *</label>
@@ -91,6 +96,10 @@
                             <div class="form-field">
                                 <label for="nationality">Nationalité</label>
                                 <input id="nationality" name="nationality" type="text" value="{{ old('nationality') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="photo">Photo</label>
+                                <input id="photo" name="photo" type="file" accept="image/*">
                             </div>
                         </div>
                     </section>
@@ -158,6 +167,18 @@
                                 <input id="enrollment_date" name="enrollment_date" type="date" value="{{ old('enrollment_date') }}">
                             </div>
                             <div class="form-field">
+                                <label for="previous_school">Établissement d'origine</label>
+                                <input id="previous_school" name="previous_school" type="text" value="{{ old('previous_school') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="arrival_date">Date d'arrivée</label>
+                                <input id="arrival_date" name="arrival_date" type="date" value="{{ old('arrival_date') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="previous_class">Classe précédente</label>
+                                <input id="previous_class" name="previous_class" type="text" value="{{ old('previous_class') }}">
+                            </div>
+                            <div class="form-field">
                                 <label for="class_status">Statut de la classe</label>
                                 <select id="class_status" name="class_status">
                                     <option value="active" @selected(old('class_status', 'active') === 'active')>Actif</option>
@@ -187,35 +208,62 @@
 
                 <div class="student-modal__panel" data-form-panel="parent" role="tabpanel">
                     <section class="form-section">
-                        <h2>Parent / Tuteur principal</h2>
+                        <h2>Parents et correspondant</h2>
                         <div class="form-grid">
                             <div class="form-field">
-                                <label for="parent_first_name">Prénom</label>
-                                <input id="parent_first_name" name="parent_first_name" type="text" value="{{ old('parent_first_name') }}">
+                                <label for="father_name">Nom et prénoms du père</label>
+                                <input id="father_name" name="father_name" type="text" value="{{ old('father_name') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_last_name">Nom</label>
-                                <input id="parent_last_name" name="parent_last_name" type="text" value="{{ old('parent_last_name') }}">
+                                <label for="father_occupation">Profession du père</label>
+                                <input id="father_occupation" name="father_occupation" type="text" value="{{ old('father_occupation') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_relationship">Lien de parenté</label>
-                                <input id="parent_relationship" name="parent_relationship" type="text" value="{{ old('parent_relationship') }}">
+                                <label for="father_address">Domicile du père</label>
+                                <input id="father_address" name="father_address" type="text" value="{{ old('father_address') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_phone">Téléphone</label>
-                                <input id="parent_phone" name="parent_phone" type="text" value="{{ old('parent_phone') }}">
+                                <label for="father_phone">Téléphone du père</label>
+                                <input id="father_phone" name="father_phone" type="text" value="{{ old('father_phone') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_email">Email</label>
-                                <input id="parent_email" name="parent_email" type="email" value="{{ old('parent_email') }}">
+                                <label for="mother_name">Nom et prénoms de la mère</label>
+                                <input id="mother_name" name="mother_name" type="text" value="{{ old('mother_name') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_address">Adresse</label>
-                                <input id="parent_address" name="parent_address" type="text" value="{{ old('parent_address') }}">
+                                <label for="mother_occupation">Profession de la mère</label>
+                                <input id="mother_occupation" name="mother_occupation" type="text" value="{{ old('mother_occupation') }}">
                             </div>
                             <div class="form-field">
-                                <label for="parent_occupation">Profession</label>
-                                <input id="parent_occupation" name="parent_occupation" type="text" value="{{ old('parent_occupation') }}">
+                                <label for="mother_address">Domicile de la mère</label>
+                                <input id="mother_address" name="mother_address" type="text" value="{{ old('mother_address') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="mother_phone">Téléphone de la mère</label>
+                                <input id="mother_phone" name="mother_phone" type="text" value="{{ old('mother_phone') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="guardian_name">Nom et prénoms du correspondant</label>
+                                <input id="guardian_name" name="guardian_name" type="text" value="{{ old('guardian_name') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="guardian_relationship">Lien avec l'élève</label>
+                                <input id="guardian_relationship" name="guardian_relationship" type="text" value="{{ old('guardian_relationship') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="guardian_occupation">Profession du correspondant</label>
+                                <input id="guardian_occupation" name="guardian_occupation" type="text" value="{{ old('guardian_occupation') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="guardian_address">Domicile du correspondant</label>
+                                <input id="guardian_address" name="guardian_address" type="text" value="{{ old('guardian_address') }}">
+                            </div>
+                            <div class="form-field">
+                                <label for="guardian_phone">Téléphone du correspondant</label>
+                                <input id="guardian_phone" name="guardian_phone" type="text" value="{{ old('guardian_phone') }}">
+                            </div>
+                            <div class="form-field">
+                                <p class="form-helper">Renseignez au moins le nom et le téléphone si un contact est ajouté.</p>
                             </div>
                         </div>
                     </section>
