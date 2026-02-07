@@ -118,6 +118,7 @@ class SchoolClassController extends Controller
             ->groupBy('classe_id');
 
         $coefficientsByLevel = ProgrammeMatiere::query()
+            ->where('actif', true)
             ->get()
             ->groupBy(fn (ProgrammeMatiere $programme) => $programme->annee_scolaire_id.'-'.$programme->niveau_id.'-'.$programme->serie_id);
 
@@ -510,6 +511,7 @@ class SchoolClassController extends Controller
         $assignments = AffectationEnseignant::query()->where('classe_id', $classe->id)->get();
         $programmes = ProgrammeClasse::query()->where('classe_id', $classe->id)->get();
         $coefficients = ProgrammeMatiere::query()
+            ->where('actif', true)
             ->where('annee_scolaire_id', $classe->annee_scolaire_id)
             ->where('niveau_id', $classe->niveau_id)
             ->when(
