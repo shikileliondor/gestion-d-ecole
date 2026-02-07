@@ -7,8 +7,8 @@ use App\Models\Classe;
 use App\Models\Eleve;
 use App\Models\EleveContact;
 use App\Models\EleveTuteur;
-use App\Models\EleveUrgence;
 use App\Models\Inscription;
+use App\Models\Niveau;
 use App\Services\MatriculeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -67,7 +67,16 @@ class StudentController extends Controller
                 $annee->setAttribute('name', $annee->libelle);
             });
 
-        return view('students.index', compact('students', 'classes', 'academicYears'));
+        $activeAcademicYear = $this->activeAcademicYear();
+        if ($activeAcademicYear) {
+            $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
+        }
+
+        $levels = Niveau::query()
+            ->orderBy('ordre')
+            ->get();
+
+        return view('students.index', compact('students', 'classes', 'academicYears', 'activeAcademicYear', 'levels'));
     }
 
     public function create(): View
@@ -91,7 +100,11 @@ class StudentController extends Controller
             $activeAcademicYear->setAttribute('name', $activeAcademicYear->libelle);
         }
 
-        return view('students.create', compact('classes', 'academicYears', 'activeAcademicYear'));
+        $levels = Niveau::query()
+            ->orderBy('ordre')
+            ->get();
+
+        return view('students.create', compact('classes', 'academicYears', 'activeAcademicYear', 'levels'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -110,11 +123,10 @@ class StudentController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'enrollment_date' => ['nullable', 'date'],
             'status' => ['nullable', 'in:active,suspended,transferred,graduated,inactive'],
+            'level_id' => ['required', 'exists:niveaux,id'],
             'class_id' => ['required', 'exists:classes,id'],
             'academic_year_id' => ['nullable', 'exists:annees_scolaires,id'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
-            'emergency_contact_name' => ['nullable', 'string', 'max:255'],
-            'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
             'parent_first_name' => ['nullable', 'string', 'max:255'],
             'parent_last_name' => ['nullable', 'string', 'max:255'],
             'parent_relationship' => ['nullable', 'string', 'max:50'],
@@ -148,6 +160,17 @@ class StudentController extends Controller
 
                 if (! $request->filled('parent_phone')) {
                     $validator->errors()->add('parent_phone', 'Le téléphone du tuteur est requis.');
+                }
+            }
+
+            if ($request->filled('level_id') && $request->filled('class_id')) {
+                $matchesLevel = Classe::query()
+                    ->where('id', $request->input('class_id'))
+                    ->where('niveau_id', $request->input('level_id'))
+                    ->exists();
+
+                if (! $matchesLevel) {
+                    $validator->errors()->add('class_id', 'La classe sélectionnée ne correspond pas au niveau choisi.');
                 }
             }
         });
@@ -198,15 +221,6 @@ class StudentController extends Controller
                     'email' => $data['email'] ?? null,
                     'adresse' => $data['address'] ?? null,
                     'ville' => $data['city'] ?? null,
-                ]);
-            }
-
-            if (filled($data['emergency_contact_name'] ?? null) && filled($data['emergency_contact_phone'] ?? null)) {
-                EleveUrgence::create([
-                    'eleve_id' => $eleve->id,
-                    'nom_complet' => $data['emergency_contact_name'],
-                    'lien' => 'AUTRE',
-                    'telephone' => $data['emergency_contact_phone'],
                 ]);
             }
 

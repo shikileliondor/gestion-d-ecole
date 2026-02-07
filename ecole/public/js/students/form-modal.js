@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const firstNameInput = modal?.querySelector('#first_name');
     const lastNameInput = modal?.querySelector('#last_name');
     const admissionPreview = modal?.querySelector('[data-admission-preview]');
+    const levelSelect = modal?.querySelector('#level_id');
+    const classSelect = modal?.querySelector('#class_id');
 
     if (!modal) {
         return;
@@ -38,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         activateTab('identity');
+        updateClassOptions();
     };
 
     const closeModal = () => {
@@ -62,6 +65,28 @@ document.addEventListener('DOMContentLoaded', () => {
         admissionPreview.textContent = `${yearValue}-${letters}`;
     };
 
+    const updateClassOptions = () => {
+        if (!classSelect) {
+            return;
+        }
+        const selectedLevel = levelSelect?.value;
+        Array.from(classSelect.options).forEach((option) => {
+            if (!option.value) {
+                option.hidden = false;
+                return;
+            }
+            const optionLevel = option.getAttribute('data-level-id');
+            option.hidden = Boolean(selectedLevel && optionLevel !== selectedLevel);
+        });
+
+        if (classSelect.value) {
+            const selectedOption = classSelect.selectedOptions[0];
+            if (selectedOption?.hidden) {
+                classSelect.value = '';
+            }
+        }
+    };
+
     if (openButton) {
         openButton.addEventListener('click', openModal);
     }
@@ -83,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         input?.addEventListener('input', updateAdmissionPreview);
     });
 
+    levelSelect?.addEventListener('change', updateClassOptions);
+
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeModal();
@@ -90,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     updateAdmissionPreview();
+    updateClassOptions();
 
     if (modal.dataset.openOnLoad === 'true') {
         openModal();

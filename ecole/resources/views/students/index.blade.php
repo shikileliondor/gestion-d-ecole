@@ -73,6 +73,8 @@
     @include('students.partials.student-form-modal', [
         'classes' => $classes,
         'academicYears' => $academicYears,
+        'activeAcademicYear' => $activeAcademicYear,
+        'levels' => $levels,
         'isOpen' => $errors->any() || request()->get('open') === 'create',
     ])
 
