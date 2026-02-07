@@ -27,8 +27,8 @@
                 ],
                 [
                     'label' => 'Inscriptions',
-                    'route' => 'students.enrollments',
-                    'active' => 'students.enrollments*',
+                    'url' => route('students.index', ['open' => 'create']),
+                    'active' => 'students.index',
                 ],
                 [
                     'label' => 'Réinscriptions',

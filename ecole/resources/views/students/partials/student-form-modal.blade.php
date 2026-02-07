@@ -11,7 +11,7 @@
     <div class="student-modal__overlay" data-form-modal-close></div>
     <div class="student-modal__content" role="dialog" aria-modal="true" aria-labelledby="student-form-modal-title">
         <div class="student-modal__header">
-            <h2 id="student-form-modal-title">Ajouter un élève</h2>
+            <h2 id="student-form-modal-title">Inscrire un élève</h2>
             <button class="student-modal__close" type="button" data-form-modal-close aria-label="Fermer">
                 ×
             </button>
@@ -222,7 +222,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button class="primary-button" type="submit">Enregistrer l'élève</button>
+                    <button class="primary-button" type="submit">Valider l'inscription</button>
                     <button class="secondary-button" type="button" data-form-modal-close>Annuler</button>
                 </div>
             </form>

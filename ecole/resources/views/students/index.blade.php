@@ -7,10 +7,10 @@
     <div class="students-page">
         <div class="students-header">
             <div>
-                <h1>Gestion des élèves</h1>
-                <p>Liste complète et fiches détaillées</p>
+                <h1>Élèves</h1>
+                <p>Inscriptions et liste des élèves réunies sur un seul écran.</p>
             </div>
-            <button class="primary-button" type="button" data-form-modal-open>+ Ajouter un élève</button>
+            <button class="primary-button" type="button" data-form-modal-open>+ Nouvelle inscription</button>
         </div>
 
         <div class="students-toolbar">
