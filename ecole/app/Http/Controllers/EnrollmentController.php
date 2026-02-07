@@ -17,23 +17,14 @@ use Illuminate\View\View;
 
 class EnrollmentController extends Controller
 {
-    public function hub(): View
+    public function hub(): RedirectResponse
     {
-        return view('students.enrollments-hub');
+        return redirect()->route('students.index', ['open' => 'create']);
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        $activeAcademicYear = $this->activeAcademicYear();
-
-        $classes = $activeAcademicYear
-            ? Classe::query()
-                ->where('annee_scolaire_id', $activeAcademicYear->id)
-                ->orderBy('nom')
-                ->get()
-            : collect();
-
-        return view('students.enrollments', compact('activeAcademicYear', 'classes'));
+        return redirect()->route('students.index', ['open' => 'create']);
     }
 
     public function store(Request $request): RedirectResponse
@@ -94,7 +85,7 @@ class EnrollmentController extends Controller
         });
 
         return redirect()
-            ->route('students.enrollments')
+            ->route('students.index')
             ->with('status', "L'inscription a été enregistrée avec succès.");
     }
 
