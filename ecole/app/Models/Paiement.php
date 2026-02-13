@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Paiement extends Model
 {
@@ -24,4 +25,9 @@ class Paiement extends Model
         'date_paiement' => 'date',
         'montant_paye' => 'decimal:2',
     ];
+
+    public function inscription(): BelongsTo
+    {
+        return $this->belongsTo(Inscription::class);
+    }
 }

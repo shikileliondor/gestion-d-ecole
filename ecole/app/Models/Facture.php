@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Facture extends Model
 {
@@ -24,4 +25,9 @@ class Facture extends Model
         'date_emission' => 'date',
         'montant_total' => 'decimal:2',
     ];
+
+    public function inscription(): BelongsTo
+    {
+        return $this->belongsTo(Inscription::class);
+    }
 }
