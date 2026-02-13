@@ -546,14 +546,16 @@ class SchoolClassController extends Controller
         return $coefficients
             ->groupBy('matiere_id')
             ->map(function (Collection $items) use ($serieId) {
+                $latestItems = $items->sortByDesc('id')->values();
+
                 if ($serieId) {
-                    return $items->firstWhere('serie_id', $serieId)
-                        ?? $items->firstWhere('serie_id', null)
-                        ?? $items->first();
+                    return $latestItems->firstWhere('serie_id', $serieId)
+                        ?? $latestItems->firstWhere('serie_id', null)
+                        ?? $latestItems->first();
                 }
 
-                return $items->firstWhere('serie_id', null)
-                    ?? $items->first();
+                return $latestItems->firstWhere('serie_id', null)
+                    ?? $latestItems->first();
             })
             ->filter();
     }
