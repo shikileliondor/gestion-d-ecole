@@ -3,6 +3,7 @@
 use App\Http\Controllers\Accounting\InvoiceController;
 use App\Http\Controllers\Accounting\ReceiptController;
 use App\Http\Controllers\Accounting\JournalController;
+use App\Http\Controllers\Accounting\PaymentController;
 use App\Http\Controllers\Accounting\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierEleveController;
@@ -173,6 +174,17 @@ Route::middleware('auth')->group(function () {
             Route::post('/{receipt}/cancel', [ReceiptController::class, 'cancel'])->name('cancel');
             Route::get('/download', fn () => view('accounting.receipts.download'))->name('download');
             Route::get('/numbering', fn () => view('accounting.receipts.numbering'))->name('numbering');
+        });
+
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [PaymentController::class, 'index'])->name('index');
+            Route::get('/create', [PaymentController::class, 'createPayment'])->name('create-payment');
+            Route::post('/create', [PaymentController::class, 'storePayment'])->name('store-payment');
+            Route::post('/{payment}/cancel', [PaymentController::class, 'cancelPayment'])->name('cancel-payment');
+            Route::get('/discounts/create', [PaymentController::class, 'createDiscount'])->name('create-discount');
+            Route::post('/discounts', [PaymentController::class, 'storeDiscount'])->name('store-discount');
+            Route::post('/discounts/{discount}/cancel', [PaymentController::class, 'cancelDiscount'])->name('cancel-discount');
         });
 
         Route::prefix('overdue')->name('overdue.')->group(function () {
