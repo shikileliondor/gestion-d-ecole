@@ -111,8 +111,8 @@
                 ],
                 [
                     'label' => 'Documents RH & Urgences',
-                    'url' => '#',
-                    'todo' => true,
+                    'route' => 'rh.documents.index',
+                    'active' => 'rh.documents.index',
                 ],
             ],
         ],

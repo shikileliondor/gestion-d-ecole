@@ -29,13 +29,10 @@
 
         <form class="filters-bar" method="GET" data-filter-form data-async-form data-async-action="classes-filter" data-no-reset="true">
             <div class="filter-group">
-                <label for="filter-year">Année</label>
-                <select id="filter-year" name="academic_year_id">
-                    <option value="">Toutes</option>
-                    @foreach ($academicYears as $year)
-                        <option value="{{ $year->id }}" @selected(($selectedAcademicYearId ?? null) == $year->id)>{{ $year->libelle }}</option>
-                    @endforeach
-                </select>
+                <label>Année</label>
+                <p class="text-sm text-slate-600">
+                    {{ $activeAcademicYear?->libelle ?? 'Non configurée (voir Paramètres)' }}
+                </p>
             </div>
             <div class="filter-group">
                 <label for="filter-level">Niveau</label>
