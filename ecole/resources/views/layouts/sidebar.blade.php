@@ -133,13 +133,13 @@
                 ],
                 [
                     'label' => 'Journal',
-                    'url' => '#',
-                    'todo' => true,
+                    'route' => 'accounting.journal.index',
+                    'active' => 'accounting.journal.index',
                 ],
                 [
                     'label' => 'Rapports financiers',
-                    'url' => '#',
-                    'todo' => true,
+                    'route' => 'accounting.reports.index',
+                    'active' => 'accounting.reports.index',
                 ],
             ],
         ],

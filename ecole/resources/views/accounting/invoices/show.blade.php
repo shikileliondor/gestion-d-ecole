@@ -1,0 +1,9 @@
+<x-page-shell title="Facture {{ $invoice->numero_facture }}" subtitle="Détail, paiements et actions de validation/annulation.">
+    <div class="rounded-2xl border bg-white p-5 space-y-4">
+        <div class="flex justify-between"><div><p class="font-semibold">{{ $invoice->inscription?->eleve?->nom }} {{ $invoice->inscription?->eleve?->prenoms }}</p><p class="text-sm text-gray-500">{{ $invoice->type_facture }} · {{ $invoice->date_emission?->format('d/m/Y') }}</p></div><span class="rounded bg-slate-100 px-2 py-1 text-xs">{{ $invoice->statut }}</span></div>
+        <table class="w-full text-sm"><thead><tr class="text-left text-gray-500"><th>Libellé</th><th>Qté</th><th>PU</th><th>Remise</th><th>Montant</th></tr></thead><tbody>@foreach($invoice->lignes as $line)<tr class="border-t"><td>{{ $line->libelle }}</td><td>{{ $line->quantite }}</td><td>{{ number_format($line->prix_unitaire,0,',',' ') }}</td><td>{{ number_format($line->remise,0,',',' ') }}</td><td>{{ number_format($line->montant,0,',',' ') }}</td></tr>@endforeach</tbody></table>
+        <div class="text-right font-semibold">Net à payer: {{ number_format($invoice->montant_total,0,',',' ') }}</div>
+        @if($canManageInvoices && $invoice->statut!=='ANNULEE')<form method="POST" action="{{ route('accounting.invoices.validate',$invoice) }}">@csrf<button class="rounded bg-emerald-600 px-3 py-2 text-xs text-white">Valider</button></form>@endif
+        @if($canCancel && $invoice->statut!=='ANNULEE')<form method="POST" action="{{ route('accounting.invoices.cancel',$invoice) }}" class="flex gap-2">@csrf<input name="justification" required class="rounded border px-2 py-1 text-sm" placeholder="Justification annulation"><button class="rounded bg-rose-600 px-3 py-1 text-xs text-white">Annuler</button></form>@endif
+    </div>
+</x-page-shell>
