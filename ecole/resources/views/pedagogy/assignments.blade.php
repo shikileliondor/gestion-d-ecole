@@ -35,7 +35,7 @@
 
             <div x-show="tab === 'class'" x-transition class="space-y-6">
                 <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <form method="GET" class="flex flex-wrap items-end gap-4">
+                    <form method="GET" data-filter-form class="flex flex-wrap items-end gap-4">
                         <div class="flex flex-col">
                             <label class="text-xs font-semibold text-slate-500">Année scolaire</label>
                             <select name="academic_year_id" class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
@@ -78,7 +78,7 @@
 
             <div x-show="tab === 'teacher'" x-transition class="space-y-6">
                 <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <form method="GET" class="flex flex-wrap items-end gap-4">
+                    <form method="GET" data-filter-form class="flex flex-wrap items-end gap-4">
                         <input type="hidden" name="academic_year_id" value="{{ $selectedAcademicYearId }}">
                         <div class="flex flex-col">
                             <label class="text-xs font-semibold text-slate-500">Enseignant</label>

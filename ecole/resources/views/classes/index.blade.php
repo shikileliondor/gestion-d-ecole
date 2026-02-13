@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <form class="filters-bar" method="GET" data-async-form data-async-action="classes-filter" data-no-reset="true">
+        <form class="filters-bar" method="GET" data-filter-form data-async-form data-async-action="classes-filter" data-no-reset="true">
             <div class="filter-group">
                 <label>Année</label>
                 <p class="text-sm text-slate-600">

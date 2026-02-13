@@ -27,6 +27,12 @@ class SchoolClassController extends Controller
 {
     public function index(Request $request): View|JsonResponse
     {
+        $validatedFilters = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'level_id' => ['nullable', 'integer', 'exists:niveaux,id'],
+            'serie_id' => ['nullable', 'integer', 'exists:series,id'],
+        ]);
+
         $classesQuery = Classe::query()->orderBy('nom');
 
         $academicYears = AnneeScolaire::query()

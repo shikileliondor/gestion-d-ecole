@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+    border-color: rgb(226 232 240);
+    border-radius: 0.5rem;
+    min-height: 42px;
+    padding: 0.35rem 0.5rem;
+}
