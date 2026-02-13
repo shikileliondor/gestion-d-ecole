@@ -128,7 +128,6 @@ class StudentController extends Controller
             'status' => ['nullable', 'in:active,suspended,transferred,graduated,inactive'],
             'level_id' => ['required', 'exists:niveaux,id'],
             'class_id' => ['required', 'exists:classes,id'],
-            'academic_year_id' => ['nullable', 'exists:annees_scolaires,id'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
             'parent_first_name' => ['nullable', 'string', 'max:255'],
             'parent_last_name' => ['nullable', 'string', 'max:255'],
@@ -180,11 +179,11 @@ class StudentController extends Controller
 
         $data = $validator->validate();
 
-        $academicYearId = $this->resolveAcademicYearId($data['academic_year_id'] ?? null);
+        $academicYearId = $this->resolveAcademicYearId();
 
         if (! $academicYearId) {
             return back()->withErrors([
-                'academic_year_id' => "Aucune année scolaire active n'est disponible.",
+                'settings' => "Aucune année scolaire active n'est configurée. Veuillez la définir dans Paramètres.",
             ]);
         }
 
