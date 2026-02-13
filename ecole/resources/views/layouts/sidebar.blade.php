@@ -132,6 +132,11 @@
                     'active' => 'accounting.receipts.list',
                 ],
                 [
+                    'label' => 'Paiements',
+                    'route' => 'accounting.payments.index',
+                    'active' => 'accounting.payments.*',
+                ],
+                [
                     'label' => 'Journal',
                     'route' => 'accounting.journal.index',
                     'active' => 'accounting.journal.index',

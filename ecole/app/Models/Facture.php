@@ -46,4 +46,9 @@ class Facture extends Model
     {
         return $this->hasMany(Paiement::class);
     }
+
+    public function remises(): HasMany
+    {
+        return $this->hasMany(Remise::class);
+    }
 }

@@ -66,9 +66,10 @@ class ReceiptController extends AccountingController
         abort_if(! $feeId, 422, "Aucun frais d'inscription de référence disponible.");
 
         DB::transaction(function () use ($data, $request, $feeId) {
-            $invoice = Facture::query()->lockForUpdate()->findOrFail($data['facture_id']);
+            $invoice = Facture::query()->with('remises')->lockForUpdate()->findOrFail($data['facture_id']);
             $paid = (float) $invoice->paiements()->whereNull('annule_le')->sum('montant_paye');
-            $remaining = (float) $invoice->montant_total - $paid;
+            $discount = (float) $invoice->remises()->whereNull('annule_le')->sum('montant_applique');
+            $remaining = (float) $invoice->montant_total - $discount - $paid;
             abort_if($data['montant_paye'] > $remaining, 422, 'Montant supérieur au reste à payer');
 
             $payment = Paiement::create([
@@ -89,8 +90,9 @@ class ReceiptController extends AccountingController
                 'montant' => $data['montant_paye'],
             ]);
 
-            $newPaid = $invoice->paiements()->whereNull('annule_le')->sum('montant_paye');
-            $invoice->update(['statut' => $newPaid >= (float) $invoice->montant_total ? 'PAYEE' : 'PARTIELLE']);
+            $newPaid = (float) $invoice->paiements()->whereNull('annule_le')->sum('montant_paye');
+            $newDiscount = (float) $invoice->remises()->whereNull('annule_le')->sum('montant_applique');
+            $invoice->update(['statut' => $newPaid >= ((float) $invoice->montant_total - $newDiscount) ? 'PAYEE' : 'PARTIELLE']);
 
             $this->logAction($request, 'PAIEMENT_RECU', 'recus', $receipt->id, null, ['facture_id' => $invoice->id, 'montant' => $receipt->montant]);
         });
