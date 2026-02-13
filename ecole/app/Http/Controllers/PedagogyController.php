@@ -1127,10 +1127,17 @@ class PedagogyController extends Controller
         }
 
         return ProgrammeMatiere::query()
+            ->where('actif', true)
             ->where('annee_scolaire_id', $academicYearId)
             ->where('niveau_id', $levelId)
-            ->when($serieId, fn ($query) => $query->where('serie_id', $serieId))
+            ->when(
+                $serieId,
+                fn ($query) => $query->where('serie_id', $serieId),
+                fn ($query) => $query->whereNull('serie_id')
+            )
+            ->orderByDesc('id')
             ->get()
+            ->unique('matiere_id')
             ->keyBy('matiere_id');
     }
 
