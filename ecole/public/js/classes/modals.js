@@ -254,8 +254,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? JSON.parse(trigger.dataset.classSubjects)
                 : [];
             const emptyMessage = modal.querySelector('[data-subjects-empty]');
+            const missingCoefficientsMessage = modal.querySelector('[data-subjects-missing-coefficients]');
 
             subjectsTable.innerHTML = '';
+
+            if (missingCoefficientsMessage) {
+                missingCoefficientsMessage.hidden = true;
+                missingCoefficientsMessage.textContent = '';
+            }
 
             if (!subjects.length) {
                 if (emptyMessage) {
@@ -265,6 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (emptyMessage) {
                     emptyMessage.hidden = true;
                 }
+
+                let missingCoefficients = 0;
+
                 subjects.forEach((subject) => {
                     const row = document.createElement('tr');
 
@@ -280,13 +289,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     const coefficientCell = document.createElement('td');
-                    coefficientCell.textContent = subject.coefficient || subject.coefficient === 0 ? subject.coefficient : '—';
+                    const hasCoefficient = subject.coefficient || subject.coefficient === 0;
+                    coefficientCell.textContent = hasCoefficient ? subject.coefficient : '—';
+
+                    if (!hasCoefficient) {
+                        missingCoefficients += 1;
+                    }
 
                     row.appendChild(nameCell);
                     row.appendChild(teacherCell);
                     row.appendChild(coefficientCell);
                     subjectsTable.appendChild(row);
                 });
+
+                if (missingCoefficientsMessage && missingCoefficients > 0) {
+                    missingCoefficientsMessage.hidden = false;
+                    missingCoefficientsMessage.textContent = `${missingCoefficients} matière(s) sans coefficient. Définissez-les dans Paramètres > Coefficients officiels.`;
+                }
             }
         }
 

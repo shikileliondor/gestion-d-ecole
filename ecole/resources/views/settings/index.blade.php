@@ -397,6 +397,7 @@
                                     'actif' => $coef->actif,
                                 ])),
                                 academicYearId: @js($coefficientAcademicYearId),
+                                levelsUsingSeries: @js($levelsUsingSeries->keys()->map(fn ($id) => (int) $id)),
                                 usesSeries: @js($series->isNotEmpty()),
                                 storeUrl: @js($coefficientsStoreRoute),
                                 defaultsUrl: @js($coefficientsDefaultsRoute),
@@ -451,7 +452,7 @@
                                             </template>
                                         </select>
                                     </div>
-                                    <div x-show="usesSeries">
+                                    <div x-show="showSerieSelector">
                                         <label class="text-xs font-semibold text-gray-500">Série</label>
                                         <select
                                             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
@@ -465,7 +466,7 @@
                                         </select>
                                     </div>
                                     <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700" x-show="missingCount > 0">
-                                        <strong x-text="missingCount"></strong> matières sans coefficient pour ce niveau.
+                                        <strong x-text="missingCount"></strong> matières sans coefficient pour ce niveau/série. Définissez-les dans Paramètres avant calcul des moyennes.
                                     </div>
                                 </div>
 
@@ -526,7 +527,7 @@
                                                     <select
                                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                                                         x-model.number="copyFromSerieId"
-                                                        x-show="usesSeries"
+                                                        x-show="showCopySerieSelector"
                                                     >
                                                         <option :value="null">Toutes les séries</option>
                                                         <template x-for="serie in series" :key="`copy-serie-${serie.id}`">
@@ -556,6 +557,31 @@
                                     :class="statusType === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
                                     x-text="statusMessage"
                                 ></div>
+
+                                <div class="rounded-lg border border-gray-200 bg-white">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200 text-xs">
+                                            <thead class="bg-gray-50">
+                                                <tr class="text-left font-semibold uppercase tracking-wide text-gray-500">
+                                                    <th class="px-4 py-2">Niveau</th>
+                                                    <th class="px-4 py-2">Série</th>
+                                                    <th class="px-4 py-2">Matières définies</th>
+                                                    <th class="px-4 py-2">Manquantes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                <template x-for="summary in recapRows" :key="summary.key">
+                                                    <tr>
+                                                        <td class="px-4 py-2 font-semibold text-gray-900" x-text="summary.level"></td>
+                                                        <td class="px-4 py-2 text-gray-700" x-text="summary.serie"></td>
+                                                        <td class="px-4 py-2 text-gray-700" x-text="summary.defined"></td>
+                                                        <td class="px-4 py-2" :class="summary.missing > 0 ? 'text-amber-700' : 'text-emerald-700'" x-text="summary.missing"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1264,6 +1290,7 @@
                     series: config.series ?? [],
                     subjects: config.subjects ?? [],
                     coefficients: config.coefficients ?? [],
+                    levelsUsingSeries: config.levelsUsingSeries ?? [],
                     academicYearId: config.academicYearId,
                     usesSeries: config.usesSeries ?? false,
                     storeUrl: config.storeUrl,
@@ -1274,6 +1301,7 @@
                     copyFromLevelId: null,
                     copyFromSerieId: null,
                     rows: [],
+                    recapRows: [],
                     initialSnapshot: [],
                     missingCount: 0,
                     statusMessage: '',
@@ -1284,13 +1312,36 @@
                     get canEdit() {
                         return Boolean(this.academicYearId && this.selectedLevelId);
                     },
+                    get showSerieSelector() {
+                        return this.usesSeries && this.levelRequiresSeries(this.selectedLevelId);
+                    },
+                    get showCopySerieSelector() {
+                        return this.usesSeries && this.levelRequiresSeries(this.copyFromLevelId);
+                    },
                     init() {
+                        if (!this.showSerieSelector) {
+                            this.selectedSerieId = null;
+                        }
+
                         this.refreshRows();
                     },
+                    levelRequiresSeries(levelId) {
+                        return this.levelsUsingSeries.includes(Number(levelId));
+                    },
                     refreshRows() {
+                        if (!this.showSerieSelector) {
+                            this.selectedSerieId = null;
+                        } else if (this.selectedSerieId === null) {
+                            this.selectedSerieId = this.series?.[0]?.id ?? null;
+                        }
+
+                        if (!this.showCopySerieSelector) {
+                            this.copyFromSerieId = null;
+                        }
+
                         const filtered = this.coefficients.filter((coef) => {
                             const matchesLevel = coef.niveau_id === this.selectedLevelId;
-                            const matchesSerie = this.usesSeries
+                            const matchesSerie = this.showSerieSelector
                                 ? ((coef.serie_id ?? null) === (this.selectedSerieId ?? null))
                                 : (coef.serie_id ?? null) === null;
 
@@ -1318,6 +1369,7 @@
 
                         this.initialSnapshot = this.rows.map((row) => ({ ...row }));
                         this.updateMissingCount();
+                        this.refreshRecap();
                     },
                     updateMissingCount() {
                         this.missingCount = this.rows.filter((row) => row.subjectActive && !row.coefficient).length;
@@ -1335,6 +1387,33 @@
                     resetForm() {
                         this.rows = this.initialSnapshot.map((row) => ({ ...row }));
                         this.updateMissingCount();
+                        this.refreshRecap();
+                    },
+                    refreshRecap() {
+                        const activeSubjectsCount = this.subjects.filter((subject) => subject.active).length;
+
+                        this.recapRows = this.levels.flatMap((level) => {
+                            const levelSeries = this.levelRequiresSeries(level.id)
+                                ? this.series
+                                : [{ id: null, code: 'Sans série' }];
+
+                            return levelSeries.map((serie) => {
+                                const definedCount = this.coefficients.filter((coef) => {
+                                    const matchesScope = coef.niveau_id === level.id
+                                        && ((coef.serie_id ?? null) === (serie.id ?? null));
+
+                                    return matchesScope && Boolean(coef.actif && coef.coefficient);
+                                }).length;
+
+                                return {
+                                    key: `${level.id}-${serie.id ?? 'none'}`,
+                                    level: level.code,
+                                    serie: serie.id ? serie.code : '—',
+                                    defined: definedCount,
+                                    missing: Math.max(activeSubjectsCount - definedCount, 0),
+                                };
+                            });
+                        });
                     },
                     async save() {
                         if (!this.canEdit) {
@@ -1345,10 +1424,10 @@
                         this.statusType = 'success';
                         this.isSaving = true;
 
-                        const payload = {
-                            academic_year_id: this.academicYearId,
-                            niveau_id: this.selectedLevelId,
-                            serie_id: this.usesSeries ? this.selectedSerieId : null,
+                            const payload = {
+                                academic_year_id: this.academicYearId,
+                                niveau_id: this.selectedLevelId,
+                                serie_id: this.showSerieSelector ? this.selectedSerieId : null,
                             coefficients: this.rows.map((row) => ({
                                 matiere_id: row.matiere_id,
                                 coefficient: row.coefficient ?? null,
@@ -1404,7 +1483,7 @@
                                 body: JSON.stringify({
                                     academic_year_id: this.academicYearId,
                                     niveau_id: this.selectedLevelId,
-                                    serie_id: this.usesSeries ? this.selectedSerieId : null,
+                                    serie_id: this.showSerieSelector ? this.selectedSerieId : null,
                                 }),
                             });
 
@@ -1446,9 +1525,9 @@
                                 body: JSON.stringify({
                                     academic_year_id: this.academicYearId,
                                     source_niveau_id: this.copyFromLevelId,
-                                    source_serie_id: this.usesSeries ? this.copyFromSerieId : null,
+                                    source_serie_id: this.showCopySerieSelector ? this.copyFromSerieId : null,
                                     target_niveau_id: this.selectedLevelId,
-                                    target_serie_id: this.usesSeries ? this.selectedSerieId : null,
+                                    target_serie_id: this.showSerieSelector ? this.selectedSerieId : null,
                                 }),
                             });
 

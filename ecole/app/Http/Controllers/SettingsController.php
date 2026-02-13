@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnneeScolaire;
+use App\Models\Classe;
 use App\Models\Frais;
 use App\Models\Matiere;
 use App\Models\ModePaiement;
@@ -81,6 +82,14 @@ class SettingsController extends Controller
         }
 
         $coefficientAcademicYearId = $selectedAcademicYear?->id ?? $academicYears->first()?->id;
+        $levelsUsingSeries = $coefficientAcademicYearId
+            ? Classe::query()
+                ->where('annee_scolaire_id', $coefficientAcademicYearId)
+                ->whereNotNull('serie_id')
+                ->distinct()
+                ->pluck('niveau_id')
+                ->flip()
+            : collect();
         $officialCoefficients = $coefficientAcademicYearId
             ? ProgrammeMatiere::query()
                 ->where('annee_scolaire_id', $coefficientAcademicYearId)
@@ -107,6 +116,7 @@ class SettingsController extends Controller
             'periodTemplates' => $this->periodTemplates($activePeriodType ?? 'TRIMESTRE'),
             'coefficientAcademicYearId' => $coefficientAcademicYearId,
             'officialCoefficients' => $officialCoefficients,
+            'levelsUsingSeries' => $levelsUsingSeries,
         ]);
     }
 
@@ -456,6 +466,10 @@ class SettingsController extends Controller
         $levelId = $data['niveau_id'];
         $academicYearId = $data['academic_year_id'];
 
+        if ($error = $this->validateCoefficientSerieScope($academicYearId, $levelId, $serieId)) {
+            return response()->json(['message' => $error], 422);
+        }
+
         $existing = $this->coefficientQuery($academicYearId, $levelId, $serieId)
             ->orderBy('id')
             ->get()
@@ -511,6 +525,10 @@ class SettingsController extends Controller
         $serieId = $data['serie_id'] ?? null;
         $levelId = $data['niveau_id'];
         $academicYearId = $data['academic_year_id'];
+
+        if ($error = $this->validateCoefficientSerieScope($academicYearId, $levelId, $serieId)) {
+            return response()->json(['message' => $error], 422);
+        }
 
         $subjects = Matiere::query()
             ->where('actif', true)
@@ -568,6 +586,14 @@ class SettingsController extends Controller
         $academicYearId = $data['academic_year_id'];
         $sourceSerieId = $data['source_serie_id'] ?? null;
         $targetSerieId = $data['target_serie_id'] ?? null;
+
+        if ($error = $this->validateCoefficientSerieScope($academicYearId, $data['source_niveau_id'], $sourceSerieId, 'source')) {
+            return response()->json(['message' => $error], 422);
+        }
+
+        if ($error = $this->validateCoefficientSerieScope($academicYearId, $data['target_niveau_id'], $targetSerieId, 'cible')) {
+            return response()->json(['message' => $error], 422);
+        }
 
         if ($data['source_niveau_id'] === $data['target_niveau_id'] && $sourceSerieId === $targetSerieId) {
             return response()->json([
@@ -660,6 +686,25 @@ class SettingsController extends Controller
                 fn ($query) => $query->where('serie_id', $serieId),
                 fn ($query) => $query->whereNull('serie_id')
             );
+    }
+
+    private function validateCoefficientSerieScope(int $academicYearId, int $levelId, ?int $serieId, string $label = 'sélectionné'): ?string
+    {
+        $levelUsesSeries = Classe::query()
+            ->where('annee_scolaire_id', $academicYearId)
+            ->where('niveau_id', $levelId)
+            ->whereNotNull('serie_id')
+            ->exists();
+
+        if ($levelUsesSeries && ! $serieId) {
+            return "Le niveau {$label} nécessite une série. Veuillez sélectionner une série avant d'enregistrer les coefficients.";
+        }
+
+        if (! $levelUsesSeries && $serieId) {
+            return "Le niveau {$label} ne gère pas de série. Veuillez retirer la série pour ce niveau.";
+        }
+
+        return null;
     }
 
     private function formatCoefficients(Collection $coefficients): array

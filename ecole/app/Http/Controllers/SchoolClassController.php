@@ -156,16 +156,8 @@ class SchoolClassController extends Controller
                 $classe->setRelation('academicYear', $academicYear);
             }
 
-            $coeffKeyDefault = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-';
-            $coeffKeySpecific = $classe->serie_id
-                ? $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.$classe->serie_id
-                : null;
-            $coefficientsForClass = $coefficientsByLevel->get($coeffKeyDefault, collect());
-            if ($coeffKeySpecific) {
-                $coefficientsForClass = $coefficientsForClass->concat(
-                    $coefficientsByLevel->get($coeffKeySpecific, collect())
-                );
-            }
+            $coeffKey = $classe->annee_scolaire_id.'-'.$classe->niveau_id.'-'.($classe->serie_id ?? '');
+            $coefficientsForClass = $coefficientsByLevel->get($coeffKey, collect());
             $officialCoefficients = $this->selectCoefficientsForSerie($coefficientsForClass, $classe->serie_id);
 
             $assignments = $this->mapProgrammeAssignments(
@@ -528,10 +520,7 @@ class SchoolClassController extends Controller
             ->where('niveau_id', $classe->niveau_id)
             ->when(
                 $classe->serie_id,
-                fn ($query) => $query->where(function ($subQuery) use ($classe) {
-                    $subQuery->where('serie_id', $classe->serie_id)
-                        ->orWhereNull('serie_id');
-                }),
+                fn ($query) => $query->where('serie_id', $classe->serie_id),
                 fn ($query) => $query->whereNull('serie_id')
             )
             ->get();
@@ -550,7 +539,6 @@ class SchoolClassController extends Controller
 
                 if ($serieId) {
                     return $latestItems->firstWhere('serie_id', $serieId)
-                        ?? $latestItems->firstWhere('serie_id', null)
                         ?? $latestItems->first();
                 }
 

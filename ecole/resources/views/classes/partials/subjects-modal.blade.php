@@ -30,6 +30,7 @@
                 <tbody data-subjects-table></tbody>
             </table>
             <p class="helper-text" data-subjects-empty hidden>Aucune matière affectée pour le moment.</p>
+            <p class="helper-text text-amber-700" data-subjects-missing-coefficients hidden></p>
         </div>
     </div>
 </div>
