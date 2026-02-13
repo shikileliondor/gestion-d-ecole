@@ -242,8 +242,7 @@ class EnrollmentController extends Controller
                 ->where('annee_scolaire_id', $activeAcademicYear->id)
                 ->where('niveau_id', $targetNiveauId)
                 ->orderBy('nom')
-                ->first()
-            ?? $currentClass;
+                ->first();
     }
 
     private function mapGender(?string $gender): ?string
