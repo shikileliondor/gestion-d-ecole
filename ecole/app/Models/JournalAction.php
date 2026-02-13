@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JournalAction extends Model
 {
@@ -29,4 +30,9 @@ class JournalAction extends Model
         'nouvelles_valeurs' => 'array',
         'created_at' => 'datetime',
     ];
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\JournalConnexion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,17 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        JournalConnexion::query()->create([
+            'user_id' => Auth::id(),
+            'email_tente' => $request->string('email')->toString(),
+            'date_connexion' => now(),
+            'statut' => 'SUCCES',
+            'origine' => 'WEB',
+            'session_id' => $request->session()->getId(),
+            'ip_adresse' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
