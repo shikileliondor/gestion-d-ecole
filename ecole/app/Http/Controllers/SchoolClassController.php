@@ -34,7 +34,7 @@ class SchoolClassController extends Controller
             ->get()
             ->each(fn (AnneeScolaire $annee) => $annee->setAttribute('name', $annee->libelle));
 
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id'));
+        $selectedAcademicYearId = $this->resolveAcademicYearId();
         $selectedLevelId = $request->input('level_id');
         $selectedSerieId = $request->input('serie_id');
 
@@ -220,7 +220,6 @@ class SchoolClassController extends Controller
     public function store(Request $request, ClasseService $service): JsonResponse|RedirectResponse
     {
         $data = $request->validateWithBag('classForm', [
-            'academic_year_id' => ['required', 'exists:annees_scolaires,id'],
             'name' => ['required', 'string', 'max:255'],
             'level' => ['required', 'string', 'max:50', Rule::exists('niveaux', 'code')],
             'series' => ['nullable', 'string', 'max:50', Rule::exists('series', 'code')],
@@ -228,11 +227,18 @@ class SchoolClassController extends Controller
             'status' => ['nullable', 'in:active,inactive'],
         ]);
 
+        $academicYearId = $this->resolveAcademicYearId();
+        if (! $academicYearId) {
+            return back()->withErrors([
+                'settings' => "Aucune année scolaire active n'est configurée. Veuillez la définir dans Paramètres.",
+            ], 'classForm');
+        }
+
         $niveauId = $this->resolveNiveauId($data['level'] ?? null);
         $serieId = $this->resolveSerieId($data['series'] ?? null);
 
         $classe = $service->create([
-            'annee_scolaire_id' => $data['academic_year_id'],
+            'annee_scolaire_id' => $academicYearId,
             'niveau_id' => $niveauId,
             'serie_id' => $serieId,
             'nom' => $data['name'],

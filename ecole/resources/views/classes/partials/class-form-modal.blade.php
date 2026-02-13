@@ -32,23 +32,14 @@
             @csrf
             <div class="form-grid">
                 <div class="form-field">
-                    <label for="academic_year_id">Année scolaire</label>
+                    <label>Année scolaire (globale)</label>
                     @if (! empty($activeAcademicYear))
-                        <select id="academic_year_id" name="academic_year_id" disabled>
-                            <option value="{{ $activeAcademicYear->id }}" selected>
-                                {{ $activeAcademicYear->name ?? $activeAcademicYear->libelle }}
-                            </option>
-                        </select>
-                        <input type="hidden" name="academic_year_id" value="{{ $activeAcademicYear->id }}">
+                        <p class="form-static">{{ $activeAcademicYear->name ?? $activeAcademicYear->libelle }}</p>
                     @else
-                        <select id="academic_year_id" name="academic_year_id" required>
-                            <option value="">Sélectionner</option>
-                            @foreach ($academicYears as $year)
-                                <option value="{{ $year->id }}" @selected(old('academic_year_id') == $year->id)>
-                                    {{ $year->name ?? $year->start_date?->format('Y') }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <p class="error-text">Aucune année scolaire active n'est configurée. Définissez-la dans Paramètres.</p>
+                    @endif
+                    @if ($classFormErrors->has('settings'))
+                        <span class="error-text">{{ $classFormErrors->first('settings') }}</span>
                     @endif
                 </div>
                 <div class="form-field">
