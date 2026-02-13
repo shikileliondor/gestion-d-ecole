@@ -63,12 +63,17 @@ class PedagogyController extends Controller
 
     public function programme(Request $request): View
     {
+        $filters = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
         $subjects = $this->subjectsList();
 
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($filters['academic_year_id'] ?? 0)) ?? 0;
+        $selectedClassId = (int) ($filters['class_id'] ?? 0);
         $selectedClass = $selectedClassId ? Classe::query()->find($selectedClassId) : null;
 
         $programmeRows = collect();
@@ -159,12 +164,18 @@ class PedagogyController extends Controller
 
     public function assignments(Request $request): View
     {
+        $filters = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'teacher_id' => ['nullable', 'integer', 'exists:enseignants,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
         $teachers = $this->teachers();
 
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($filters['academic_year_id'] ?? 0)) ?? 0;
+        $selectedClassId = (int) ($filters['class_id'] ?? 0);
         $selectedTeacherId = (int) ($request->input('teacher_id') ?? 0);
 
         $programmeRows = collect();
@@ -259,17 +270,24 @@ class PedagogyController extends Controller
 
     public function evaluations(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'subject_id' => ['nullable', 'integer', 'exists:matieres,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
         $subjects = $this->subjectsList();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
 
         $filters = [
             'academic_year_id' => $selectedAcademicYearId,
-            'class_id' => (int) ($request->input('class_id') ?? 0),
-            'subject_id' => (int) ($request->input('subject_id') ?? 0),
+            'class_id' => (int) ($validated['class_id'] ?? 0),
+            'subject_id' => (int) ($validated['subject_id'] ?? 0),
             'period_id' => $selectedPeriodId,
         ];
 
@@ -418,13 +436,20 @@ class PedagogyController extends Controller
 
     public function grades(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+            'evaluation_id' => ['nullable', 'integer', 'exists:evaluations,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
-        $selectedEvaluationId = (int) ($request->input('evaluation_id') ?? 0);
+        $selectedClassId = (int) ($validated['class_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
+        $selectedEvaluationId = (int) ($validated['evaluation_id'] ?? 0);
 
         $evaluations = $this->evaluationQuery([
             'academic_year_id' => $selectedAcademicYearId,
@@ -536,12 +561,18 @@ class PedagogyController extends Controller
 
     public function reportCards(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
+        $selectedClassId = (int) ($validated['class_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
 
         $reportData = collect();
         $lockStatus = null;
@@ -668,13 +699,19 @@ class PedagogyController extends Controller
 
     public function transcripts(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'student_id' => ['nullable', 'integer', 'exists:eleves,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $students = Eleve::query()->orderBy('nom')->orderBy('prenoms')->get();
 
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
-        $selectedStudentId = (int) ($request->input('student_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
+        $selectedStudentId = (int) ($validated['student_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
 
         $reportData = collect();
 
@@ -710,13 +747,19 @@ class PedagogyController extends Controller
 
     public function studentReportCards(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'student_id' => ['nullable', 'integer', 'exists:eleves,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $students = Eleve::query()->orderBy('nom')->orderBy('prenoms')->get();
 
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
-        $selectedStudentId = (int) ($request->input('student_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
+        $selectedStudentId = (int) ($validated['student_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
 
         $reportData = collect();
 
@@ -737,14 +780,21 @@ class PedagogyController extends Controller
 
     public function leaderboard(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+            'subject_id' => ['nullable', 'integer', 'exists:matieres,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $subjects = $this->subjectsList();
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
-        $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
+        $selectedClassId = (int) ($validated['class_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
+        $selectedSubjectId = (int) ($validated['subject_id'] ?? 0);
 
         $data = collect();
         $rankingMode = $selectedSubjectId ? 'subject' : 'general';
@@ -771,14 +821,22 @@ class PedagogyController extends Controller
 
     public function resultsDashboard(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'class_id' => ['nullable', 'integer', 'exists:classes,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+            'subject_id' => ['nullable', 'integer', 'exists:matieres,id'],
+            'q' => ['nullable', 'string', 'max:120'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $subjects = $this->subjectsList();
-        $selectedClassId = (int) ($request->input('class_id') ?? 0);
-        $selectedPeriodId = $this->resolvePeriodId($periods, $request->integer('period_id'));
-        $selectedSubjectId = (int) ($request->input('subject_id') ?? 0);
+        $selectedClassId = (int) ($validated['class_id'] ?? 0);
+        $selectedPeriodId = $this->resolvePeriodId($periods, (int) ($validated['period_id'] ?? 0));
+        $selectedSubjectId = (int) ($validated['subject_id'] ?? 0);
         $search = $request->string('q')->trim()->toString();
 
         $studentsQuery = Inscription::query()
@@ -857,14 +915,19 @@ class PedagogyController extends Controller
 
     public function dashboard(Request $request): View
     {
+        $validated = $request->validate([
+            'academic_year_id' => ['nullable', 'integer', 'exists:annees_scolaires,id'],
+            'period_id' => ['nullable', 'integer', 'exists:periodes,id'],
+        ]);
+
         $academicYears = $this->academicYears();
         $classes = $this->classes();
         $subjects = $this->subjectsList();
-        $selectedAcademicYearId = $this->resolveAcademicYearId($request->integer('academic_year_id')) ?? 0;
+        $selectedAcademicYearId = $this->resolveAcademicYearId((int) ($validated['academic_year_id'] ?? 0)) ?? 0;
         $periods = $this->periods($selectedAcademicYearId);
         $activePeriodType = $periods->firstWhere('actif', true)?->type;
         $periodOptions = $activePeriodType ? $periods->where('type', $activePeriodType)->values() : $periods;
-        $selectedPeriodId = $this->resolvePeriodId($periodOptions, $request->integer('period_id'));
+        $selectedPeriodId = $this->resolvePeriodId($periodOptions, (int) ($validated['period_id'] ?? 0));
 
         $selectedPeriod = $selectedPeriodId ? $periodOptions->firstWhere('id', $selectedPeriodId) : null;
 

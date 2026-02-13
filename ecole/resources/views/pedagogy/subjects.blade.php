@@ -15,7 +15,7 @@
     <div class="py-6" data-async-page>
         <div class="mx-auto max-w-7xl space-y-6">
             <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <form method="GET" class="flex flex-wrap items-end gap-4">
+                <form method="GET" data-filter-form class="flex flex-wrap items-end gap-4">
                     <div class="flex flex-col">
                         <label class="text-xs font-semibold text-slate-500">Recherche</label>
                         <input name="q" value="{{ $search }}" type="text" placeholder="Mathématiques, Français..." class="rounded-lg border border-slate-200 px-3 py-2 text-sm">

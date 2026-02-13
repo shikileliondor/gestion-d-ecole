@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <form class="filters-bar" method="GET" data-async-form data-async-action="classes-filter" data-no-reset="true">
+        <form class="filters-bar" method="GET" data-filter-form data-async-form data-async-action="classes-filter" data-no-reset="true">
             <div class="filter-group">
                 <label for="filter-year">Année</label>
                 <select id="filter-year" name="academic_year_id">
