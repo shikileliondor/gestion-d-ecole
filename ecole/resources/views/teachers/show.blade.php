@@ -166,7 +166,7 @@
                                 <td>{{ $document->libelle }}</td>
                                 <td>{{ $document->description ?? '—' }}</td>
                                 <td>
-                                    <a href="{{ Storage::url($document->fichier_url) }}" target="_blank" rel="noreferrer">
+                                    <a href="{{ Storage::url($document->file_path) }}" target="_blank" rel="noreferrer">
                                         Télécharger
                                     </a>
                                 </td>

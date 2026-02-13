@@ -80,7 +80,7 @@ class EnseignantController extends Controller
                 'documents' => $enseignant->documents->map(fn (EnseignantDocument $document) => [
                     'id' => $document->id,
                     'libelle' => $document->libelle,
-                    'url' => $document->fichier_url ? Storage::url($document->fichier_url) : null,
+                    'url' => $document->file_path ? Storage::url($document->file_path) : null,
                 ]),
             ]);
         }
@@ -152,10 +152,10 @@ class EnseignantController extends Controller
         $enseignant->documents()->create([
             'type_document' => $data['type_document'],
             'libelle' => $data['libelle'],
-            'description' => $data['description'] ?? null,
-            'fichier_url' => $path,
+            'file_path' => $path,
+            'original_name' => $file?->getClientOriginalName(),
             'mime_type' => $file?->getClientMimeType(),
-            'taille' => $file?->getSize(),
+            'size_bytes' => $file?->getSize(),
         ]);
 
         return redirect()
@@ -171,8 +171,8 @@ class EnseignantController extends Controller
                 ->withErrors(['document' => 'Document introuvable.']);
         }
 
-        if ($document->fichier_url) {
-            Storage::disk('public')->delete($document->fichier_url);
+        if ($document->file_path) {
+            Storage::disk('public')->delete($document->file_path);
         }
 
         $document->delete();
@@ -272,9 +272,10 @@ class EnseignantController extends Controller
             $enseignant->documents()->create([
                 'type_document' => 'AUTRE',
                 'libelle' => $libelle ?: pathinfo($document->getClientOriginalName(), PATHINFO_FILENAME),
-                'fichier_url' => $path,
+                'file_path' => $path,
+                'original_name' => $document->getClientOriginalName(),
                 'mime_type' => $document->getClientMimeType(),
-                'taille' => $document->getSize(),
+                'size_bytes' => $document->getSize(),
             ]);
         }
     }
