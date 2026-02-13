@@ -17,10 +17,14 @@ class Recu extends Model
         'paiement_id',
         'date_emission',
         'montant',
+        'motif_annulation',
+        'annule_le',
+        'annule_par',
     ];
 
     protected $casts = [
         'date_emission' => 'date',
+        'annule_le' => 'datetime',
         'montant' => 'decimal:2',
     ];
 
