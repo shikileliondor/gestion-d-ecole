@@ -6,6 +6,7 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\PedagogyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RhDocumentController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
@@ -62,6 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::get('/staff/{id}', [StaffController::class, 'show'])->name('staff.show');
     Route::put('/staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
+
+    Route::get('/rh/documents', [RhDocumentController::class, 'index'])->name('rh.documents.index');
+    Route::post('/rh/documents', [RhDocumentController::class, 'store'])->name('rh.documents.store');
+    Route::put('/rh/documents/{document}', [RhDocumentController::class, 'update'])->name('rh.documents.update');
+    Route::delete('/rh/documents/{document}', [RhDocumentController::class, 'destroy'])->name('rh.documents.destroy');
+    Route::get('/rh/documents/{document}/download', [RhDocumentController::class, 'download'])->name('rh.documents.download');
 
     Route::get('/teachers', [EnseignantController::class, 'index'])->name('teachers.index');
     Route::get('/teachers/create', [EnseignantController::class, 'create'])->name('teachers.create');
