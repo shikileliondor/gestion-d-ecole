@@ -17,11 +17,13 @@ class User extends Authenticatable
         'matricule',
         'email',
         'password',
+        'role',
         'photo_path',
     ];
 
     protected $hidden = [
         'password',
+        'role',
         'remember_token',
     ];
 

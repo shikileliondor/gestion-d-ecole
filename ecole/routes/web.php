@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Accounting\InvoiceController;
 use App\Http\Controllers\Accounting\ReceiptController;
+use App\Http\Controllers\Accounting\JournalController;
+use App\Http\Controllers\Accounting\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierEleveController;
 use App\Http\Controllers\EnrollmentController;
@@ -140,13 +142,20 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('invoices')->name('invoices.')->group(function () {
             Route::get('/', [InvoiceController::class, 'index'])->name('index');
+            Route::get('/create', [InvoiceController::class, 'create'])->name('create');
+            Route::post('/', [InvoiceController::class, 'store'])->name('store');
             Route::get('/student', fn () => view('accounting.invoices.student'))->name('student');
             Route::get('/class', fn () => view('accounting.invoices.class'))->name('class');
-            Route::get('/unpaid', [InvoiceController::class, 'unpaid'])->name('unpaid');
+            Route::get('/{invoice}', [InvoiceController::class, 'show'])->name('show');
+            Route::post('/{invoice}/validate', [InvoiceController::class, 'validateInvoice'])->name('validate');
+            Route::post('/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('cancel');
         });
 
         Route::prefix('receipts')->name('receipts.')->group(function () {
             Route::get('/', [ReceiptController::class, 'index'])->name('list');
+            Route::get('/create', [ReceiptController::class, 'create'])->name('create');
+            Route::post('/', [ReceiptController::class, 'store'])->name('store');
+            Route::post('/{receipt}/cancel', [ReceiptController::class, 'cancel'])->name('cancel');
             Route::get('/download', fn () => view('accounting.receipts.download'))->name('download');
             Route::get('/numbering', fn () => view('accounting.receipts.numbering'))->name('numbering');
         });
@@ -157,7 +166,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/history', fn () => view('accounting.overdue.history'))->name('history');
         });
 
+        Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
+
         Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/annual', fn () => view('accounting.reports.annual'))->name('annual');
             Route::get('/monthly', fn () => view('accounting.reports.monthly'))->name('monthly');
             Route::get('/class', fn () => view('accounting.reports.class'))->name('class');
