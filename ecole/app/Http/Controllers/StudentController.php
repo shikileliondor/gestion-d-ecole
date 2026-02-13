@@ -129,41 +129,28 @@ class StudentController extends Controller
             'level_id' => ['required', 'exists:niveaux,id'],
             'class_id' => ['required', 'exists:classes,id'],
             'class_status' => ['nullable', 'in:active,transferred,completed'],
-            'parent_first_name' => ['nullable', 'string', 'max:255'],
-            'parent_last_name' => ['nullable', 'string', 'max:255'],
-            'parent_relationship' => ['nullable', 'string', 'max:50'],
-            'parent_phone' => ['nullable', 'string', 'max:30'],
-            'parent_email' => ['nullable', 'email', 'max:255'],
-            'parent_address' => ['nullable', 'string', 'max:255'],
-            'parent_occupation' => ['nullable', 'string', 'max:255'],
+            'previous_school' => ['nullable', 'string', 'max:255'],
+            'arrival_date' => ['nullable', 'date'],
+            'previous_class' => ['nullable', 'string', 'max:255'],
+            'father_name' => ['nullable', 'string', 'max:255'],
+            'father_occupation' => ['nullable', 'string', 'max:255'],
+            'father_address' => ['nullable', 'string', 'max:255'],
+            'father_phone' => ['nullable', 'string', 'max:30'],
+            'mother_name' => ['nullable', 'string', 'max:255'],
+            'mother_occupation' => ['nullable', 'string', 'max:255'],
+            'mother_address' => ['nullable', 'string', 'max:255'],
+            'mother_phone' => ['nullable', 'string', 'max:30'],
+            'guardian_name' => ['nullable', 'string', 'max:255'],
+            'guardian_relationship' => ['nullable', 'string', 'max:50'],
+            'guardian_occupation' => ['nullable', 'string', 'max:255'],
+            'guardian_address' => ['nullable', 'string', 'max:255'],
+            'guardian_phone' => ['nullable', 'string', 'max:30'],
         ]);
 
         $validator->after(function ($validator) use ($request) {
-            $parentFields = [
-                $request->input('parent_first_name'),
-                $request->input('parent_last_name'),
-                $request->input('parent_relationship'),
-                $request->input('parent_phone'),
-                $request->input('parent_email'),
-                $request->input('parent_address'),
-                $request->input('parent_occupation'),
-            ];
-
-            $hasParentData = collect($parentFields)->filter(fn ($value) => filled($value))->isNotEmpty();
-
-            if ($hasParentData) {
-                if (! $request->filled('parent_first_name')) {
-                    $validator->errors()->add('parent_first_name', 'Le prénom du tuteur est requis.');
-                }
-
-                if (! $request->filled('parent_last_name')) {
-                    $validator->errors()->add('parent_last_name', 'Le nom du tuteur est requis.');
-                }
-
-                if (! $request->filled('parent_phone')) {
-                    $validator->errors()->add('parent_phone', 'Le téléphone du tuteur est requis.');
-                }
-            }
+            $this->validateTutorBlock($validator, $request, 'father', 'père');
+            $this->validateTutorBlock($validator, $request, 'mother', 'mère');
+            $this->validateTutorBlock($validator, $request, 'guardian', 'correspondant');
 
             if ($request->filled('level_id') && $request->filled('class_id')) {
                 $matchesLevel = Classe::query()
@@ -232,15 +219,12 @@ class StudentController extends Controller
                 ]);
             }
 
-            $hasParentData = collect([
-                $data['parent_first_name'] ?? null,
-                $data['parent_last_name'] ?? null,
-                $data['parent_relationship'] ?? null,
-                $data['parent_phone'] ?? null,
-                $data['parent_email'] ?? null,
-                $data['parent_address'] ?? null,
-                $data['parent_occupation'] ?? null,
-            ])->filter(fn ($value) => filled($value))->isNotEmpty();
+            $this->createTutor($eleve->id, 'PERE', [
+                'name' => $data['father_name'] ?? null,
+                'phone' => $data['father_phone'] ?? null,
+                'address' => $data['father_address'] ?? null,
+                'occupation' => $data['father_occupation'] ?? null,
+            ]);
 
             $this->createTutor($eleve->id, 'MERE', [
                 'name' => $data['mother_name'] ?? null,
@@ -261,6 +245,28 @@ class StudentController extends Controller
         return redirect()
             ->route('students.index')
             ->with('status', "L'élève a été ajouté avec succès.");
+    }
+
+    private function validateTutorBlock($validator, Request $request, string $prefix, string $label): void
+    {
+        $fields = [
+            $request->input("{$prefix}_name"),
+            $request->input("{$prefix}_occupation"),
+            $request->input("{$prefix}_address"),
+            $request->input("{$prefix}_phone"),
+        ];
+
+        if (collect($fields)->filter(fn ($value) => filled($value))->isEmpty()) {
+            return;
+        }
+
+        if (! $request->filled("{$prefix}_name")) {
+            $validator->errors()->add("{$prefix}_name", "Le nom du {$label} est requis.");
+        }
+
+        if (! $request->filled("{$prefix}_phone")) {
+            $validator->errors()->add("{$prefix}_phone", "Le téléphone du {$label} est requis.");
+        }
     }
 
     public function show(int $id): JsonResponse
