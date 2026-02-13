@@ -89,6 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return formData;
     };
 
+    const buildGetUrl = (action, formData) => {
+        const url = new URL(action, window.location.origin);
+        formData.forEach((value, key) => {
+            if (value === null || value === undefined || value === '') {
+                return;
+            }
+            url.searchParams.append(key, String(value));
+        });
+        return url;
+    };
+
     const parseJson = async (response) => {
         try {
             return await response.json();
@@ -332,14 +343,21 @@ document.addEventListener('DOMContentLoaded', () => {
         clearAlert(modalErrors);
 
         const action = form.dataset.asyncAction || '';
-        const method = form.method || 'POST';
+        const method = (form.method || 'POST').toUpperCase();
+        const formData = serializeForm(form);
+        const isGetRequest = method === 'GET';
+        const requestUrl = isGetRequest ? buildGetUrl(form.action, formData).toString() : form.action;
+        const requestInit = {
+            method,
+            ...fetchOptions,
+        };
+
+        if (!isGetRequest) {
+            requestInit.body = formData;
+        }
 
         try {
-            const response = await fetch(form.action, {
-                method: method.toUpperCase(),
-                body: serializeForm(form),
-                ...fetchOptions,
-            });
+            const response = await fetch(requestUrl, requestInit);
 
             const payload = await parseJson(response);
 
@@ -361,6 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (payload) {
                 updateForAction(action, payload);
+            }
+
+            if (action === 'classes-filter') {
+                window.history.replaceState({}, '', requestUrl);
+            } else {
+                await refreshClassesGrid();
             }
 
             if (modal && !payload?.keep_open) {
