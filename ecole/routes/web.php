@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Accounting\InvoiceController;
+use App\Http\Controllers\Accounting\ReceiptController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DossierEleveController;
 use App\Http\Controllers\EnrollmentController;
@@ -137,14 +139,14 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::prefix('invoices')->name('invoices.')->group(function () {
-            Route::get('/', fn () => view('accounting.invoices.index'))->name('index');
+            Route::get('/', [InvoiceController::class, 'index'])->name('index');
             Route::get('/student', fn () => view('accounting.invoices.student'))->name('student');
             Route::get('/class', fn () => view('accounting.invoices.class'))->name('class');
-            Route::get('/unpaid', fn () => view('accounting.invoices.unpaid'))->name('unpaid');
+            Route::get('/unpaid', [InvoiceController::class, 'unpaid'])->name('unpaid');
         });
 
         Route::prefix('receipts')->name('receipts.')->group(function () {
-            Route::get('/', fn () => view('accounting.receipts.list'))->name('list');
+            Route::get('/', [ReceiptController::class, 'index'])->name('list');
             Route::get('/download', fn () => view('accounting.receipts.download'))->name('download');
             Route::get('/numbering', fn () => view('accounting.receipts.numbering'))->name('numbering');
         });
