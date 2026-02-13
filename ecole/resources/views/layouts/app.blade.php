@@ -102,7 +102,10 @@
                                             </span>
                                         @endif
                                     </button>
-                                    <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm">
+                                    <a
+                                        href="{{ route('profile.edit') }}"
+                                        class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40"
+                                    >
                                         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
                                             {{ $userInitials }}
                                         </div>
@@ -110,7 +113,17 @@
                                             <p class="text-sm font-semibold text-slate-800">{{ $user?->name ?? 'Utilisateur' }}</p>
                                             <p class="text-xs text-slate-400">{{ $user?->email }}</p>
                                         </div>
-                                    </div>
+                                    </a>
+
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="inline-flex h-11 items-center justify-center rounded-2xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50"
+                                        >
+                                            Déconnexion
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
