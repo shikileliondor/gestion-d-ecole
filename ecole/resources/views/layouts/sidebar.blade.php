@@ -155,13 +155,13 @@
                 ],
                 [
                     'label' => 'Messagerie',
-                    'url' => '#',
-                    'todo' => true,
+                    'route' => 'tools.messaging.index',
+                    'active' => 'tools.messaging.*',
                 ],
                 [
                     'label' => 'Journal & Audit',
-                    'url' => '#',
-                    'todo' => true,
+                    'route' => 'tools.audit.index',
+                    'active' => 'tools.audit.*',
                 ],
                 [
                     'label' => 'Exports',

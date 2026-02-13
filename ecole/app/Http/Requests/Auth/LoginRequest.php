@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\JournalConnexion;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +45,23 @@ class LoginRequest extends FormRequest
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+
+            $attemptedEmail = (string) $this->input('email');
+            $fallbackUserId = User::query()->where('email', $attemptedEmail)->value('id')
+                ?? User::query()->value('id');
+
+            if ($fallbackUserId) {
+                JournalConnexion::query()->create([
+                    'user_id' => $fallbackUserId,
+                    'email_tente' => $attemptedEmail,
+                'date_connexion' => now(),
+                'statut' => 'ECHEC',
+                'origine' => 'WEB',
+                'session_id' => $this->session()->getId(),
+                'ip_adresse' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+                ]);
+            }
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),

@@ -15,6 +15,8 @@ use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ToolsMessagingController;
+use App\Http\Controllers\ToolsAuditController;
 use App\Models\ModePaiement;
 use App\Models\ParametreEcole;
 use Illuminate\Support\Facades\Route;
@@ -119,6 +121,19 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tools/dossiers-eleves', [DossierEleveController::class, 'index'])
         ->name('tools.student-files.index');
+
+    Route::prefix('/tools/messaging')->name('tools.messaging.')->group(function () {
+        Route::get('/', [ToolsMessagingController::class, 'index'])->name('index');
+        Route::get('/create', [ToolsMessagingController::class, 'create'])->name('create');
+        Route::post('/', [ToolsMessagingController::class, 'store'])->name('store');
+        Route::get('/conversations/{conversation}', [ToolsMessagingController::class, 'show'])->name('show');
+    });
+
+    Route::prefix('/tools/audit')->name('tools.audit.')->group(function () {
+        Route::get('/', [ToolsAuditController::class, 'index'])->name('index');
+        Route::get('/actions/{action}', [ToolsAuditController::class, 'showAction'])->name('actions.show');
+        Route::get('/connections/{connection}', [ToolsAuditController::class, 'showConnection'])->name('connections.show');
+    });
 
     Route::prefix('accounting')->name('accounting.')->group(function () {
         Route::get('/dashboard', fn () => view('accounting.dashboard'))->name('dashboard');
